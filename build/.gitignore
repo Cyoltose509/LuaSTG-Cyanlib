@@ -1,0 +1,8 @@
+/develop/*
+/release/*
+/release_demo/*
+/archive_cache/*
+/archive_demo_cache/*
+/paper_engine/*
+/wallpaper_engine_archive_cache/*
+/package/*
