@@ -7,6 +7,8 @@
 ---@field Easing Core.Lib.Easing
 ---@field Draw Core.Render.Draw
 ---@field Json Core.Lib.Json
+---@field StateMachine Core.Lib.StateMachine
+---@field Controller Core.Lib.Controller
 local M = {}
 Core.Lib = M
 
@@ -16,5 +18,7 @@ require("Core.Scripts.Lib.Table")
 require("Core.Scripts.Lib.Geom")
 require("Core.Scripts.Lib.Easing")
 require("Core.Scripts.Lib.Json")
+require("Core.Scripts.Lib.StateMachine")
+require("Core.Scripts.Lib.Controller")
 
 

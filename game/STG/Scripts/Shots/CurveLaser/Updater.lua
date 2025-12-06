@@ -8,9 +8,20 @@ function Updater:init()
     ---@type STG.Shots.CurveLaser.Base[]
     self.list = {}
     local MainLoop = Core.MainLoop
-    MainLoop.AddOnSceneChangeBeforeEvent("CurveLaser.Updater.Refresh", 0, self.Refresh)
-    MainLoop.Frame.AddGameEvent("CurveLaser.Updater.Frame", 101, self.Frame)
-    MainLoop.Frame.AddGameEvent("CurveLaser.Updater.CollisionCheck", 102, self.CollisionCheck)
+    MainLoop.AddEvent("SceneChangeBefore", "Default", {
+        name = "CurveLaser.Updater.Refresh",
+        func = self.Refresh
+    })
+    MainLoop.AddEvent("Frame", "Gameplay", {
+        name = "CurveLaser.Updater.Frame",
+        func = self.Frame,
+        after = "Core.Object.After"
+    })
+    MainLoop.AddEvent("Frame", "Gameplay", {
+        name = "CurveLaser.Updater.CollisionCheck",
+        func = self.CollisionCheck,
+        after = "Core.Object.After"
+    })
 end
 
 function Updater:addLaser(laser)

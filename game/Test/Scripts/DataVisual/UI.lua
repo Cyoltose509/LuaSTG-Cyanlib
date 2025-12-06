@@ -122,12 +122,12 @@ end
 function M.PauseMenu(self)
 
     local root = UI.Manager.CreateHUDRoot("Test.PauseMenu", 2)
-    root :addChild(UI.Child("Title", 0, function()
+    root :addChild(UI.Immediate("Title", 0, function()
         local A = self.alpha
         local hud = UI.Camera:getView()
         Render.Text("exo2", "Game Paused", hud.centerX, hud.centerY + 100 * (1 - A),
                 1, Color(A * 255, 255, 255, 255), "centerpoint")
-    end)):addChild(UI.Child("Back", -1, function()
+    end)):addChild(UI.Immediate("Back", -1, function()
         local A = self.alpha
         local hud = UI.Camera:getView()
         Render.Draw.SetState(Render.BlendMode.Default, Color(A * 100, 0, 0, 0))

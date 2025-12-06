@@ -50,7 +50,6 @@ require("Core.Scripts.Math")
 require("Core.Scripts.VFS")
 require("Core.Scripts.Object")
 require("Core.Scripts.RNG")
-require("Core.Scripts.StateMachine")
 
 require("Core.Scripts.System")
 require("Core.Scripts.Input")

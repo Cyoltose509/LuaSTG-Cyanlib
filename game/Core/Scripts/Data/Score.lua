@@ -13,7 +13,7 @@ local function CheckData(_data)
     end
 end
 
-local password = { 1, 2, 3, 4, 5, 6, 7 }
+local password = { 3, 6, 11, 5, 4, 1, 2, 5, 8, 11, 9, 15, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 100 }
 ---@param file file
 ---@param str string
 local function writeEncodeData(file, str)

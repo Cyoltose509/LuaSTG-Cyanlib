@@ -47,8 +47,8 @@ end
 ---@param name string @事件名称
 ---@param level number @事件优先度
 ---@param func function @事件函数
----@param label string @事件标签
-function EventListener:addEvent(group, name, level, func, label)
+---@vararg string @事件标签
+function EventListener:addEvent(group, name, level, func, ...)
     level = level or 0
     assert(type(group) == "string", "group must be string")
     assert(type(name) == "string", "name must be string")
@@ -67,12 +67,64 @@ function EventListener:addEvent(group, name, level, func, label)
         level = level,
         func = func,
         enable = true,
-        label = label or ""
+        labels = { ... }
     }
     table.insert(self.data[group], data)
     self.data[group][name] = data
     self:sort(group)
+    return data
+end
 
+---添加事件（高级）
+---可以指定事件的位置、优先度、标签等
+---@class Core.Lib.EventListener.EventOption
+---@field name string
+---@field level number
+---@field func function
+---@field before string|nil
+---@field after string|nil
+---@field autoSort boolean|nil
+---@field labels string[]|nil
+---@param group string
+---@param opt Core.Lib.EventListener.EventOption
+function EventListener:addEventAdvanced(group, opt)
+    local function calcLevel(refName, dir)
+        local ref = self:find(group, refName)
+        local list = self.data[group]
+        local idx = 1
+        for i, v in ipairs(list) do
+            if v == ref then
+                idx = i
+                break
+            end
+        end
+        local ptr
+        if dir == "before" then
+            ptr = max(idx - 1, 1)
+            local before = list[ptr]
+            return before and (before.level + ref.level) / 2 or ref.level - 1
+        else
+            ptr = min(idx + 1, #list)
+            local after = list[ptr]
+            return after and (ref.level + after.level) / 2 or ref.level + 1
+        end
+    end
+    local level = opt.level
+    if opt.before then
+        level = calcLevel(opt.before, "before")
+    elseif opt.after then
+        level = calcLevel(opt.after, "after")
+    elseif opt.autoSort or not opt.level then
+        local list = self.data[group]
+        local last = list[#list]
+        if last then
+            level = last.level + 1
+        end
+    end
+    local m = self:addEvent(group, opt.name, level, opt.func)
+    if opt.labels then
+        m.labels = opt.labels
+    end
 end
 
 ---移除事件
@@ -104,7 +156,6 @@ function EventListener:dispatch(group, ...)
     end
 end
 
-
 function EventListener:enableByGroup(group)
     if not self.data[group] then
         return
@@ -126,8 +177,10 @@ end
 function EventListener:enableByLabel(label)
     for _, events in pairs(self.data) do
         for _, data in ipairs(events) do
-            if data.label == label then
-                data.enable = true
+            for _, l in ipairs(data.labels) do
+                if l == label then
+                    data.enable = true
+                end
             end
         end
     end
@@ -135,8 +188,10 @@ end
 function EventListener:disableByLabel(label)
     for _, events in pairs(self.data) do
         for _, data in ipairs(events) do
-            if data.label == label then
-                data.enable = false
+            for _, l in ipairs(data.labels) do
+                if l == label then
+                    data.enable = false
+                end
             end
         end
     end

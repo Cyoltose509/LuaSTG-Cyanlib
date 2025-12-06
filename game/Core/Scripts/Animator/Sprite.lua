@@ -6,7 +6,7 @@ Core.Animator.Sprite = M
 local type = type
 local setmetatable = setmetatable
 
-local StateMachine = Core.StateMachine
+local StateMachine = Core.Lib.StateMachine
 local Color = Core.Render.Color
 
 ---@class Core.Animator.Sprite.ImageFrame
@@ -315,7 +315,7 @@ end
 ---@return boolean @是否播放成功
 function M:playAnimation(name)
     local anim = self.animations[name]
-    assert(anim and #anim.frames > 0, "Invalid animation name: ".. tostring(name))
+    assert(anim and #anim.frames > 0, "Invalid animation name: " .. tostring(name))
     self.currentAnimation = anim
     self.animationTimer = 0
     self.animationIndex = 1

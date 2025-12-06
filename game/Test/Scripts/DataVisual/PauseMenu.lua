@@ -11,9 +11,9 @@ local pauseMenu = {
     kill = true
 }
 function pauseMenu:init()
-    MainLoop.Frame.DisableLabel(MainLoop.Frame.Label.Gameplay)
+    MainLoop.DisableLabel(MainLoop.Label.Gameplay)
     self.alpha = 0
-    self.ui_root = Test.UI.PauseMenu(self)
+    self.ui_root = Test.DataVisual.UI.PauseMenu(self)
     self.is_exiting = false
     self.kill = false
     Core.Task.New(self, function()
@@ -34,7 +34,7 @@ function pauseMenu:frame()
 end
 function pauseMenu:exit()
 
-    MainLoop.Frame.EnableLabel(MainLoop.Frame.Label.Gameplay)
+    MainLoop.EnableLabel(MainLoop.Label.Gameplay)
     Core.Task.New(self, function()
         self.kill = true
         for _ = 1, 10 do
@@ -56,5 +56,8 @@ function M.Frame()
 
 end
 
-MainLoop.Frame.AddBeforeEvent("test_pause_menu", 10, M.Frame)
+MainLoop.AddEvent("Frame","Before", {
+    name = "Test.DataVisual.PauseMenu",
+    func = M.Frame,
+})
 
