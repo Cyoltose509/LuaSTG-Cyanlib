@@ -15,12 +15,14 @@ function Updater:init()
     MainLoop.AddEvent("Frame", "Gameplay", {
         name = "CurveLaser.Updater.Frame",
         func = self.Frame,
-        after = "Core.Object.After"
+        after = "Core.Object.After",
+        labels = { MainLoop.Label.Gameplay }
     })
     MainLoop.AddEvent("Frame", "Gameplay", {
         name = "CurveLaser.Updater.CollisionCheck",
         func = self.CollisionCheck,
-        after = "Core.Object.After"
+        after = "Core.Object.After",
+        labels = { MainLoop.Label.Gameplay }
     })
 end
 

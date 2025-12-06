@@ -16,12 +16,14 @@ function Updater:init()
     MainLoop.AddEvent("Frame", "Gameplay", {
         name = "Laser.Updater.Frame",
         func = self.Frame,
-        after = "Core.Object.After"
+        after = "Core.Object.After",
+        labels = { MainLoop.Label.Gameplay }
     })
     MainLoop.AddEvent("Frame", "Gameplay", {
         name = "Laser.Updater.CollisionCheck",
         func = self.CollisionCheck,
-        after = "Core.Object.After"
+        after = "Core.Object.After",
+        labels = { MainLoop.Label.Gameplay }
     })
 end
 
