@@ -55,6 +55,7 @@ function M:newNode(name, position, parent, is_static)
 end
 local T=1
 function M:fullScreenEffect()
+    --[[
     self.camera:shake(30, 5, 1, 1.5, 1)
     local _T=T
     T=T+1
@@ -67,7 +68,7 @@ function M:fullScreenEffect()
 
         end
         --Core.Render.ScreenRT.Stop()
-    end)
+    end)--]]
 end
 
 function M:spawnNodes(parentNode, max_depth)

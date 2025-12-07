@@ -33,7 +33,7 @@
     },
     "file_system": {
         "resources": [],
-        "user": "$User/"
+        "user": "User/"
     },
     "timing": {
         "frame_rate": 60

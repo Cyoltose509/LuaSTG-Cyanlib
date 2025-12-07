@@ -21,7 +21,7 @@ function M.Main(self)
             local r, g, b = m.color[1], m.color[2], m.color[3]
             local rx, ry = UI.Camera:worldToUI(self.camera, m.x, m.y, m.z)
             local size = (m.r + s * 3) * self.camera:getDepthScale(m.x, m.y, m.z)
-            Render.Text("exo2", ("%s"):format(m.name), rx, ry - size * 1.4,
+            Render.TextSimple("exo2", ("%s"):format(m.name), rx, ry - size * 1.4,
                     size * 0.03, Color(size * 8 * A, 255, 255, 255), "centerpoint")
 
             Core.Resource.Image.Get("pure_circle")
@@ -47,13 +47,13 @@ function M.Main(self)
     end))
     hud_root:addChild(UI.Immediate("FPS", 0, function()
         local hud = UI.Camera:getView()
-        Render.Text("exo2", ("%.1f"):format(lstg.GetFPS()), hud.right - 20, hud.top - 30,
+        Render.TextSimple("exo2", ("%.1f"):format(lstg.GetFPS()), hud.right - 20, hud.top - 30,
                 1, Color(150, 255, 255, 255), "right")
     end))
     local keyShow = UI.Immediate("KeyShow", 0, function()
         local hud = UI.Camera:getView()
         for _, v in ipairs(self.keyTriggerList) do
-            Render.Text("exo2", ("%s"):format(v.name), hud.right - 20, hud.bottom + 30 + v.pos * 50,
+            Render.TextSimple("exo2", ("%s"):format(v.name), hud.right - 20, hud.bottom + 30 + v.pos * 50,
                     1, Color(v.alpha * 100, 255, 255, 255), "right")
         end
     end)
