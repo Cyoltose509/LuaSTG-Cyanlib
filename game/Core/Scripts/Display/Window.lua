@@ -2,7 +2,6 @@
 local M = {}
 Core.Display.Window = M
 
-M.ResponsiveLayout = true
 M.window_width = 100
 M.window_height = 100
 
@@ -31,9 +30,7 @@ end
 function M.GetSize()
     return M.window_width, M.window_height
 end
-function M.SetResponsiveLayout(flag)
-    M.ResponsiveLayout = flag
-end
+
 
 ---@param set Core.Data.Setting.Settings
 function M.ChangeVideoMode(set)

@@ -2,6 +2,19 @@
 local M = {}
 Core.Display.Screen = M
 
+M.ResponsiveLayout = true
+M.ResolutionX = 960
+M.ResolutionY = 540
+function M.SetResponsiveLayout(flag)
+    M.ResponsiveLayout = flag
+end
+function M.GetResolution()
+    return M.ResolutionX, M.ResolutionY
+end
+function M.SetResolution(x, y)
+    M.ResolutionX = x
+    M.ResolutionY = y
+end
 local screen = {
     width = 400,
     height = 400,
@@ -10,7 +23,7 @@ local screen = {
     resScale = 1,
     scale = 1,
     dx = 0,
-    dy = 0
+    dy = 0,
 }
 
 function M.GetSize()
@@ -76,9 +89,13 @@ function M.Reset(set)
     local ui_scale = set.ui_scaling / 100
     _fullW = _fullW / ui_scale
     _fullH = _fullH / ui_scale
-    --_fullW, _fullH = int(_fullW), int(_fullH)
-    screen.width = _fullW --/ 2
-    screen.height = _fullH --/ 2
+    if M.ResponsiveLayout then
+        screen.width = _fullW --/ 2
+        screen.height = _fullH --/ 2
+    else
+        screen.width = M.ResolutionX
+        screen.height = M.ResolutionY
+    end
     screen.hScale = resx / screen.width
     screen.vScale = resy / screen.height
     screen.resScale = resx / resy

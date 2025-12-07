@@ -36,18 +36,16 @@ function M.GetResolution()
 end
 
 function M.Update()
-    if M.Window.ResponsiveLayout then
+    if M.Screen.ResponsiveLayout then
         local curW, curH = M.Window.GetClientAreaSize()
         if curW == 0 or curH == 0 then
             return
         end
         local set = Core.Data.Setting.Get()
-        local gs = set.graphics_system
-        if not gs.fullscreen then
-            if curW ~= gs.width or curH ~= gs.height then
-                gs.width = curW
-                gs.height = curH
-                M.Window.SetSize(gs.width, gs.height)
+        local lastW, lastH = M.Window.GetSize()
+        if not set.graphics_system.fullscreen then
+            if curW ~= lastW or curH ~= lastH then
+                M.Window.SetSize(curW, curH)
                 M.Screen.Reset()
                 --Core.Data.Setting.Save() TODO
             end
