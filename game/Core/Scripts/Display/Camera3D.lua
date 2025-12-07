@@ -4,7 +4,7 @@ Core.Display.Camera3D = M
 function M:init()
     Core.Display.Camera.Base.init(self)
     self._is_3d = true
-    self.dir = 0
+    self.yaw = 0
     self.pitch = 0
     self.roll = 0
     self.x = 0
@@ -106,14 +106,14 @@ end
 function M:getForward()
     local fx, fy, fz = 0, 0, 1
     fy, fz = vec2_rot(fy, fz, self.pitch)
-    fx, fz = vec2_rot(fx, fz, self.dir)
+    fx, fz = vec2_rot(fx, fz, self.yaw)
     fx, fy = vec2_rot(fx, fy, self.roll)
     return fx, fy, fz
 end
 function M:getUp()
     local ux, uy, uz = 0, 1, 0
     uy, uz = vec2_rot(uy, uz, self.pitch)
-    ux, uz = vec2_rot(ux, uz, self.dir)
+    ux, uz = vec2_rot(ux, uz, self.yaw)
     ux, uy = vec2_rot(ux, uy, self.roll)
     return ux, uy, uz
 end
@@ -132,11 +132,11 @@ function M:setPosition(x, y, z)
     return self
 end
 ---@param pitch number@绕X轴旋转的角度
----@param dir number@绕Y轴旋转的角度
+---@param yaw number@绕Y轴旋转的角度
 ---@param roll number@绕Z轴旋转的角度
-function M:setRotation(pitch, dir, roll)
+function M:setRotation(pitch, yaw, roll)
     self.pitch = pitch or self.pitch
-    self.dir = dir or self.dir
+    self.yaw = yaw or self.yaw
     self.roll = roll or self.roll
     return self
 end

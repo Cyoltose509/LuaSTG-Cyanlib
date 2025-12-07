@@ -14,9 +14,9 @@ function M:init(camera)
     self.moveSpeed = 20
     self.smoothFactor = 0.1
     self.pitch = self.camera.pitch
-    self.dir = self.camera.dir
+    self.yaw = self.camera.yaw
     self._pitch = self.pitch
-    self._dir = self.dir
+    self._yaw = self.yaw
 end
 
 function M:frame()
@@ -30,12 +30,12 @@ function M:frame()
     if mouse.IsPressed(mouse.Key.Middle) then
         local dx, dy = mouse.GetDelta()
         self._pitch = self._pitch - dy * self.rotationSpeed
-        self._dir = self._dir - dx * self.rotationSpeed
+        self._yaw = self._yaw - dx * self.rotationSpeed
     end
 
     self.pitch = self.pitch + (self._pitch - self.pitch) * self.smoothFactor
-    self.dir = self.dir + (self._dir - self.dir) * self.smoothFactor
-    self.camera:setRotation(self.pitch, self.dir)
+    self.yaw = self.yaw + (self._yaw - self.yaw) * self.smoothFactor
+    self.camera:setRotation(self.pitch, self.yaw)
     self.camera:setFieldOfView(self.fov)
     local vec=Core.Math.Vector3.New(Core.Input.GetAxis("MoveForward"),
             Core.Input.GetAxis("MoveRight"),
