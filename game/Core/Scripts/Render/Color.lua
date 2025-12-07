@@ -3,8 +3,8 @@ local M = {}
 Core.Render.Color = M
 
 setmetatable(M, {
-    __call = function(self, ...)
-        return self.ARGB(...)
+    __call = function(_, ...)
+        return lstg.Color(...)
     end
 })
 

@@ -1,6 +1,4 @@
 ---@class Core.MainLoop
----@field Frame Core.MainLoop.Frame
----@field Render Core.MainLoop.Render
 local M = {}
 Core.MainLoop = M
 

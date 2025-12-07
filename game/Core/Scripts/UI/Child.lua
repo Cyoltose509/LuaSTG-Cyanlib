@@ -93,6 +93,7 @@ function M:deserialize(data)
         for _, childData in ipairs(data.children) do
             local child = Core.UI[childData._name]()
             child:deserialize(childData)
+            child.parent = self
             table.insert(self.children, child)
         end
     end
