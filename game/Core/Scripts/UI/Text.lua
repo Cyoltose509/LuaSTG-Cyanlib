@@ -1,100 +1,121 @@
 ---@class Core.UI.Text : Core.UI.Child
 local M = Core.Class(Core.UI.Child)
 Core.UI.Text = M
+M:addSerializeSimple(Core.UI.Child, "text")
+M:addSerializeOrder("text", function(value)
+    return Core.Lib.Json.Encode(value:serialize())
+end)
+M:addDeserializeOrder("text", function(value, self)
+    self.text:deserialize(Core.Lib.Json.Decode(value))
+    return self.text
+end)
+
 ---@alias Core.UI.Text.New Core.UI.Text.New|fun():Core.UI.Text
 function M:init()
     Core.UI.Child.init(self, "Text", 0)
-    self.text = ""
-    self.font = nil
-    ---@type Core.Resource.TTF
-    self.font_res = nil
-    self.size = 16
-    self.color = Core.Render.Color.Default
-    self.black_color = Core.Render.Color.Black
-    self.parent = nil
-    self.has_shadow = true
-    self.halign = "center"
-    self.valign = "vcenter"
-end
----无效函数
-function M:setRotation()
-    return self
-end
----如果只传入"centerpoint"，会自动设置为居中
----@overload fun(align:string):self
-function M:setAlignment(halign, valign)
-    if halign == "centerpoint" then
-        halign = "center"
-        valign = "vcenter"
-    end
-    self.halign = halign or "center"
-    self.valign = valign or "vcenter"
-    return self
-end
-function M:enableShadow(enabled)
-    self.has_shadow = enabled or false
-    return self
+    ---@private
+    self.text = Core.Render.Text()
 end
 
----@param color Core.Render.Color
-function M:setColor(color)
-    self.color = color or Core.Render.Color.Default
-    self.black_color = Core.Render.Color(color.a, 0, 0, 0)
-    return self
-end
-function M:refreshWH()
-    if self.font_res then
-        local scale = min(self._hscale, self._vscale)
-        local fr = lstg.FontRenderer
-        local size = self.size / self.font_res:getSize() * scale
-        fr.SetFontProvider(self.font)
-        fr.SetScale(size, size)
-        local l, r, b, t = fr.MeasureTextBoundary(self.text)
-        self:setWH((r - l) * 1.05, (t - b) * 1.3)
-    else
-        self:setWH(0, 0)
-    end
-    return self
-end
----@return self
 function M:setText(text)
-    self.text = text or ""
-    self:refreshWH()
+    self.text:setText(text)
     return self
 end
 function M:setFont(font)
-    self.font = font
-    self.font_res = Core.Resource.TTF.Get(font)
-    self:refreshWH()
+    self.text:setFont(font)
     return self
 end
-function M:setSize(size)
-    self.size = size or 16
-    self:refreshWH()
+function M:setColor(color)
+    self.text:setColor(color)
+    return self
+end
+function M:setHAlign(value)
+    self.text:setHAlign(value)
+    return self
+end
+function M:setVAlign(value)
+    self.text:setVAlign(value)
+    return self
+end
+function M:setTextRect(w, h, free)
+    self.text:setRect(w, h)
+    if not free then
+        self:setWH(w, h)
+    end
+    return self
+end
+function M:setRotation(rot)
+    self.text:setRotation(rot)
+    return self
+end
+function M:setLineHeightFactor(f)
+    self.text:setLineHeightFactor(f)
+    return self
+end
+function M:enableWordBreak(enable)
+    self.text:enableWordBreak(enable)
+    return self
+end
+function M:enableWrapWord(enable)
+    self.text:enableWrapWord(enable)
+    return self
+end
+function M:enableAutoFit(width, height)
+    self.text:enableAutoFit(width, height)
+    return self
+end
+function M:setSize(s)
+    self.text:setSize(s)
+    return self
+end
+function M:setBlendMode(mode)
+    self.text:setBlendMode(mode)
+    return self
+end
+function M:setShadowColor(color)
+    self.text:setShadowColor(color)
+    return self
+end
+function M:enableShadow(enable)
+    self.text:enableShadow(enable)
+    return self
+end
+function M:setShadowDiv(div)
+    self.text:setShadowDiv(div)
+    return self
+end
+function M:setShadowDirection(dirX, dirY)
+    self.text:setShadowDirection(dirX, dirY)
+    return self
+end
+function M:enableOblique(enable)
+    self.text:enableOblique(enable)
+    return self
+end
+function M:setObliqueAngle(a)
+    self.text:setObliqueAngle(a)
+    return self
+end
+function M:enableLockAspectRatio(enable)
+    self.text:enableLockAspectRatio(enable)
+    return self
+end
+function M:enableRichText(enable)
+    self.text:enableRichText(enable)
     return self
 end
 
 function M:update()
+    local last_x, last_y = self._x, self._y
+    local laset_hscale, last_vscale = self._hscale, self._vscale
     Core.UI.Child.update(self)
-end
-
-function M:draw()
-    --Core.Render.Draw.SetState(Core.Render.BlendMode.Default, Core.Render.Color.Default)
-    --Core.Render.Draw.RectOutline(self._x, self._y, self.width * self._hscale, self.height * self._vscale, 0, 2)
-    local scale = min(self._hscale, self._vscale)
-    local halign, valign = self.halign, self.valign
-    if self.parentLayout then
-        halign, valign = "centerpoint"
-    end--TODO:这是一个可能需要来完善的功能，目前暂时强制居中对齐
-    if self.font_res then
-        local size = self.size / self.font_res:getSize() * 2 * scale
-        if self.has_shadow then
-            local s = self.size * scale / 48
-            for i = 1, 4 do
-                Core.Render.Text(self.font, self.text, self._x + i * 0.7 * s, self._y - i * 0.5 * s, size, self.black_color, halign, valign)
-            end
-        end
-        Core.Render.Text(self.font, self.text, self._x, self._y, size, self.color, halign, valign)
+    if self._x ~= last_x or self._y ~= last_y then
+        self.text:setPosition(self._x, self._y)
     end
-
+    if self._hscale ~= laset_hscale or self._vscale ~= last_vscale then
+        self.text:setScale(self._hscale, self._vscale)
+    end
+end
+function M:draw()
+    self.text:draw()
 end

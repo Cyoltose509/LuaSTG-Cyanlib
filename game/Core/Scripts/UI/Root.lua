@@ -115,3 +115,28 @@ function M:enableEventByLabel(label)
     self.eventListener:enableByLabel(label)
 end
 
+function M:serialize()
+    local data = {
+        name = self.name,
+        layer = self.layer,
+    }
+    data.children = {}
+    for _, child in ipairs(self.children) do
+        if child.canSerialize then
+            table.insert(data.children, child:serialize())
+        end
+    end
+    return data
+end
+
+function M:deserialize(data)
+    self.name = data.name
+    self.layer = data.layer
+    self.children = {}
+    for _, childData in ipairs(data.children) do
+        local child = Core.UI[childData._name]()
+        child:deserialize(childData)
+        self:addChild(child)
+    end
+end
+
