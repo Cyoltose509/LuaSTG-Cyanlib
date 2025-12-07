@@ -96,7 +96,10 @@ function M.Update()
 end
 
 function M.Restart()
-    for _, scene in ipairs(M.Scenes) do
-        M.PushScene(scene.name, scene.frameBelow, scene.renderBelow)
+   M.NextScene=M.Stack[1]
+    for i, scene in ipairs(M.Stack) do
+        if i > 1 then
+            M.PushScene(scene.name, scene.frameBelow, scene.renderBelow)
+        end
     end
 end
