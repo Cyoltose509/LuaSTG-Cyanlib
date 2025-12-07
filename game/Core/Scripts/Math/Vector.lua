@@ -21,7 +21,7 @@ function Vector2.Min(vec1, vec2)
     return (vec1 - vec2 + (vec1-vec2):abs()) * 0.5
 end
 
-----@class Core.Math.Vector3:lstg.Vector3
+---@class Core.Math.Vector3:lstg.Vector3
 local Vector3 = require("lstg.Vector3")
 Core.Math.Vector3 = Vector3
 
