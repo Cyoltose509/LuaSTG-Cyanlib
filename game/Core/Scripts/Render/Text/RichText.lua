@@ -104,41 +104,45 @@ function M.Parse(raw_text, default_style)
     local runs = {}
     local now_style = {}
     local i = 1
-    local char_index = 1  -- 纯文本的字符计数（从1开始）
-
-    local function push_run(end_char_index)
-        if char_index < end_char_index then
-            ---@class Core.Lib.RichText.Parsed
-            local run = {
-                start = char_index,
-                stop = end_char_index - 1,
-                style = current_style(now_style, default_style)
-            }
-            table.insert(runs, run)
-            char_index = end_char_index
-        end
+    local m = 1 -- 纯文本的字符计数（从1开始）
+    local function push_run(part)
+        table.insert(clean_text, part)
+        ---@class Core.Lib.RichText.Parsed
+        local run = {
+            start = m,
+            stop = m + #part - 1,
+            style = current_style(now_style, default_style)
+        }
+        table.insert(runs, run)
+        m = m + #part
     end
 
     while i <= #raw_text do
-        local s, e = raw_text:find("<[^>]+>", i)
+        local s, e = raw_text:find("<[^<>]+>", i)
         if not s then
             -- 最后一段纯文本
             local part = raw_text:sub(i)
-            table.insert(clean_text, part)
-            push_run(char_index + #part)
+            push_run(part)
             break
         end
+        if raw_text:sub(s - 1, s - 1) == "\\" then
+            -- 转义符号，不处理
+            if s > i then
+                local part = raw_text:sub(i, s - 2) .. raw_text:sub(s, e)
+                push_run(part)
+            end
+        else
+            -- 标签前的纯文本
+            if s > i then
+                local part = raw_text:sub(i, s - 1)
+                push_run(part)
+            end
 
-        -- 标签前的纯文本
-        if s > i then
-            local part = raw_text:sub(i, s - 1)
-            table.insert(clean_text, part)
-            push_run(char_index + #part)
+            -- 处理标签
+            local tag_str = raw_text:sub(s, e)
+            parse_simple_tag(now_style, tag_str)
         end
 
-        -- 处理标签
-        local tag_str = raw_text:sub(s, e)
-        parse_simple_tag(now_style, tag_str)
         i = e + 1
     end
 
