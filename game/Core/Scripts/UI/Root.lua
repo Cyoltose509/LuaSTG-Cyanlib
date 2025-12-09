@@ -12,7 +12,11 @@ function M:init(name, layer)
     self.name = name
     self.layer = layer or 0
     self.timer = 0
-    self._needSort = false
+    self._x = 0
+    self._y = 0
+    self._hscale = 1
+    self._vscale = 1
+    self._need_sort = false
     self.eventListener = Core.Lib.EventListener()
     self.eventListener:create(before)
     self.eventListener:create(after)
@@ -23,7 +27,7 @@ end
 function M:addChild(child)
     table.insert(self.children, child)
     child.parent = self
-    self._needSort = true
+    self._need_sort = true
     return self
 end
 
@@ -32,7 +36,7 @@ function M:removeChild(child)
         if c == child then
             table.remove(self.children, i)
             child.parent = nil
-            self._needSort = true
+            self._need_sort = true
             return
         end
     end
@@ -42,11 +46,16 @@ function M:update()
     self.eventListener:dispatch(before, self)
     Core.Task.Do(self)
     self.timer = self.timer + 1
-    if self._needSort then
+    if self._need_sort then
         table.sort(self.children, function(a, b)
             return (a.layer or 0) < (b.layer or 0)
         end)
-        self._needSort = nil
+        self._need_sort = nil
+    end
+    for _, child in ipairs(self.children) do
+        if child.before_update then
+            child:before_update()
+        end
     end
     for _, child in ipairs(self.children) do
         if child.update then
@@ -122,7 +131,7 @@ function M:serialize()
     }
     data.children = {}
     for _, child in ipairs(self.children) do
-        if child.canSerialize then
+        if child.can_serialize then
             table.insert(data.children, child:serialize())
         end
     end
@@ -134,7 +143,7 @@ function M:deserialize(data)
     self.layer = data.layer
     self.children = {}
     for _, childData in ipairs(data.children) do
-        local child = Core.UI[childData._name]()
+        local child = Core.UI.ParseName(childData._name)()
         child:deserialize(childData)
         self:addChild(child)
     end

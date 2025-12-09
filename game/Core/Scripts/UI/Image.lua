@@ -62,4 +62,5 @@ function M:draw()
             :setPos(self._x, self._y)
             :draw()
     end
+    Core.UI.Child.draw(self)
 end

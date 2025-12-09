@@ -68,4 +68,5 @@ function M:draw()
             :setPos(self._x, self._y)
             :draw(self.ani_timer)
     end
+    Core.UI.Child.draw(self)
 end

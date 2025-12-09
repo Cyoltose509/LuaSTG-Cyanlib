@@ -17,39 +17,38 @@ M.Alignments = {
 
 ---@class Core.UI.Layout.Base:Core.UI.Child
 local Base = Core.Class(Core.UI.Child)
-Base:addSerializeSimple(Core.UI.Child, "isLayout", "paddingTop", "paddingBottom", "paddingLeft", "paddingRight",
-        "spacing", "ignoreSpacingAndFill", "lockAspectRatio", "align")
+Base:addSerializeSimple(Core.UI.Child, "is_layout", "padding_top", "padding_bottom", "padding_left", "padding_right",
+        "spacing", "ignore_spacing", "lock_aspect_ratio", "align")
 Base:addSerializeOrder("align", Core.Lib.Json.Encode)
 Base:addDeserializeOrder("align", Core.Lib.Json.Decode)
 
 function Base:init(layer)
     Core.UI.Child.init(self, "Layout", layer)
     ---@type Core.UI.Child[]
-    self.children = {}
-    self.isLayout = true
+    self.is_layout = true
     self:setDirty()
-    self.paddingTop = 0
-    self.paddingBottom = 0
-    self.paddingLeft = 0
-    self.paddingRight = 0
+    self.padding_top = 0
+    self.padding_bottom = 0
+    self.padding_left = 0
+    self.padding_right = 0
     self.spacing = 10
-    self.ignoreSpacingAndFill = false
-    self.lockAspectRatio = true
-    self._needSort = false
+    self.ignore_spacing = false
+    self.lock_aspect_ratio = true
+    self._need_sort = false
     self.align = M.Alignments.CenterCenter
 end
 function Base:addChild(child)
     table.insert(self.children, child)
     child.parent = self
-    child.parentLayout = self
-    self._needSort = true
+    child.parent_layout = self
+    self._need_sort = true
     return self
 end
 function Base:setPadding(top, bottom, left, right)
-    self.paddingTop = top or 0
-    self.paddingBottom = bottom or 0
-    self.paddingLeft = left or 0
-    self.paddingRight = right or 0
+    self.padding_top = top or 0
+    self.padding_bottom = bottom or 0
+    self.padding_left = left or 0
+    self.padding_right = right or 0
     self:setDirty()
     return self
 end
@@ -64,8 +63,8 @@ function Base:removeChild(child)
         if c == child then
             table.remove(self.children, i)
             child.parent = nil
-            child.parentLayout = nil
-            self._needSort = true
+            child.parent_layout = nil
+            self._need_sort = true
             return
         end
     end
@@ -75,17 +74,17 @@ function Base:applyLayout()
 
 end
 function Base:setDirty()
-    if self.isDirty then
+    if self._is_dirty then
         return self
     end
-    self.isDirty = true
+    self._is_dirty = true
 
-    if self.parentLayout then
-        self.parentLayout:setDirty()
+    if self.parent_layout then
+        self.parent_layout:setDirty()
     end
     if self.children then
         for _, child in ipairs(self.children) do
-            if child.isLayout then
+            if child.is_layout then
                 child:setDirty()
             end
         end
@@ -97,26 +96,12 @@ function Base:rebuild()
     self:applyLayout()
 end
 function Base:update()
-    if self._needSort then
-        table.sort(self.children, function(a, b)
-            return (a.layer or 0) < (b.layer or 0)
-        end)
-        self._needSort = nil
+    self._hscale, self._vscale = self:getScale()
+    if self._is_dirty then
+        self:rebuild()
+        self._is_dirty = false
     end
     Core.UI.Child.update(self)
-    local childRebuild = false
-    if self.isDirty then
-        self:rebuild()
-        childRebuild = true
-        self.isDirty = false
-    end
-    for _, child in ipairs(self.children) do
-        if child.update then
-            child:update()
-        end
-    end
-
-
 end
 ---@param alignment Core.UI.Layout.Alignment
 function Base:setAlignment(alignment)
@@ -130,38 +115,34 @@ function Base:draw()
     --test
     -- Core.Render.Draw.SetState(Core.Render.BlendMode.Default, Core.Render.Color.Default)
     -- Core.Render.Draw.RectOutline(self._x, self._y, self.width * self._hscale, self.height * self._vscale, 0, 2)
-    for _, child in pairs(self.children) do
-        if child.draw then
-            child:draw()
-        end
-    end
+    Core.UI.Child.draw(self)
 end
 
 function Base:getCenter(offsetX, offsetY)
     offsetX = offsetX or 0
     offsetY = offsetY or 0
     local halign, valign = self.align[1], self.align[2]
-    local cx = self._x + offsetX
-    local cy = self._y + offsetY
+    local cx = offsetX
+    local cy = offsetY
     if halign == -1 then
-        cx = cx - (self.width / 2 + self.paddingLeft) * self._hscale
+        cx = cx - (self.width / 2 + self.padding_left) * self._hscale
     elseif halign == 1 then
-        cx = cx + (self.width / 2 - self.paddingRight) * self._hscale
+        cx = cx + (self.width / 2 - self.padding_right) * self._hscale
     end
     if valign == -1 then
-        cy = cy - (self.height / 2 + self.paddingBottom) * self._vscale
+        cy = cy - (self.height / 2 + self.padding_bottom) * self._vscale
     elseif valign == 1 then
-        cy = cy + (self.height / 2 - self.paddingTop) * self._vscale
+        cy = cy + (self.height / 2 - self.padding_top) * self._vscale
 
     end
     return cx, cy
 end
 
 function Base:setIgnoreSpacing(enable)
-    self.ignoreSpacingAndFill = enable
+    self.ignore_spacing = enable
 end
-function Base:setLockAspectRatio(enable)
-    self.lockAspectRatio = enable
+function Base:enableLockAspectRatio(enable)
+    self.lock_aspect_ratio = enable
 end
 
 local Vec = Core.Math.Vector2
@@ -173,7 +154,7 @@ local function applyLayout(self, dir)
     dir:normalize()
     local reverseDir = Vec.New(dir.y, dir.x)
     local scaleVec = Vec.New(self._hscale, self._vscale)
-    local availableRect = Vec.New(self.width - self.paddingLeft - self.paddingRight, self.height - self.paddingTop - self.paddingBottom) * scaleVec
+    local availableRect = Vec.New(self.width - self.padding_left - self.padding_right, self.height - self.padding_top - self.padding_bottom) * scaleVec
     local availableVec = availableRect * dir
     local count = 0
     local childVec = availableRect * reverseDir
@@ -192,7 +173,7 @@ local function applyLayout(self, dir)
         spaceVec = maxSpace
     end
     local scale = availableRect / maxVec
-    if self.lockAspectRatio then
+    if self.lock_aspect_ratio then
         local p = scale:dot(reverseDir)
         scale = Vec.New(p, p)
     end
@@ -211,7 +192,7 @@ local function applyLayout(self, dir)
     end
     childVec = childVec - spaceVec
 
-    if self.ignoreSpacingAndFill then
+    if self.ignore_spacing then
         spaceVec = (availableVec - picVec) / (count - 1)
     end
     local allSpacing = spaceVec * (count - 1)
@@ -263,15 +244,15 @@ end
 ---@class Core.UI.Layout.Grid:Core.UI.Layout.Base
 local Grid = Core.Class(Base)
 M.Grid = Grid
-Grid:addSerializeSimple(Base, "spacingH", "spacingV", "horizontalCount", "verticalCount", "weightData", "gridData")
-Grid:addSerializeOrder("gridData", Core.Lib.Json.Encode)
-Grid:addDeserializeOrder("gridData", Core.Lib.Json.Decode)
-Grid:addSerializeOrder("weightData", Core.Lib.Json.Encode)
-Grid:addDeserializeOrder("weightData", Core.Lib.Json.Decode)
+Grid:addSerializeSimple(Base, "spacing_h", "spacing_v", "horizontal_count", "vertical_count", "weight_data", "grid_data")
+Grid:addSerializeOrder("grid_data", Core.Lib.Json.Encode)
+Grid:addDeserializeOrder("grid_data", Core.Lib.Json.Decode)
+Grid:addSerializeOrder("weight_data", Core.Lib.Json.Encode)
+Grid:addDeserializeOrder("weight_data", Core.Lib.Json.Decode)
 
-function Grid:init(horizontalCount, verticalCount, layer)
+function Grid:init(horizontal_count, vertical_count, layer)
     Base.init(self, layer)
-    self:setGrid(horizontalCount, verticalCount)
+    self:setGrid(horizontal_count, vertical_count)
     self:setSpacing()
 end
 
@@ -280,8 +261,8 @@ end
 ---@overload fun(h:number, v:number):self
 ---@overload fun(spacing:number):self
 function Grid:setSpacing(h, v)
-    self.spacingH = h or 0
-    self.spacingV = v or h or 0
+    self.spacing_h = h or 0
+    self.spacing_v = v or h or 0
     self:setDirty()
     return self
 end
@@ -294,11 +275,11 @@ end
 ---@overload fun(alignment:Core.UI.Layout.Alignment):self
 function Grid:setAlignment(alignment, i, j)
     if i and j then
-        self.gridData[i][j].align = alignment
+        self.grid_data[i][j].align = alignment
     else
-        for _i = 1, self.horizontalCount do
-            for _j = 1, self.verticalCount do
-                self.gridData[_i][_j].align = alignment
+        for _i = 1, self.horizontal_count do
+            for _j = 1, self.vertical_count do
+                self.grid_data[_i][_j].align = alignment
             end
         end
     end
@@ -312,13 +293,13 @@ end
 ---@param i number 行号
 ---@param j number 列号
 ---@overload fun(enable:boolean):self
-function Grid:setLockAspectRatio(enable, i, j)
+function Grid:enableLockAspectRatio(enable, i, j)
     if i and j then
-        self.gridData[i][j].lockAspectRatio = enable
+        self.grid_data[i][j].lock_aspect_ratio = enable
     else
-        for _i = 1, self.horizontalCount do
-            for _j = 1, self.verticalCount do
-                self.gridData[_i][_j].lockAspectRatio = enable
+        for _i = 1, self.horizontal_count do
+            for _j = 1, self.vertical_count do
+                self.grid_data[_i][_j].lock_aspect_ratio = enable
             end
         end
     end
@@ -333,10 +314,10 @@ end
 function Grid:setWeight(weight, col, row)
     assert(type(weight) == "number" and weight > 0, "Weight must be a positive number")
     if col then
-        self.weightData.x[col] = weight
+        self.weight_data.x[col] = weight
     end
     if row then
-        self.weightData.y[row] = weight
+        self.weight_data.y[row] = weight
     end
     self:setDirty()
     return self
@@ -349,11 +330,11 @@ end
 ---@overload fun(scale:number):self
 function Grid:setScale(scale, i, j)
     if i and j then
-        self.gridData[i][j].scale = scale
+        self.grid_data[i][j].scale = scale
     else
-        for _i = 1, self.horizontalCount do
-            for _j = 1, self.verticalCount do
-                self.gridData[_i][_j].scale = scale
+        for _i = 1, self.horizontal_count do
+            for _j = 1, self.vertical_count do
+                self.grid_data[_i][_j].scale = scale
             end
         end
     end
@@ -361,32 +342,32 @@ function Grid:setScale(scale, i, j)
     return self
 end
 
-function Grid:setGrid(horizontalCount, verticalCount)
-    self.horizontalCount = horizontalCount or 3
-    self.verticalCount = verticalCount or 3
-    ---@type Core.UI.Layout.GridData[][]
-    self.gridData = {}
-    for i = 1, self.horizontalCount do
-        self.gridData[i] = {}
-        for j = 1, self.verticalCount do
-            ---@class Core.UI.Layout.GridData
-            self.gridData[i][j] = {
-                lockAspectRatio = true,
+function Grid:setGrid(horizontal_count, vertical_count)
+    self.horizontal_count = horizontal_count or 3
+    self.vertical_count = vertical_count or 3
+    ---@type Core.UI.Layout.grid_data[][]
+    self.grid_data = {}
+    for i = 1, self.horizontal_count do
+        self.grid_data[i] = {}
+        for j = 1, self.vertical_count do
+            ---@class Core.UI.Layout.grid_data
+            self.grid_data[i][j] = {
+                lock_aspect_ratio = true,
                 scale = 1,
                 align = M.Alignments.CenterCenter,
                 childID = 0,
             }
         end
     end
-    self.weightData = {
+    self.weight_data = {
         x = {},
         y = {}
     }
-    for i = 1, self.horizontalCount do
-        self.weightData.x[i] = 1
+    for i = 1, self.horizontal_count do
+        self.weight_data.x[i] = 1
     end
-    for i = 1, self.verticalCount do
-        self.weightData.y[i] = 1
+    for i = 1, self.vertical_count do
+        self.weight_data.y[i] = 1
     end
     self:setDirty()
     return self
@@ -394,26 +375,26 @@ end
 function Grid:getChild(i, j)
     i = i or 1
     j = j or 1
-    assert(1 <= i and i <= self.horizontalCount and 1 <= j and j <= self.verticalCount, "Invalid cell index")
-    if self.gridData[i][j].childID > 0 then
-        return self.children[self.gridData[i][j].childID]
+    assert(1 <= i and i <= self.horizontal_count and 1 <= j and j <= self.vertical_count, "Invalid cell index")
+    if self.grid_data[i][j].childID > 0 then
+        return self.children[self.grid_data[i][j].childID]
     else
         return self.children[(i - 1) * 9 + j]
     end
 end
 
 function Grid:applyLayout()
-    local count = Vec.New(self.horizontalCount, self.verticalCount)
+    local count = Vec.New(self.horizontal_count, self.vertical_count)
     local scaleVec = Vec.New(self._hscale, self._vscale)
-    local spacing = Vec.New(self.spacingH, self.spacingV) * scaleVec
-    local realRect = Vec.New(self.width - self.paddingLeft - self.paddingRight, self.height - self.paddingTop - self.paddingBottom) * scaleVec
+    local spacing = Vec.New(self.spacing_h, self.spacing_v) * scaleVec
+    local realRect = Vec.New(self.width - self.padding_left - self.padding_right, self.height - self.padding_top - self.padding_bottom) * scaleVec
     local availableRect = realRect - spacing * (count - Vec.New(1, 1))
     local weightVec = Vec.New(0, 0)
-    for i = 1, self.horizontalCount do
-        weightVec.x = weightVec.x + self.weightData.x[i]
+    for i = 1, self.horizontal_count do
+        weightVec.x = weightVec.x + self.weight_data.x[i]
     end
-    for i = 1, self.verticalCount do
-        weightVec.y = weightVec.y + self.weightData.y[i]
+    for i = 1, self.vertical_count do
+        weightVec.y = weightVec.y + self.weight_data.y[i]
     end
     local Pos = Vec.New(0, 0)
     local childP = 1
@@ -431,22 +412,22 @@ function Grid:applyLayout()
         end
     end
     local breakFlag = false
-    for j = 1, self.verticalCount do
+    for j = 1, self.vertical_count do
         local weight
         local realSize
-        for i = 1, self.horizontalCount do
+        for i = 1, self.horizontal_count do
             local cur = getChild()
             if cur then
-                local data = self.gridData[i][j]
+                local data = self.grid_data[i][j]
                 data.childID = childP - 1
-                weight = Vec.New(self.weightData.x[i], self.weightData.y[j]) / weightVec
+                weight = Vec.New(self.weight_data.x[i], self.weight_data.y[j]) / weightVec
                 realSize = availableRect * weight
-                cur.layout_x = Pos.x + self._x - realRect.x / 2
-                cur.layout_y = Pos.y + self._y + realRect.y / 2
+                cur.layout_x = Pos.x - realRect.x / 2
+                cur.layout_y = Pos.y + realRect.y / 2
                 Pos.x = Pos.x + realSize.x + spacing.x
                 local picSize = Vec.New(cur.width, cur.height)
                 local scale = realSize / picSize * data.scale
-                if data.lockAspectRatio then
+                if data.lock_aspect_ratio then
                     local p = min(scale.x, scale.y)
                     scale = Vec.New(p, p)
                 end

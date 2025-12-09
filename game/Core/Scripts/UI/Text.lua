@@ -15,6 +15,15 @@ function M:init()
     Core.UI.Child.init(self, "Text", 0)
     ---@private
     self.text = Core.Render.Text()
+    self.text:enableRectAnchor(true)
+    self._auto_width_height = true
+end
+function M:autoWidthHeight(enable)
+    self._auto_width_height = enable
+    if enable then
+        self:setWH(self.text._total_width, self.text._total_height)
+    end
+    return self
 end
 
 function M:setText(text)
@@ -35,6 +44,10 @@ function M:setHAlign(value)
 end
 function M:setVAlign(value)
     self.text:setVAlign(value)
+    return self
+end
+function M:setAlignment(...)
+    self.text:setAlignment(...)
     return self
 end
 function M:setTextRect(w, h, free)
@@ -104,18 +117,27 @@ function M:enableRichText(enable)
     self.text:enableRichText(enable)
     return self
 end
-
-function M:update()
-    local last_x, last_y = self._x, self._y
-    local laset_hscale, last_vscale = self._hscale, self._vscale
-    Core.UI.Child.update(self)
-    if self._x ~= last_x or self._y ~= last_y then
-        self.text:setPosition(self._x, self._y)
-    end
-    if self._hscale ~= laset_hscale or self._vscale ~= last_vscale then
-        self.text:setScale(self._hscale, self._vscale)
+function M:refresh()
+    self.text:setPosition(self:getXY())
+    self.text:setScale(self:getScale())
+    self.text:update()
+end
+function M:before_update()
+    local last_width, last_height = self.text:getContentSize()
+    self:refresh()
+    local now_width, now_height = self.text:getContentSize()
+    if self._auto_width_height and (last_width ~= now_width or last_height ~= now_height) then
+        --self:setWH(self.text._total_width, self.text._total_height)
+        self:setTextRect(now_width, now_height)
     end
 end
+function M:update()
+    Core.UI.Child.update(self)
+    self:refresh()
+end
 function M:draw()
-    self.text:draw()
+    --Core.Render.Draw.SetState("", Core.Render.Color(255, 255, 255, 255))
+    --Core.Render.Draw.Sector(self._x, self._y, 0, 30, 0, 360, 20)
+    self.text:draw(true)
+    Core.UI.Child.draw(self)
 end

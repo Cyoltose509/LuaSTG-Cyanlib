@@ -22,7 +22,8 @@ function M:init(tex)
     self._color2 = nil
     self._color3 = nil
     self._color4 = nil
-    self._needUpdate = true
+    self._ignore_pos_update = true
+    self._need_update = true
     self.uv_data = {
         { 0, 0, 0, 0, },
         { 0, 0, 0, 0, },
@@ -44,7 +45,7 @@ function M:setUV(x, y, width, height)
     self.uvW = width
     self.uvH = height
     self:setWH(width, height)
-    self._needUpdate = true
+    self._need_update = true
     return self
 end
 function M:setTexture(tex, notSetUV)
@@ -58,35 +59,31 @@ function M:setTexture(tex, notSetUV)
     end
     return self
 end
-function M:setRotation(rot)
-    self.rot = rot
-    self._needUpdate = true
-    return self
-end
 function M:update()
-    local _x, _y, _h, _v = self._x, self._y, self._hscale, self._vscale
     Core.UI.Child.update(self)
-    if self._needUpdate or self._x ~= _x or self._y ~= _y or self._hscale ~= _h or self._vscale ~= _v then
+    if self._need_update then
         local cosr, sinr = cos(self.rot), sin(self.rot)
         local w, h = self.width * self._hscale / 2, self.height * self._vscale / 2
-        self.uv_data[1][1], self.uv_data[1][2] = self._x - cosr * w - sinr * h, self._y - sinr * w + cosr * h
-        self.uv_data[2][1], self.uv_data[2][2] = self._x + cosr * w - sinr * h, self._y + sinr * w + cosr * h
-        self.uv_data[3][1], self.uv_data[3][2] = self._x + cosr * w + sinr * h, self._y + sinr * w - cosr * h
-        self.uv_data[4][1], self.uv_data[4][2] = self._x - cosr * w + sinr * h, self._y - sinr * w - cosr * h
+        self.uv_data[1][1], self.uv_data[1][2] = -cosr * w - sinr * h, -sinr * w + cosr * h
+        self.uv_data[2][1], self.uv_data[2][2] = cosr * w - sinr * h, sinr * w + cosr * h
+        self.uv_data[3][1], self.uv_data[3][2] = cosr * w + sinr * h, sinr * w - cosr * h
+        self.uv_data[4][1], self.uv_data[4][2] = -cosr * w + sinr * h, -sinr * w - cosr * h
         self.uv_data[1][3], self.uv_data[1][4] = self.uvX, self.uvY
         self.uv_data[2][3], self.uv_data[2][4] = self.uvX + self.uvW, self.uvY
         self.uv_data[3][3], self.uv_data[3][4] = self.uvX + self.uvW, self.uvY + self.uvH
         self.uv_data[4][3], self.uv_data[4][4] = self.uvX, self.uvY + self.uvH
-        self._needUpdate = false
+        self._need_update = false
     end
 end
 function M:draw()
     if self.tex then
+        local x, y = self._x, self._y
         self.tex:setBlend(self._blend)
-            :setUV1(self.uv_data[1][1], self.uv_data[1][2], 0.5, self.uv_data[1][3], self.uv_data[1][4], self._color1)
-            :setUV2(self.uv_data[2][1], self.uv_data[2][2], 0.5, self.uv_data[2][3], self.uv_data[2][4], self._color2)
-            :setUV3(self.uv_data[3][1], self.uv_data[3][2], 0.5, self.uv_data[3][3], self.uv_data[3][4], self._color3)
-            :setUV4(self.uv_data[4][1], self.uv_data[4][2], 0.5, self.uv_data[4][3], self.uv_data[4][4], self._color4)
+            :setUV1(x + self.uv_data[1][1], y + self.uv_data[1][2], 0.5, self.uv_data[1][3], self.uv_data[1][4], self._color1)
+            :setUV2(x + self.uv_data[2][1], y + self.uv_data[2][2], 0.5, self.uv_data[2][3], self.uv_data[2][4], self._color2)
+            :setUV3(x + self.uv_data[3][1], y + self.uv_data[3][2], 0.5, self.uv_data[3][3], self.uv_data[3][4], self._color3)
+            :setUV4(x + self.uv_data[4][1], y + self.uv_data[4][2], 0.5, self.uv_data[4][3], self.uv_data[4][4], self._color4)
             :draw()
     end
+    Core.UI.Child.draw(self)
 end

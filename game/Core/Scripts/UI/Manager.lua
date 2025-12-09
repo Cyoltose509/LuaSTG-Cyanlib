@@ -5,30 +5,30 @@ Core.UI.Manager = M
 local Canvas = {
     ---@type Core.UI.Root[]
     roots = {},
-    _needSort = false
+    _need_sort = false
 }
 
 function Canvas:addRoot(root)
     table.insert(self.roots, root)
-    self._needSort = true
+    self._need_sort = true
 end
 
 function Canvas:removeRoot(root)
     for i, r in ipairs(self.roots) do
         if r == root then
             table.remove(self.roots, i)
-            self._needSort = true
+            self._need_sort = true
             return
         end
     end
 end
 
 function Canvas:update()
-    if self._needSort then
+    if self._need_sort then
         table.sort(self.roots, function(a, b)
             return (a.layer or 0) < (b.layer or 0)
         end)
-        self._needSort = nil
+        self._need_sort = nil
     end
     for _, root in ipairs(self.roots) do
         if root.update then
