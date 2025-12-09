@@ -8,6 +8,7 @@
 ---@field Plane Core.Math.Plane
 ---@field Matrix3 Core.Math.Matrix3
 ---@field Matrix4 Core.Math.Matrix4
+---@field Geom Core.Math.Geom
 local M = {}
 
 ---注意：为了避免性能开销，尽量减少对象化Vector, Ray, Plane等
@@ -22,6 +23,7 @@ require("Core.Scripts.Math.Quaternion")
 require("Core.Scripts.Math.Ray")
 require("Core.Scripts.Math.Plane")
 require("Core.Scripts.Math.Matrix")
+require("Core.Scripts.Math.Geom")
 
 ---@alias Core.Math.Point2 Core.Math.Vector2
 ---@alias Core.Math.Point3 Core.Math.Vector3

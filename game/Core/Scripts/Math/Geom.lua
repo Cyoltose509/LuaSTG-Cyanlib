@@ -1,8 +1,6 @@
----@class Core.Lib.Geom
+---@class Core.Math.Geom
 local M = {}
-Core.Lib.Geom = M
-
-
+Core.Math.Geom = M
 
 function M.PointInRect(px, py, x1, y1, x2, y2)
     if x1 == x2 or y1 == y2 then
@@ -38,7 +36,6 @@ function M.PerspectiveProjection(x, y, z, x0, y0, z0, zp, fovy)
 
 end
 
-
 function M.InversePerspectiveProjection(x_proj, y_proj, zp, x0, y0, z0, z)
     -- Calculate the inverse scaling factor based on depth (z distance from the viewpoint)
     local t_inv = (z - z0) / (zp - z0)
@@ -49,7 +46,6 @@ function M.InversePerspectiveProjection(x_proj, y_proj, zp, x0, y0, z0, z)
 
     return x, y, z
 end
-
 
 function M.PointOnSegment(mp, p1, p2, offset)
     local x1, y1 = p1.x, p1.y
@@ -75,6 +71,40 @@ function M.PointOnSegment(mp, p1, p2, offset)
     local distance = hypot(x0 - closestX, y0 - closestY)--Dist(mp, { x = closestX, y = closestY })
     -- 检查距离是否在误差范围内
     return distance <= offset
+end
+
+---输入矩形参数
+---返回矩形4个顶点的坐标
+---Input rect parameters
+---Return the coordinates of the four corners of the rectangle
+---@param rotateCenter boolean 是否旋转中心 whether to rotate the center
+---@return number[]
+function M.GetRectPoints(cx, cy, w, h, angle, rotateCenter)
+    local cosr, sinr = cos(angle), sin(angle)
+    if rotateCenter then
+        cx, cy = cx * cosr - cy * sinr, cx * sinr + cy * cosr
+    end
+    local w2, h2 = w / 2, h / 2
+    return { cx - w2 * cosr - h2 * sinr, cy + h2 * cosr - w2 * sinr,
+             cx + w2 * cosr - h2 * sinr, cy + h2 * cosr + w2 * sinr,
+             cx + w2 * cosr + h2 * sinr, cy - h2 * cosr + w2 * sinr,
+             cx - w2 * cosr + h2 * sinr, cy - h2 * cosr - w2 * sinr }
+end
+
+---旋转四边形
+---Rotate a quadrilateral
+---@param rotateCenter boolean 是否旋转中心 whether to rotate the center
+function M.RotateQuad(cx, cy, x1, y1, x2, y2, x3, y3, x4, y4, angle, rotateCenter)
+    local cosr, sinr = cos(angle), sin(angle)
+    if rotateCenter then
+        cx, cy = cx * cosr - cy * sinr, cx * sinr + cy * cosr
+    end
+    return {
+        cx + x1 * cosr - y1 * sinr, cy + x1 * sinr + y1 * cosr,
+        cx + x2 * cosr - y2 * sinr, cy + x2 * sinr + y2 * cosr,
+        cx + x3 * cosr - y3 * sinr, cy + x3 * sinr + y3 * cosr,
+        cx + x4 * cosr - y4 * sinr, cy + x4 * sinr + y4 * cosr
+    }
 end
 
 
