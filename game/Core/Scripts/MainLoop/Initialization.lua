@@ -31,8 +31,12 @@ MainLoop.AddEvent("Init", "Default", {
     func = Core.Object.InitAll,
 })
 MainLoop.AddEvent("Init", "Default", {
+    name = "Core.Display.Import",
+    func = Core.Display.Import,
+})
+MainLoop.AddEvent("Init", "Default", {
     name = "Core.Set.VideoMode",
-    func = Core.Display.Window.ChangeVideoMode,
+    func = Core.Display.Window.Refresh,
 })
 MainLoop.AddEvent("Init", "Default", {
     name = "Core.Reset.Screen",
