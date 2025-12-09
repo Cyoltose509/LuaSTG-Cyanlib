@@ -10,6 +10,9 @@ local RenderRect = lstg.RenderRect
 ---@overload fun(blend:string, a:number, r:number, g:number, b:number)
 ---@overload fun(blend:string, color:lstg.Color)
 function M.SetState(blend, c1, c2, c3, c4)
+    if not blend and not c1 then
+        return
+    end
     assert(type(blend) == "string", "blend must be a string")
     local white = Core.Resource.Image.Get("white")
     if type(c1) == "number" then
@@ -38,13 +41,13 @@ function M.Connect(x1, y1, x2, y2, w1, w2, cut1, cut2)
     cut2 = cut2 or 0
     w2 = w2 or w1
 
-    local rot = atan2(y2 - y1,x2 - x1)
+    local rot = atan2(y2 - y1, x2 - x1)
     local cosr, sinr = cos(rot), sin(rot)
     x1 = x1 + cut1 * cosr
     y1 = y1 + cut1 * sinr
     x2 = x2 - cut2 * cosr
     y2 = y2 - cut2 * sinr
-    local len = hypot(y2 - y1,x2 - x1 )
+    local len = hypot(y2 - y1, x2 - x1)
     local cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
     if w1 == w2 then
         M.Line(cx, cy, rot, len, w1)
@@ -86,8 +89,8 @@ function M.Sector(x, y, r1, r2, a1, a2, point, rot)
 end
 
 function M.RectOutline(x, y, w, h, rot, outl)
-    rot=rot or 0
-    outl=outl or 1
+    rot = rot or 0
+    outl = outl or 1
     local ox = w / 2 + outl / 2
     local oy = h / 2 + outl / 2
     M.Line(x + ox * cos(rot), y + ox * sin(rot), rot + 90, (h), outl)
@@ -100,7 +103,6 @@ function M.RectBrightOutline(x1, x2, y1, y2, ws, alpha, r, g, b, blend)
     blend = blend or "mul+add"
     local col1 = lstg.Color(0, r, g, b)
     local col2 = lstg.Color(alpha, r, g, b)
-    --Core.Render.Draw.setState( "mul+add", 666, 0, 0, 0)--刷新存储列表
     M.SetState(blend, col1, col1, col2, col2)
     M.Rect(x1, x2, y1, y1 + ws)
     M.Rect(x1, x2, y2, y2 - ws)
@@ -111,13 +113,10 @@ function M.RectBrightOutline(x1, x2, y1, y2, ws, alpha, r, g, b, blend)
 end
 
 ---渲染圆角矩形
----或者说尖角长六边形
 function M.RoundedRect(x1, x2, y1, y2, rr, point)
     point = point or 1
 
-    M.Rect(x1 + rr, x2 - rr, y1 + rr, y2 - rr)
-    M.Rect(x1 + rr, x2 - rr, y1, y1 + rr)
-    M.Rect(x1 + rr, x2 - rr, y2 - rr, y2)
+    M.Rect(x1 + rr, x2 - rr, y1, y2)
     M.Rect(x1, x1 + rr, y1 + rr, y2 - rr)
     M.Rect(x2 - rr, x2, y1 + rr, y2 - rr)
     M.Sector(x1 + rr, y2 - rr, 0, rr, 90, 180, point)

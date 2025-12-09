@@ -4,7 +4,7 @@ Core.Data.Setting = M
 
 local KEY = Core.Input.Keyboard.Key
 local xKEY = Core.Input.Xinput.Key
-local resx, resy = Core.Display.GetResolution()
+local resx, resy = Core.Display.GetSize()
 ---@class Core.Data.Setting.Settings
 local default_setting = {
     reso_value = math.floor(resy * 0.8),

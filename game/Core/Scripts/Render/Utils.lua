@@ -19,6 +19,7 @@ end
 ---@overload fun(image:string, blend:string, color:lstg.Color)
 function M.SetImageState(image, blend, c1, c2, c3, c4)
     local img = Core.Resource.Image.Get(image)
+    assert(img, "Image not found: " .. image)
     if type(c1) == "number" then
         img:setState(blend, lstg.Color(c1, c2, c3, c4))
     else
@@ -31,6 +32,7 @@ end
 ---@overload fun(animation:string, blend:string, color:lstg.Color)
 function M.SetAnimationState(animation, blend, c1, c2, c3, c4)
     local ani = Core.Resource.Animation.Get(animation)
+    assert(ani, "Animation not found: " .. animation)
     if type(c1) == "number" then
         ani:setState(blend, lstg.Color(c1, c2, c3, c4))
     else
@@ -42,6 +44,7 @@ end
 ---@overload fun(font:string, blend:string, color:lstg.Color)
 function M.SetFontState(font, blend, a, r, g, b)
     local fnt = Core.Resource.Font.Get(font)
+    assert(fnt, "Font not found: " .. font)
     if type(a) == "number" then
         fnt:setState(blend, lstg.Color(a, r, g, b))
     else
@@ -225,46 +228,6 @@ local function buildFmt(...)
     end
     return fmt
 end
-local function simpleFmt(...)
-    local halign = 0
-    local valign = 0
-    for _, v in ipairs({ ... }) do
-        if v == "center" then
-            halign = 1
-        elseif v == "right" then
-            halign = 2
-        elseif v == "vcenter" then
-            valign = 1
-        elseif v == "bottom" then
-            valign = 2
-        elseif v == "centerpoint" then
-            halign = 1
-            valign = 1
-        end
-    end
-    return halign, valign
-end
-
-local function getStrokePos(ix, iy, l, r, b, t, halign, valign)
-    local w, h = r - l, t - b
-    local x, y = ix, iy
-    if halign == 0 then
-        x = x - l -- 使左边缘对齐 x
-    elseif halign == 1 then
-        x = (x - l) - (w / 2) -- 居中
-    else
-        -- "right"
-        x = x - r -- 使右边缘对齐 x
-    end
-    if valign == 0 then
-        y = y - t -- 使顶边缘对齐 y
-    elseif valign == 1 then
-        y = (y - b) - (h / 2) -- 居中
-    else
-        y = y - b -- 使底边缘对齐 y
-    end
-    return x, y
-end
 
 function M.Font(fontname, text, x, y, size, ...)
     lstg.RenderText(fontname, text, x, y, size, buildFmt(...))
@@ -275,194 +238,6 @@ function M.TextSimple(ttfname, text, x, y, scale, color, ...)
     lstg.RenderTTF(ttfname, text, x, x, y, y, fmt, color, scale)
 end
 
-function M.TextInRect(ttfname, text, left, right, bottom, top, scale, color, ...)
-    lstg.RenderTTF(ttfname, text, left, right, bottom, top, buildFmt(...), color, scale)
-end
-
----绘制文本，支持对齐方式、旋转、缩放、混合模式、颜色等参数
----不支持多行渲染（可能会出问题）
----Render Text with alignment, rotation, scaling, blend mode, and color parameters
----Does not support multi-line rendering (may cause problems)
----@param ttfname string
----@param blend lstg.BlendMode
----@param color lstg.Color
-function M.TextAdvanced(ttfname, text, x, y, rot, hscale, vscale, blend, color, ...)
-    rot = rot or 0
-    hscale = hscale or 1
-    vscale = vscale or 1
-    blend = blend or Core.Render.BlendMode.Default
-    color = color or Core.Render.Color.Default
-    local fr = lstg.FontRenderer
-    fr.SetFontProvider(ttfname)
-    fr.SetScale(hscale / 2, vscale / 2)
-
-    local x0, y0 = x, y
-    local l, r, b, t = fr.MeasureTextBoundary(text)
-    x, y = getStrokePos(x, y, l, r, b, t, ...)
-
-    local cos_v = cos(rot)
-    local sin_v = sin(rot)
-    local dx = x - x0
-    local dy = y - y0
-    local x1 = x0 + dx * cos_v - dy * sin_v
-    local y1 = y0 + dx * sin_v + dy * cos_v
-
-    -- 绘制
-
-    local ret, x2, y2 = fr.RenderTextInSpace(text, x1, y1, 0.5,
-            cos(rot), sin(rot), 0,
-            cos(rot - 90), sin(rot - 90), 0,
-            blend, color)
-    assert(ret)
-
-    return x2, y2
-end
-
----绘制斜体文本
----用向量模拟斜体效果
----仅支持单行渲染
----Render italic text with vector simulation
----Only supports single-line rendering
-function M.TextItalic(ttfname, text, x, y, size, color, ...)
-    size = size or 1
-    color = color or Core.Render.Color.Default
-
-    local fr = lstg.FontRenderer
-    fr.SetFontProvider(ttfname)
-    fr.SetScale(size / 2, size / 2)
-
-    local l, r, b, t = fr.MeasureTextBoundary(text)
-    x, y = getStrokePos(x, y, l, r, b, t, simpleFmt(...))
-
-    local ret, x2, y2 = fr.RenderTextInSpace(text, x, y, 0.5, 1, 0, 0, -0.1, -1, 0, "", color)
-    assert(ret)
-    return x2, y2
-
-end
-
----绘制文本，支持最大宽度限制
----仅支持单行渲染
----Render text with maximum width limit
----Only supports single-line renderings
-function M.TextMaxWidth(ttfname, text, x, y, size, maxw, color, ...)
-    size = size or 1
-    maxw = maxw or math.huge
-    color = color or Core.Render.Color.Default
-
-    size = size / 2
-    -- 设置字体
-
-    local fr = lstg.FontRenderer
-    fr.SetFontProvider(ttfname)
-    fr.SetScale(size, size)
-
-    -- 计算笔触位置
-    local l, r, b, t = fr.MeasureTextBoundary(text)
-    local w = r - l
-    if w > maxw then
-        fr.SetScale(size * maxw / w, size)
-        w = maxw
-        r = l + w
-    end
-
-    x, y = getStrokePos(x, y, l, r, b, t, simpleFmt(...))
-
-    -- 绘制
-    local ret, x2, y2 = fr.RenderTextInSpace(text, x, y, 0.5, 1, 0, 0, 0, -1, 0, "", color)
-    assert(ret)
-    return x2, y2
-end
-
-local text_command = {
-    ["d"] = function()
-        return 255, 255, 255, 1, 1
-    end, --default
-    ["r"] = function()
-        return 255, 130, 130
-    end, --red
-    ["b"] = function()
-        return 130, 130, 255
-    end, --blue
-    ["c"] = function()
-        return 130, 255, 255
-    end, --cyan
-    ["o"] = function()
-        return 255, 255, 130
-    end, --orange
-    ["g"] = function()
-        return 130, 255, 130
-    end, --green
-    ["y"] = function()
-        return 255, 227, 132
-    end, --yellow,
-    ["p"] = function()
-        return 255, 130, 255
-    end, --purple
-    ["-"] = function()
-        return 150, 150, 150
-    end, --gray
-}
---TODO
----简单的富文本
----text内指令实现多颜色，多大小渲染一串字符，仅支持单行渲染
----使用例：§r 红色 §b 蓝色 §c 青色 §o 橙色 §g 绿色 §y 黄色 §p 紫色 §- 灰色
----Simple rich text
----The text command implements multi-color, multi-size rendering of a string, and only single-line rendering is supported.
----Example: §r red §b blue §c cyan §o orange §g green §y yellow §p purple §- gray
-function M.TextRich(ttfname, format_text, x, y, size, alpha, black, ...)
-    size = size * 0.5
-    local fr = lstg.FontRenderer
-    fr.SetFontProvider(ttfname)
-
-    local init_R, init_G, init_B = 255, 255, 255
-    if black then
-        init_R, init_G, init_B = 0, 0, 0
-    end
-    local init_color = lstg.Color(alpha, init_R, init_G, init_B)
-    local init_size = 1
-    local split_str = "§"
-    local strs = string.split(format_text, split_str)
-    local x_off = 0
-    local l, r, b, t
-    local w, h
-    local init_A = 1
-    fr.SetScale(size * init_size, size * init_size)
-    local pure_texts = {}
-    for i, v in ipairs(strs) do
-        if i == 1 then
-            pure_texts[i] = v
-        else
-            pure_texts[i] = v:sub(2)
-        end
-    end
-    l, r, b, t = fr.MeasureTextBoundary(table.concat(pure_texts, " "))
-    w, h = r - l, t - b
-    x, y = getStrokePos(x, y, l, r, b, t, simpleFmt(...))
-    for i, text in ipairs(strs) do
-        if i ~= 1 then
-            local R, G, B, Ai, sizei = text_command[text:sub(1, 1)]()
-            text = " " .. text:sub(2)
-            if Ai then
-                init_A = Ai
-            end
-            if sizei then
-                init_size = sizei
-            end
-            if not black then
-                if R then
-                    init_R, init_G, init_B = R, G, B
-                end
-            end
-            init_color = Color(alpha * init_A, init_R, init_G, init_B)
-        end
-        fr.SetScale(size * init_size, size * init_size)
-        l, r = fr.MeasureTextBoundary(text)
-        w = r - l
-        -- 绘制
-        fr.RenderTextInSpace(text, x + x_off, y, 0.5, 1, 0, 0, 0, -1, 0, "", init_color)
-        x_off = x_off + w
-    end
-end
 
 
 

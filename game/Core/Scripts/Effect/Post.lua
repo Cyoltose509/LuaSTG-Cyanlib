@@ -149,6 +149,7 @@ end
 ---@param offx number 色散横向偏移
 ---@param offy number 色散纵向偏移
 ---@param colors table[3] 色彩列表，默认为{Render.Color.Red, Render.Color.Green, Render.Color.Blue}
+---@return Core.Effect.Post.Func
 function M.DirectionalChromatic(offx, offy, colors)
     colors = colors or colsRGB
     offx, offy = offx or 0, offy or 0
@@ -182,6 +183,7 @@ end
 ---@param yoffset number 垂直偏移量
 ---@param color lstg.Color 颜色
 ---@param blend lstg.BlendMode 混合模式
+---@return fun(rtName:string, x0:number, y0:number, scale:number)
 function M.Transform(rotation, hscale, vscale, xoffset, yoffset, color, blend)
     rotation = rotation or 0
     hscale = hscale or 1
