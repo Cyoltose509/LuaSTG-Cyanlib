@@ -66,7 +66,7 @@ function M.Main(self)
                           :setWH(1000, 1000)
                           :setGrid(9, 9)
               --  :setSpacing(10)
-                          :setLockAspectRatio(false)
+                          :enableLockAspectRatio(false)
         local texture = Core.Resource.Texture.Get("test")
         local w, h = texture:getSize()
 
