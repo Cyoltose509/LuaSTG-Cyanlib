@@ -66,7 +66,6 @@ function M.Refresh()
     end
 end
 
-M.SetFPS = lstg.SetFPS
-M.GetFPS = lstg.GetFPS
+
 M.SetSplash = lstg.SetSplash
 M.SetTitle = lstg.SetTitle

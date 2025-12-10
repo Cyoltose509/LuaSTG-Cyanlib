@@ -96,11 +96,13 @@ MainLoop.AddEvent("Frame", "Gameplay", {
     name = "Core.Object.After",
     func = function()
         lstg.ObjFrame(2)
+        Core.Collision.UpdateColliders()
         local nopause = lstg.GetCurrentSuperPause() <= 0
         if nopause then
             lstg.BoundCheck(2)
             Core.Object.Group.CollisionCheck()
         end
+        Core.Collision.CheckCollisions()
     end,
     labels = { Label.Gameplay },
 })
@@ -156,16 +158,13 @@ MainLoop.AddEvent("SceneChangeBefore", "Default", {
     end,
 })
 MainLoop.AddEvent("SceneChangeBefore", "Default", {
-    name = "Core.Reset.Collision.Pairs",
-    func = function()
-        Core.Object.Group.ResetCollisionPairs(2)
-    end,
-})
-MainLoop.AddEvent("SceneChangeBefore", "Default", {
     name = "Core.Exit.Save.Data",
     func = Core.Data.Score.Save,
 })
 MainLoop.AddEvent("SceneChangeBefore", "Default", {
     name = "Core.Reset.Pool",
-    func = lstg.ResetPool,
+    func = function()
+        lstg.ResetPool()
+        Core.Collision.ResetColliders()
+    end,
 })

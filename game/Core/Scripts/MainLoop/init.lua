@@ -5,8 +5,9 @@ Core.MainLoop = M
 M.HasInitialized = false
 M.ExitFlag = false
 M.EventListener = Core.Lib.EventListener()
-M.Ticker = 0
-M.Speed = 1
+M.DoTicker = 0
+M.DoSpeed = 1
+M.FPS = 60
 
 M.Label = {
     Gameplay = "Gameplay",
@@ -100,10 +101,10 @@ M.DefineEventGroup("SceneChangeAfter", "Default")
 
 M.DefineEventGroup("Frame", "Before")
 M.DefineEventGroup("Frame", "Gameplay", nil, function(self)
-    M.Ticker = M.Ticker + M.Speed
-    while M.Ticker > 0 do
+    M.DoTicker = M.DoTicker + M.DoSpeed
+    while M.DoTicker > 0 do
         M.EventListener:dispatch(self.realName)
-        M.Ticker = M.Ticker - 1
+        M.DoTicker = M.DoTicker - 1
     end
 end)
 M.DefineEventGroup("Frame", "After")
@@ -179,11 +180,21 @@ function M.RemoveEvent(loopGroup, eventGroup, name)
 end
 
 function M.SetSpeed(speed)
-    M.Speed = speed
+    M.DoSpeed = speed
 end
 
 function M.GetEventListener()
     return M.EventListener
+end
+
+M.GetFPS = lstg.GetFPS
+function M.SetFPS(fps)
+    lstg.SetFPS(fps)
+    M.FPS = fps
+    if Core.Time then
+        Core.Time._Delta = 1 / M.FPS
+        Core.Time.SetSpeed(Core.Time.GetSpeed())
+    end
 end
 
 GameInit = M.Init
