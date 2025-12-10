@@ -3,7 +3,7 @@
 local M = {}
 STG.Shots.Laser.Collider = M
 
-local Object = Core.Object
+local Object = STG.Object
 local AttributeProxy = Object.AttributeProxy
 
 

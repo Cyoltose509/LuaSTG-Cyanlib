@@ -6,7 +6,7 @@
 local M = {}
 STG.Shots = M
 
-local Object = Core.Object
+local Object = STG.Object
 ---颜色表
 ---如果是string的话则是颜色id，如果是number的话则是color索引
 M.Color = {

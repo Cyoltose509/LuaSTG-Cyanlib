@@ -4,7 +4,7 @@
 local M = {}
 STG.Shots.Bullet = M
 
-local Object = Core.Object
+local Object = STG.Object
 
 local function DelBulletFunc(self, drop_p)
     local w = Core.World.GetMain()

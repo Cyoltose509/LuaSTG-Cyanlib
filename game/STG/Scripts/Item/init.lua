@@ -2,7 +2,7 @@
 local M = {}
 STG.Item = M
 
-local Object = Core.Object
+local Object = STG.Object
 
 local sound
 

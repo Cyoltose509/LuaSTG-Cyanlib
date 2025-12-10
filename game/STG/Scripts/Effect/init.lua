@@ -2,7 +2,7 @@
 local M = {}
 STG.Effect = M
 
-local Object = Core.Object
+local Object = STG.Object
 
 local hinter = Object.Define()
 function hinter:frame()

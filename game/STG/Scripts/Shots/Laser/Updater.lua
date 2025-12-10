@@ -2,7 +2,7 @@
 local Updater = {}
 STG.Shots.Laser.Updater = Updater
 
-local Object = Core.Object
+local Object = STG.Object
 local Base = STG.Shots.Laser.Base
 
 function Updater:init()

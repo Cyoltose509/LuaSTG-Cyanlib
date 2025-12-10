@@ -61,7 +61,7 @@ function Updater.CollisionCheck()
                     local len = sqrt(lx * lx + ly * ly)
                     local rot = atan2(ly, lx)
                     local cosr, sinr = cos(rot), sin(rot)
-                    for other in Object.Group.GetToCollide(obj) do
+                    for other in Object.Group.GetToCollide(obj.group) do
                         local dx = other.x - p1.x
                         local dy = other.y - p1.y
                         dx, dy = dx * cosr + dy * sinr, dy * cosr - dx * sinr

@@ -122,7 +122,7 @@ local RenderEventObj = Core.Object.Define(Core.Object.Base, {
         self.updatef = updatef
         self.colli = false
         self.bound = false
-        self.group = Core.Object.Group.Ghost
+        self.group = 0
         self.master = master
     end,
     frame = function(self)

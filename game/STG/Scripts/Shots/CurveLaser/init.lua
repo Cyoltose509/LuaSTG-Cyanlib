@@ -5,7 +5,7 @@ local M = {}
 STG.Shots.CurveLaser = M
 
 local Task = Core.Task
-local Object = Core.Object
+local Object = STG.Object
 
 local AttributeProxy = Object.AttributeProxy
 

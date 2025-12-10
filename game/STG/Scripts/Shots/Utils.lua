@@ -2,7 +2,7 @@
 local M = {}
 STG.Shots.Utils = M
 
-local Object = Core.Object
+local Object = STG.Object
 local Base = STG.Shots.Bullet.Base
 local Task = Core.Task
 local MulAdd = Core.Render.BlendMode.MulAdd
