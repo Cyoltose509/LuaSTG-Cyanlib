@@ -14,20 +14,30 @@ function M:init()
 end
 ---@return self
 function M:lockRoundAspect(enable)
-    self.lock_round_aspect = enable
-    self._need_update = true
+    enable = enable or false
+    if self.lock_round_aspect ~= enable then
+        self.lock_round_aspect = enable
+        self._need_update = true
+    end
     return self
 end
 ---@return self
 function M:setRoundSize(size)
-    self.round_size = size
-    self._need_update = true
+    size = size or 10
+    if self.round_size ~= size then
+        self.round_size = size
+        self._need_update = true
+    end
     return self
 end
 ---@return self
 function M:setRoundSeg(seg)
-    self.round_seg = seg
-    self._need_update = true
+    seg = seg or 1
+    seg = max(1, seg)
+    if self.round_seg ~= seg then
+        self.round_seg = seg
+        self._need_update = true
+    end
     return self
 end
 function M:update()

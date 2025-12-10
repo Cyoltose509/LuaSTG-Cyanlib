@@ -40,12 +40,18 @@ function M:setState(blend, c1, c2, c3, c4)
     return self
 end
 function M:setUV(x, y, width, height)
-    self.uvX = x
-    self.uvY = y
-    self.uvW = width
-    self.uvH = height
-    self:setWH(width, height)
-    self._need_update = true
+    x = x or self.uvX
+    y = y or self.uvY
+    width = width or self.uvW
+    height = height or self.uvH
+    if x ~= self.uvX or y ~= self.uvY or width ~= self.uvW or height ~= self.uvH then
+        self.uvX = x
+        self.uvY = y
+        self.uvW = width
+        self.uvH = height
+        self:setWH(width, height)
+        self._need_update = true
+    end
     return self
 end
 function M:setTexture(tex, notSetUV)

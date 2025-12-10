@@ -1,6 +1,10 @@
 ---@class Core.UI.Draw.Parallelogram : Core.UI.Draw.Rect
 local M = Core.Class(Core.UI.Draw.Rect)
 Core.UI.Draw.Parallelogram = M
+
+M:addSerializeSimple(Core.UI.Draw.Rect, "skew_angle")
+
+
 function M:init()
     Core.UI.Draw.Rect.init(self)
     self.name = "Draw.Parallelogram"
@@ -9,8 +13,11 @@ function M:init()
 end
 
 function M:setSkewAngle(angle)
-    self.skew_angle = angle
-    self._need_update = true
+    angle = angle or 90
+    if angle ~= self.skew_angle then
+        self.skew_angle = angle
+        self._need_update = true
+    end
     return self
 end
 

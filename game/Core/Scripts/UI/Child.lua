@@ -168,8 +168,11 @@ function M:setPos(x, y)
 end
 ---@return self
 function M:setRotation(rot)
-    self.rot = rot
-    self._need_update = true
+    rot = rot or 0
+    if rot ~= self.rot then
+        self.rot = rot
+        self._need_update = true
+    end
     return self
 end
 ---初始化节点属性
@@ -296,7 +299,6 @@ function M:ignoreLayoutScale(enable)
     end
     return self
 end
-
 
 function M:getScale()
     if self.ignore_layout_scale then

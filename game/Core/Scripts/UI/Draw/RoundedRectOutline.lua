@@ -11,8 +11,11 @@ function M:init()
     self.outline_width = 2
 end
 function M:setOutlineWidth(width)
-    self.outline_width = width or self.outline_width
-    self._need_update = true
+    width = width or 2
+    if self.outline_width ~= width then
+        self.outline_width = width
+        self._need_update = true
+    end
     return self
 end
 function M:update()

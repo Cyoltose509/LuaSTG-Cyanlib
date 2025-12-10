@@ -1,6 +1,9 @@
 ---@class Core.UI.Draw.ParallelogramOutline : Core.UI.Draw.Parallelogram
 local M = Core.Class(Core.UI.Draw.Parallelogram)
 Core.UI.Draw.ParallelogramOutline = M
+
+M:addSerializeSimple(Core.UI.Draw.Parallelogram, "outline_width")
+
 function M:init()
     Core.UI.Draw.Parallelogram.init(self)
     self.name = "Draw.ParallelogramOutline"
@@ -9,8 +12,11 @@ function M:init()
 end
 
 function M:setOutlineWidth(width)
-    self.outline_width = width or self.outline_width
-    self._need_update = true
+    width = width or 2
+    if self.outline_width ~= width then
+        self.outline_width = width
+        self._need_update = true
+    end
     return self
 end
 

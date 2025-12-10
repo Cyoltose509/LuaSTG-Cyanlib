@@ -13,21 +13,33 @@ function M:init()
     self.seg = 4
 end
 function M:setRadius(radius1, radius2)
-    self.radius1 = radius1 or self.radius1
-    self.radius2 = radius2 or self.radius2
-    self:setWH(self.radius1 * 2, self.radius2 * 2)
-    self._need_update = true
+    radius1 = radius1 or self.radius1
+    radius2 = radius2 or self.radius2
+    if self.radius1 ~= radius1 or self.radius2 ~= radius2 then
+        self.radius1 = radius1
+        self.radius2 = radius2
+        self:setWH(self.radius1 * 2, self.radius2 * 2)
+        self._need_update = true
+    end
     return self
 end
 function M:setAngle(angle1, angle2)
-    self.angle1 = angle1 or self.angle1
-    self.angle2 = angle2 or self.angle2
-    self._need_update = true
+    angle1 = angle1 or self.angle1
+    angle2 = angle2 or self.angle2
+    if self.angle1 ~= angle1 or self.angle2 ~= angle2 then
+        self.angle1 = angle1
+        self.angle2 = angle2
+        self._need_update = true
+    end
     return self
 end
 function M:setSeg(seg)
-    self.seg = seg or self.seg
-    self._need_update = true
+    seg = seg or 3
+    seg = max(3, seg)
+    if self.seg ~= seg then
+        self.seg = seg
+        self._need_update = true
+    end
     return self
 end
 function M:update()

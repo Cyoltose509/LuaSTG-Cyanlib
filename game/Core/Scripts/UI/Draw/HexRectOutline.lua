@@ -1,6 +1,9 @@
 ---@class Core.UI.Draw.HexRectOutline : Core.UI.Draw.Rect
 local M = Core.Class(Core.UI.Draw.Rect)
 Core.UI.Draw.HexRectOutline = M
+
+M:addSerializeSimple(Core.UI.Draw.Rect, "outline_width")
+
 function M:init()
     Core.UI.Draw.Rect.init(self)
     self.name = "Draw.HexRectOutline"
@@ -8,8 +11,11 @@ function M:init()
     self.outline_width = 2
 end
 function M:setOutlineWidth(width)
-    self.outline_width = width or self.outline_width
-    self._need_update = true
+    width = width or 2
+    if self.outline_width ~= width then
+        self.outline_width = width
+        self._need_update = true
+    end
     return self
 end
 local pos_map = {

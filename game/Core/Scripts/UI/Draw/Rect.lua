@@ -16,28 +16,38 @@ end
 
 ---@return self
 function M:setRect(left, right, bottom, top)
-    self.left = left or self.left
-    self.right = right or self.right
-    self.bottom = bottom or self.bottom
-    self.top = top or self.top
-    self.draw_width = self.right - self.left
-    self.draw_height = self.top - self.bottom
-    self:setPos((self.left + self.right) / 2, (self.bottom + self.top) / 2)
-    self:setWH(self.draw_width, self.draw_height)
-    self._need_update = true
+    left=left or self.left
+    right=right or self.right
+    bottom=bottom or self.bottom
+    top=top or self.top
+    if self.left ~= left or self.right ~= right or self.bottom ~= bottom or self.top ~= top then
+        self.left = left
+        self.right = right
+        self.bottom = bottom
+        self.top = top
+        self.draw_width = self.right - self.left
+        self.draw_height = self.top - self.bottom
+        self:setPos((self.left + self.right) / 2, (self.bottom + self.top) / 2)
+        self:setWH(self.draw_width, self.draw_height)
+        self._need_update = true
+    end
     return self
 end
 
 ---@return self
 function M:setDrawSize(width, height)
-    self.draw_width = width or self.draw_width
-    self.draw_height = height or self.draw_height
-    self.left = self._x - self.draw_width / 2
-    self.right = self._x + self.draw_width / 2
-    self.bottom = self._y - self.draw_height / 2
-    self.top = self._y + self.draw_height / 2
-    self:setWH(self.draw_width, self.draw_height)
-    self._need_update = true
+    width = width or self.width
+    height = height or self.height
+    if self.draw_width ~= width or self.draw_height ~= height then
+        self.draw_width = width
+        self.draw_height = height
+        self.left = self._x - self.draw_width / 2
+        self.right = self._x + self.draw_width / 2
+        self.bottom = self._y - self.draw_height / 2
+        self.top = self._y + self.draw_height / 2
+        self:setWH(self.draw_width, self.draw_height)
+        self._need_update = true
+    end
     return self
 end
 
