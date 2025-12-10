@@ -276,20 +276,5 @@ end
 ---Initialize the input module.
 ---Define some common buttons and virtual axes, which can be used easily.
 function M.Init()
-    local keyboard = M.Keyboard
-    M.RegisterAxis("MoveRight", function()
-        return keyboard.IsPressed(keyboard.Key.A)
-    end, function()
-        return keyboard.IsPressed(keyboard.Key.D)
-    end, 0.2)
-    M.RegisterAxis("MoveUp", function()
-        return keyboard.IsPressed(keyboard.Key.Shift)
-    end, function()
-        return keyboard.IsPressed(keyboard.Key.Space)
-    end, 0.2)
-    M.RegisterAxis("MoveForward", function()
-        return keyboard.IsPressed(keyboard.Key.S)
-    end, function()
-        return keyboard.IsPressed(keyboard.Key.W)
-    end, 0.2)
+
 end

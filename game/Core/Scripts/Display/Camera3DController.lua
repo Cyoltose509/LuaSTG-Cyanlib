@@ -17,6 +17,23 @@ function M:init(camera)
     self.yaw = self.camera.yaw
     self._pitch = self.pitch
     self._yaw = self.yaw
+
+    local keyboard = Core.Input.Keyboard
+    Core.Input.RegisterAxis("MoveRight", function()
+        return keyboard.IsPressed(keyboard.Key.A)
+    end, function()
+        return keyboard.IsPressed(keyboard.Key.D)
+    end, 0.2)
+    Core.Input.RegisterAxis("MoveUp", function()
+        return keyboard.IsPressed(keyboard.Key.Shift)
+    end, function()
+        return keyboard.IsPressed(keyboard.Key.Space)
+    end, 0.2)
+    Core.Input.RegisterAxis("MoveForward", function()
+        return keyboard.IsPressed(keyboard.Key.S)
+    end, function()
+        return keyboard.IsPressed(keyboard.Key.W)
+    end, 0.2)
 end
 
 function M:frame()
@@ -37,7 +54,7 @@ function M:frame()
     self.yaw = self.yaw + (self._yaw - self.yaw) * self.smoothFactor
     self.camera:setRotation(self.pitch, self.yaw)
     self.camera:setFieldOfView(self.fov)
-    local vec=Core.Math.Vector3.New(Core.Input.GetAxis("MoveForward"),
+    local vec = Core.Math.Vector3.New(Core.Input.GetAxis("MoveForward"),
             Core.Input.GetAxis("MoveRight"),
             Core.Input.GetAxis("MoveUp"))
     if vec:magnitude() > 1 then
