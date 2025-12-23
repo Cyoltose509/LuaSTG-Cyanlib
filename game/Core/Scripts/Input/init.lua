@@ -18,8 +18,6 @@ M.Buttons = {}
 ---@type Core.Input.Axis[]
 M.Axes = {}
 
-
-
 --- Register a button with optional keyboard, xinput, and mouse bindings.
 ---@param name string
 ---@param keys Core.Input.Key[]
@@ -95,27 +93,25 @@ function M.ButtonUp(name)
     return false
 end
 
+
 --- Register an axis with left and right functions and optional smooth strength.
 --- The left and right functions should return true if the respective direction is active.
 --- The smooth strength is a value between 0 and 1 that controls the smoothing of the axis.
 ---@param name string The name of the axis.
----@param leftfunc fun():boolean The function to call when the left direction is active.
----@param rightfunc fun():boolean The function to call when the right direction is active.
----@param smoothStrength number
+---@param left_func fun():boolean The function to call when the left direction is active.
+---@param right_func fun():boolean The function to call when the right direction is active.
 ---@return Core.Input.Axis
-function M.RegisterAxis(name, leftfunc, rightfunc, smoothStrength)
-    assert(type(leftfunc) == "function", "Left function must be a function")
-    assert(type(rightfunc) == "function", "Right function must be a function")
-    smoothStrength = clamp(smoothStrength or 1, 0, 1)
+function M.RegisterAxis(name, left_func, right_func)
+    assert(type(left_func) == "function", "Left function must be a function")
+    assert(type(right_func) == "function", "Right function must be a function")
     ---@class Core.Input.Axis
     local axisUnit = {
         name = name,
-        left = leftfunc,
-        right = rightfunc,
+        left = left_func,
+        right = right_func,
         value = 0,
         left_timer = 0,
         right_timer = 0,
-        smooth = smoothStrength,
     }
     M.Axes[name] = axisUnit
     return axisUnit
@@ -132,6 +128,30 @@ function M.GetAxis(name)
     if not axis then
         return 0
     end
+    local left = axis.left()
+    local right = axis.right()
+    local value = 0
+    if left then
+        axis.left_timer = axis.left_timer + 1
+        value = value - 1
+    else
+        axis.left_timer = 0
+    end
+    if right then
+        axis.right_timer = axis.right_timer + 1
+        value = value + 1
+    else
+        axis.right_timer = 0
+    end
+    if left and right then
+        if axis.left_timer < axis.right_timer then
+            value = -1
+        elseif axis.left_timer > axis.right_timer then
+            value = 1
+        end
+    end
+    axis.value = value
+
     return axis.value
 end
 
@@ -159,7 +179,7 @@ function M.AxisUpdate()
                 value = 1
             end
         end
-        axis.value = axis.value + (value - axis.value) * axis.smooth
+        axis.value = value
 
     end
 end
@@ -168,7 +188,7 @@ function M.Update()
     M.Keyboard.Update()
     M.Mouse.Update()
     M.Xinput.Update()
-    M.AxisUpdate()
+    --M.AxisUpdate()
 end
 
 ---触发重复按键的间隔
