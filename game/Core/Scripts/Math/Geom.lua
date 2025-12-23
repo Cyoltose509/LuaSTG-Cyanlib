@@ -73,6 +73,23 @@ function M.PointOnSegment(mp, p1, p2, offset)
     return distance <= offset
 end
 
+local SQRT3=sqrt(3)
+---判断点是否在正六边形内
+function M.PointInHexagon(px, py, cx, cy, a)
+    local dx = abs(px - cx)
+    local dy = abs(py - cy)
+    if dy > SQRT3 / 2 * a then
+        return false
+    end
+    if dx > a then
+        return false
+    end
+    if SQRT3 * dx + dy > SQRT3 * a then
+        return false
+    end
+    return true
+end
+
 ---输入矩形参数
 ---返回矩形4个顶点的坐标
 ---Input rect parameters
