@@ -4,8 +4,6 @@
 ---@field Camera Core.Display.Camera
 ---@field Camera2D fun():Core.Display.Camera2D
 ---@field Camera3D fun():Core.Display.Camera3D
----@field Camera2DController fun(camera:Core.Display.Camera2D):Core.Display.Camera2DController
----@field Camera3DController fun(camera:Core.Display.Camera3D):Core.Display.Camera3DController
 local M = {}
 Core.Display = M
 
@@ -14,8 +12,6 @@ require("Core.Scripts.Display.Window")
 require("Core.Scripts.Display.Camera")
 require("Core.Scripts.Display.Camera2D")
 require("Core.Scripts.Display.Camera3D")
-require("Core.Scripts.Display.Camera2DController")
-require("Core.Scripts.Display.Camera3DController")
 
 local Display = require("lstg.Display")
 ---@type lstg.Display

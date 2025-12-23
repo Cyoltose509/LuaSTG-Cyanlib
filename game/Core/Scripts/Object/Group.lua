@@ -21,7 +21,7 @@ local CollisionPairs = {}
 function M.GetCollisionPairs()
     return CollisionPairs
 end
-function M.RegisterCollisionPairs(group1, group2)
+function M.RegisterCollisionPair(group1, group2)
     assert(M.IsValid(group1) and M.IsValid(group2), "Invalid group")
     assert(group1 ~= group2, "group1 and group2 should not be the same")
     for i = 1, #CollisionPairs do
@@ -32,7 +32,7 @@ function M.RegisterCollisionPairs(group1, group2)
     end
     table.insert(CollisionPairs, { group1, group2 })
 end
-function M.UnregisterCollisionPairs(group1, group2)
+function M.UnregisterCollisionPair(group1, group2)
     for i = #CollisionPairs, 1, -1 do
         local v = CollisionPairs[i]
         if v[1] == group1 and v[2] == group2 then

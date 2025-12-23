@@ -35,5 +35,5 @@ local CollisionPairs = {
 }
 
 for _, pair in ipairs(CollisionPairs) do
-    Core.Object.Group.RegisterCollisionPairs(pair[1], pair[2])
+    Core.Object.Group.RegisterCollisionPair(pair[1], pair[2])
 end

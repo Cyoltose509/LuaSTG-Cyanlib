@@ -2,7 +2,7 @@ local Resource = Core.Resource
 Resource.SetResourcePool(Resource.PoolType.Global)
 
 local spath = "Core\\Assets\\Sprites\\"
-Resource.Image.NewFromFile("white", spath .. "white.png",true)
+Resource.Image.NewFromFile("white", spath .. "white.png")
 Resource.Image.NewFromFile("img_void", spath .. "img_void.png")
 Resource.Image.NewFromFile("bright", spath .. "bright.png",true)
 Resource.Image.NewFromFile("bright_fog", spath .. "bright_fog.png",true)
