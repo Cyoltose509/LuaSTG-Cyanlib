@@ -74,5 +74,14 @@ function M.PolarToCart(r, a)
     return r * cos(a), r * sin(a)
 end
 
+function M.Lerp(a, b, t)
+    return (1 - t) * a + t * b
+end
+
+local exp = math.exp
+function M.ExpInterp(a, b, k)
+    return a + (b - a) * (1 - exp(-k))
+end
+
 M.Dist = lstg.Dist
 M.Angle = lstg.Angle
