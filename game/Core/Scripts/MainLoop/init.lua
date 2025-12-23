@@ -189,12 +189,14 @@ end
 
 M.GetFPS = lstg.GetFPS
 function M.SetFPS(fps)
-    lstg.SetFPS(fps)
-    M.FPS = fps
-    if Core.Time then
-        Core.Time._Delta = 1 / M.FPS
-        Core.Time.SetSpeed(Core.Time.GetSpeed())
+    if not fps or fps <= 0 then
+        lstg.SetFPS(10000)
+        M.FPS = math.huge
+    else
+        lstg.SetFPS(fps)
+        M.FPS = fps
     end
+
 end
 
 GameInit = M.Init
