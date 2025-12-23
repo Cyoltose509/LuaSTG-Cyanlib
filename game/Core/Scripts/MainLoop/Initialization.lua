@@ -73,7 +73,11 @@ MainLoop.AddEvent("Frame", "Before", {
 MainLoop.AddEvent("Frame", "Gameplay", {
     name = "Core.Object.Before",
     func = function()
+
         lstg.AfterFrame(2)
+        if Core.Collision.Enable then
+            Core.Collision.BeforeUpdate()
+        end
     end,
     labels = { Label.Gameplay },
 })
@@ -96,13 +100,14 @@ MainLoop.AddEvent("Frame", "Gameplay", {
     name = "Core.Object.After",
     func = function()
         lstg.ObjFrame(2)
-        Core.Collision.UpdateColliders()
-        local nopause = lstg.GetCurrentSuperPause() <= 0
-        if nopause then
-            lstg.BoundCheck(2)
+
+        lstg.BoundCheck(2)
+        if Core.Collision.Enable then
+            Core.Collision.Update()
+            Core.Collision.CheckAll()
+        else
             Core.Object.Group.CollisionCheck()
         end
-        Core.Collision.CheckCollisions()
     end,
     labels = { Label.Gameplay },
 })
