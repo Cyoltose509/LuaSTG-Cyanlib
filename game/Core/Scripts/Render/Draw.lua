@@ -74,17 +74,33 @@ function M.Quad(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4)
     Render4V("white", x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4)
 end
 
+function M.Circle(x, y, r1, r2, point, z)
+    point = point or 30
+    z = z or 0.5
+    local ang = (360) / point
+    local angle
+    for i = 1, point do
+        angle = i * ang
+        M.Quad(x + r2 * cos(angle - ang), y + r2 * sin(angle - ang), z,
+                x + r1 * cos(angle - ang), y + r1 * sin(angle - ang), z,
+                x + r1 * cos(angle), y + r1 * sin(angle), z,
+                x + r2 * cos(angle), y + r2 * sin(angle), z)
+    end
+
+end
+
 ---渲染圆，扇形，环形，环扇形
-function M.Sector(x, y, r1, r2, a1, a2, point, rot)
+function M.Sector(x, y, r1, r2, a1, a2, point, rot, z)
     rot = rot or 0
+    z = z or 0.5
     local ang = (a2 - a1) / point
     local angle
     for i = 1, point do
         angle = a1 + ang * i + rot
-        M.Quad(x + r2 * cos(angle - ang), y + r2 * sin(angle - ang), 0.5,
-                x + r1 * cos(angle - ang), y + r1 * sin(angle - ang), 0.5,
-                x + r1 * cos(angle), y + r1 * sin(angle), 0.5,
-                x + r2 * cos(angle), y + r2 * sin(angle), 0.5)
+        M.Quad(x + r2 * cos(angle - ang), y + r2 * sin(angle - ang), z,
+                x + r1 * cos(angle - ang), y + r1 * sin(angle - ang), z,
+                x + r1 * cos(angle), y + r1 * sin(angle), z,
+                x + r2 * cos(angle), y + r2 * sin(angle), z)
     end
 end
 
