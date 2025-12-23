@@ -112,7 +112,7 @@ function M.AfterRender()
             if e.RenderOrigin then
                 lstg.RenderTexture(e.name, "", M.GetScreenUV())
             end
-            e.func(e.name, 0, 0, Core.Display.Screen.GetScale())
+            e.func(e.name, 0, 0, 1 / Core.Display.Screen.GetScale())
         end
     end
     for n in pairs(M.rtcount) do
