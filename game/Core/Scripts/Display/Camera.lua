@@ -14,9 +14,10 @@ function M.Render()
     M.Current = nil
 end
 function M.Frame()
+    local dt = Core.Time.Delta
     for _, camera in ipairs(M.List) do
-        Core.Task.Do(camera._shakeTask)
-        Core.Task.Do(camera)
+        Core.Task.Do(camera._shakeTask, dt)
+        Core.Task.Do(camera, dt)
         camera.renderEvents:dispatch("update")
     end
 end
@@ -39,6 +40,7 @@ function base:init()
     self.renderEvents:create("update")
     self.renderEvents:create("before")
     self.renderEvents:create("after")
+    self.responsiveViewport = false
 end
 ---@return self
 function base:register(level)
@@ -48,6 +50,12 @@ function base:register(level)
         return a.level < b.level
     end)
     return self
+end
+function base:fixedShake(time, strength, interval, way, fadeout_size_mode)
+
+end
+function base:shake(time, strength, interval, way, fadeout_size_mode)
+
 end
 function base:release()
     for _, c in ipairs(self.renderObjs) do
@@ -61,6 +69,9 @@ function base:release()
     end
     self.renderObjs = {}
     self.renderEvents = nil
+    if self.responsiveViewport then
+        Core.Display.Screen.UnregisterCamera(self)
+    end
     --TODO：是否需要释放RenderTarget？
 end
 
@@ -274,6 +285,7 @@ end
 
 ---@return self
 function base:setResponsiveViewport(enable)
+    self.responsiveViewport = enable
     if enable then
         Core.Display.Screen.RegisterCamera(self)
     else

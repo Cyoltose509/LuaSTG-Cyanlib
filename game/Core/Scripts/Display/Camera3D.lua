@@ -37,7 +37,7 @@ local function vec2_rot(x, y, r_deg)
     return x * cos_v - y * sin_v, x * sin_v + y * cos_v
 end
 
-function M:shake(time, strength, interval, way, fadeout_size_mode)
+function M:fixedShake(time, strength, interval, way, fadeout_size_mode)
     Core.Task.Clear(self._shakeTask)
     Core.Task.New(self._shakeTask, function()
         local times = time / interval
@@ -56,6 +56,39 @@ function M:shake(time, strength, interval, way, fadeout_size_mode)
             end
             a = a + 360 / way
             Core.Task.Wait(interval)
+        end
+        self._shake_x = 0
+        self._shake_y = 0
+        self._shake_z = 0
+    end)
+end
+
+function M:shake(time, strength, interval, way, fadeout_size_mode)
+    Core.Task.Clear(self._shakeTask)
+    Core.Task.New(self._shakeTask, function(dt)
+        local times = int(time / interval)
+        local a = 0
+        local size = strength
+        local timer = 0
+        local i = 1
+        while i < times do
+            if timer >= interval then
+                local fx, fy, fz = self:getForward()
+                local ux, uy, uz = self:getUp()
+                local rx, ry, rz = uy * fz - uz * fy, uz * fx - ux * fz, ux * fy - uy * fx
+                local x, y, z = size * cos(a), size * sin(a), 0
+                self._shake_x = x * rx + y * ux + z * fx
+                self._shake_y = x * ry + y * uy + z * fy
+                self._shake_z = x * rz + y * uz + z * fz
+                if fadeout_size_mode then
+                    size = strength * Core.Lib.Easing[fadeout_size_mode](1 - i / times)
+                end
+                a = a + 360 / way
+                i = i + 1
+                timer = timer % interval
+            end
+            timer = timer + dt
+            Core.Task.Wait()
         end
         self._shake_x = 0
         self._shake_y = 0
@@ -156,6 +189,7 @@ function M:setFieldOfView(fov)
 end
 
 ---@param enable boolean
+---@return self
 function M:setFogEnable(enable)
     self.fog_enable = enable
     return self
@@ -372,6 +406,23 @@ function M:setSkybox(skybox)
         self:apply()
     end)
     return self
+end
+
+function M:pointInScreen(x, y, off)
+    off = off or 0
+    return x >= self.viewport.left - off
+            and x <= self.viewport.right + off
+            and y >= self.viewport.bottom - off
+            and y <= self.viewport.top + off
+end
+
+---粗略计算一个球范围是否在屏幕内
+---用于简化渲染
+function M:sphereInScreen(px, py, pz, r)
+    local ux, uy, uz = self:getUp()
+    local x, y = self:worldToScreen(px, py, pz)
+    local x1, y1 = self:worldToScreen(px + ux, py + uy, pz + uz)
+    return self:pointInScreen(x, y, r * 2 * hypot(x1 - x, y1 - y))
 end
 
 function M:reset()
