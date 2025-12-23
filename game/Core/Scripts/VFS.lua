@@ -27,6 +27,11 @@ M.DirectoryExist = FileManager.DirectoryExist
 
 ---@return string
 function M.GetCurrentDirectory()
-    local path = debug.getinfo(2).source:match("^(.+/).-$")
-    return path or ""
+    local src = debug.getinfo(2, "S").source
+    if src:sub(1,1) == "@" then
+        src = src:sub(2)
+    end
+    local i = src:match("^.*()[/\\]")
+    return i and src:sub(1, i) or ""
 end
+
