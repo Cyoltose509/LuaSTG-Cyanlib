@@ -387,7 +387,7 @@ function M:init()
         local Y = -1000
         Core.Render.Draw.Quad(-s, Y, s, s, Y, s, s, Y, -s, -s, Y, -s)
     end)
-    self.camera_controller = Core.Display.Camera3DController(self.camera)--]
+    self.camera_controller =Test.Camera.Controller3D(self.camera)--]
 
     self.ui_root = Test.DataVisual.UI.Main(self)
     self.keyTriggerList = {}

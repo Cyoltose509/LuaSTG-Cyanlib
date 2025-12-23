@@ -1,6 +1,7 @@
----@class Core.Display.Camera2DController
+
+---@class Test.Camera.Controller2D
 local M = Core.Class()
-Core.Display.Camera2DController = M
+Test.Camera.Controller2D = M
 
 ---@param camera Core.Display.Camera2D
 function M:init(camera)

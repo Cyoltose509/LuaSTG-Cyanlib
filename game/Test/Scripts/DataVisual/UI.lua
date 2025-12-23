@@ -80,6 +80,7 @@ function M.Main(self)
                 mlayout:addChild(m)--]]
             end
         end
+        --[[
         local f = io.open("Test/Scripts/mlayout.json", "w")
         f:write(Core.Lib.Json.Serialize(mlayout:serialize()))
         f:close()--]]

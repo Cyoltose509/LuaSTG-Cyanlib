@@ -1,6 +1,6 @@
----@class Core.Display.Camera3DController
+---@class Test.Camera.Controller3D
 local M = Core.Class()
-Core.Display.Camera3DController = M
+Test.Camera.Controller3D = M
 
 ---@param camera Core.Display.Camera3D
 function M:init(camera)
@@ -23,17 +23,17 @@ function M:init(camera)
         return keyboard.IsPressed(keyboard.Key.A)
     end, function()
         return keyboard.IsPressed(keyboard.Key.D)
-    end, 0.2)
+    end)
     Core.Input.RegisterAxis("MoveUp", function()
         return keyboard.IsPressed(keyboard.Key.Shift)
     end, function()
         return keyboard.IsPressed(keyboard.Key.Space)
-    end, 0.2)
+    end)
     Core.Input.RegisterAxis("MoveForward", function()
         return keyboard.IsPressed(keyboard.Key.S)
     end, function()
         return keyboard.IsPressed(keyboard.Key.W)
-    end, 0.2)
+    end)
 end
 
 function M:frame()

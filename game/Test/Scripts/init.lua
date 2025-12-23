@@ -1,5 +1,6 @@
 Test = {}
 
+require("Test.Scripts.Camera")
 require("Test.Scripts.DataVisual")
 require("Test.Scripts.STG")
 
