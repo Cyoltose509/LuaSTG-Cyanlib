@@ -12,6 +12,7 @@ function M:init()
     self.skew_angle = 90
 end
 
+---@return self
 function M:setSkewAngle(angle)
     angle = angle or 90
     if angle ~= self.skew_angle then

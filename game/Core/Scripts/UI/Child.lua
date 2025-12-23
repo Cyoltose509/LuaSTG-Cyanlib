@@ -108,6 +108,14 @@ function M:before_update()
         end
     end
 end
+function M:refreshXY()
+    self._x, self._y = self:getXY()
+    return self
+end
+function M:refreshScale()
+    self._hscale, self._vscale = self:getScale()
+    return self
+end
 function M:update()
     if self._need_sort then
         table.sort(self.children, function(a, b)
@@ -118,8 +126,8 @@ function M:update()
     self._last_hscale, self._last_vscale = self._hscale, self._vscale
     self._last_x, self._last_y = self._x, self._y
 
-    self._hscale, self._vscale = self:getScale()
-    self._x, self._y = self:getXY()
+    self:refreshScale()
+    self:refreshXY()
     if not self._need_update then
         if not self._ignore_pos_update and (self._x ~= self._last_x or self._y ~= self._last_y) then
             self._need_update = true
