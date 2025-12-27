@@ -3,7 +3,7 @@
 ---@field Setting Core.Data.Setting
 local M = {}
 Core.Data = M
-M._Path = lstg.Platform.GetRoamingAppDataPath() .. "/Cyoltose Games/TouhouRoguelike2"
+M._Path = "User"
 
 function M.GetPath()
     return M._Path
