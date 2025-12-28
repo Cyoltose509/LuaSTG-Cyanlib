@@ -406,12 +406,6 @@ local function GetAABB(obj)
 end
 
 function M.CheckPair(obj1, obj2)
-    -- 先做 AABB 快速排除
-    local ax1, ay1, ax2, ay2 = GetAABB(obj1)
-    local bx1, by1, bx2, by2 = GetAABB(obj2)
-    if ax2 < bx1 or ax1 > bx2 or ay2 < by1 or ay1 > by2 then
-        return nil
-    end
 
     -- 再调用精确碰撞函数
     return M.CheckFuncs[obj1._collider_type][obj2._collider_type](obj1, obj2)

@@ -50,6 +50,7 @@ require("Core.Scripts.Math")
 require("Core.Scripts.VFS")
 require("Core.Scripts.Object")
 require("Core.Scripts.RNG")
+require("Core.Scripts.Resource")
 
 require("Core.Scripts.System")
 require("Core.Scripts.Input")
@@ -58,7 +59,7 @@ require("Core.Scripts.Render")
 require("Core.Scripts.Effect")
 
 require("Core.Scripts.World")
-require("Core.Scripts.Resource")
+
 
 require("Core.Scripts.SceneManager")
 require("Core.Scripts.AudioManager")

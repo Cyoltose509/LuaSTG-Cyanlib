@@ -41,6 +41,8 @@ function base:init()
     self.renderEvents:create("before")
     self.renderEvents:create("after")
     self.responsiveViewport = false
+    ---@type Core.Effect.Post.Func
+    self.postEffect = nil
 end
 ---@return self
 function base:register(level)
@@ -167,6 +169,12 @@ function base:popRenderTarget()
         lstg.PopRenderTarget()
     end
 end
+
+---@param effect Core.Effect.Post.Func
+function base:setPostEffect(effect)
+    self.postEffect = effect
+    return self
+end
 ---@return self
 function base:addBeforeRenderEvent(name, layer, render, update)
     self.renderEvents:addEvent("before", name, layer, render)
@@ -281,6 +289,11 @@ function base:render()
         self.renderEvents:dispatch("after")
         self:stopCapture()
     end
+    self:applyPostEffect()
+end
+
+function base:applyPostEffect()
+
 end
 
 ---@return self

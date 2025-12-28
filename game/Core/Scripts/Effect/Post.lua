@@ -286,29 +286,15 @@ function M.ShockWave(x, y, T, strength, waveR, maxR, cutR, cutN)
     end
 end
 
-local Vec = Core.Math.Vector2
---TODO
----@param vec Core.Math.Vector2 传播方向
----@param thickness number 波纹厚度（越大越宽）
----@param strength number 扭曲位移强度
----@param omega number 波频率（越大越密）
----@param bidirectional boolean 是否双向传播
----@return fun(rtName:string, x0:number, y0:number, scale:number, process:number)
-function M.Shockline(process, vec, thickness, strength, omega, bidirectional)
-    vec = vec or Vec.right
-
+---@type Core.Resource.Shader
+local GrayEffect
+function M.Gray(strength)
+    if not GrayEffect then
+        GrayEffect = Core.Resource.Shader.Get("core:gray")
+    end
+    GrayEffect:setFloat("alpha", strength)
     return function(rtName, x0, y0, scale)
-        local rt = Core.Resource.RenderTarget.Get(rtName)
-        if not rt then
-            return
-        end
-
-        x0 = x0 or 0
-        y0 = y0 or 0
-        scale = scale or 1
-
-        local w, h = rt:getSize()
-        local sw, sh = w / scale, h / scale
-
+        GrayEffect:setTexture("screen_texture", rtName)
+        GrayEffect:post("")
     end
 end

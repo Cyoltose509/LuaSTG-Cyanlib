@@ -425,6 +425,15 @@ function M:sphereInScreen(px, py, pz, r)
     return self:pointInScreen(x, y, r * 2 * hypot(x1 - x, y1 - y))
 end
 
+function M:applyPostEffect()
+    if not self.renderTarget or not self.postEffect then
+        return
+    end
+    --TODO
+    Core.UI.Camera:apply()
+        self.postEffect(self.renderTarget, self.viewport.left, self.viewport.bottom, 1 / Core.Display.Screen.GetScale())
+end
+
 function M:reset()
     local w, h = Core.Display.Window.GetSize()
     self:setViewport(0, w, 0, h)
