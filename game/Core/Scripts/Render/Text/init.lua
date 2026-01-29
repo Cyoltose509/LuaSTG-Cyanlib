@@ -362,7 +362,7 @@ function M:setFont(font)
         self.font = font
         self.font_res = Core.Resource.TTF.Get(font)
         if not self.font_res then
-            lstg.Log(3, "Core.Render.Text: Font not found: " .. tostring(font))
+            Core.System.Log(Core.System.LogType.Warning, "Core.Render.Text: Font not found: " .. tostring(font))
             self.font = M.DEFAULT_FONT
             self.font_res = Core.Resource.TTF.Get(self.font)
         end

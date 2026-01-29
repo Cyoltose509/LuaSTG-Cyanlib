@@ -17,7 +17,7 @@ function bent_unit:init(x, y, master)
     self._index = master.index
     self.x = x
     self.y = y
-    self.fogtime = 0
+    self.fog_time = 0
     self.hide = true
     self.bound = false
     self._graze = true

@@ -9,11 +9,11 @@ M.Datas = {}
 ---Registers a sample class for curve lasers.
 ---@param name string
 ---@param opt STG.Shots.CurveLaser.Resource.Data
-function M.RegisterData(name, opt)
+function M.Register(name, opt)
     ---@class STG.Shots.CurveLaser.Resource.Data
     local data = Core.Class()
     function data:init(master)
-        self.node_img = opt.node_img or "stg:laser_preimg" .. master.index ---@type string
+        self.node_img = opt.node_img or "stg:laser_fog" .. master.index ---@type string
         self.tex = opt.tex ---@type Core.Resource.Texture
         self.x = opt.x or 0 ---采样x坐标
         self.y = opt.y or 0 ---采样y坐标

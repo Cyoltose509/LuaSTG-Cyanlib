@@ -7,7 +7,7 @@ M.__type = "Image"
 ---@type Core.Resource.Image[]
 M.res = {}
 ---@type Core.Resource.Image[][]
-M.resGroup = {}
+M.res_group = {}
 
 ---@param name string
 ---@param tex Core.Resource.Texture|string
@@ -240,7 +240,7 @@ end
 ---@return Core.Resource.Image[]
 function M.NewGroup(groupName, tex, x, y, w, h, cols, rows, a, b, rect)
     local group = {}
-    M.resGroup[groupName] = group
+    M.res_group[groupName] = group
     for i = 0, cols * rows - 1 do
         local img = M.New(groupName .. (i + 1), tex, x + w * (i % cols), y + h * (math.floor(i / cols)), w, h, a, b, rect)
         table.insert(group, img)
@@ -248,16 +248,16 @@ function M.NewGroup(groupName, tex, x, y, w, h, cols, rows, a, b, rect)
     return group
 end
 function M.GetGroup(groupName)
-    return M.resGroup[groupName]
+    return M.res_group[groupName]
 end
 function M.RemoveGroup(groupName)
-    for _, img in ipairs(M.resGroup[groupName]) do
+    for _, img in ipairs(M.res_group[groupName]) do
         img:unload()
     end
-    M.resGroup[groupName] = nil
+    M.res_group[groupName] = nil
 end
 function M.ClearGroup()
-    for groupName in pairs(M.resGroup) do
+    for groupName in pairs(M.res_group) do
         M.RemoveGroup(groupName)
     end
 end

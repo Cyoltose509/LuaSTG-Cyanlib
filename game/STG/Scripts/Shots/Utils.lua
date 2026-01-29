@@ -11,66 +11,66 @@ local Curve = STG.Shots.CurveLaser
 
 ---@param x number
 ---@param y number
----@param sty STG.Shots.Bullet.Style.Base
+---@param type STG.Shots.Bullet.Type
 ---@param col number
 ---@param v number
 ---@param a number
 ---@param omega number
 ---@param stay boolean
 ---@param destroyable boolean
-function M.BulletStraight(x, y, sty, col, v, a, omega, stay, destroyable)
-    local self = Object.New(Base, sty, col, stay, destroyable)
+function M.BulletStraight(x, y, type, col, v, a, omega, stay, destroyable)
+    local self = Object.New(Base, type, col, stay, destroyable)
     self.x, self.y = x, y
     self.omega = omega or 0
-    Object.SetV(self, v or 0, a or 0, not sty.disable_navi)
+    Object.SetV(self, v or 0, a or 0, not self.imgclass.disable_navi)
     return self
 end
----@param style STG.Shots.Bullet.Style.Base
-function M.BulletDecel(x, y, style, col, fv, v, a, mulAdd, stay, wait, time)
-    local self = Object.New(Base, style, col, stay)
+---@param type STG.Shots.Bullet.Type
+function M.BulletDecel(x, y, type, col, fv, v, a, mulAdd, stay, wait, time)
+    local self = Object.New(Base, type, col, stay)
     self.x, self.y = x, y
     self._blend = mulAdd and MulAdd or self._blend
     self.wait = wait or 0
     self.time = time or 25
-    Core.Object.SetV(self, fv, a, not style.disable_navi)
+    Core.Object.SetV(self, fv, a, not self.imgclass.disable_navi)
     Task.New(self, function()
         Task.Wait(self.wait)
-        Task.Object.ChangingV(self, fv, v, a, self.time, not style.disable_navi)
+        Task.Object.ChangingV(self, fv, v, a, self.time, not self.imgclass.disable_navi)
     end)
     return self
 end
----@param style STG.Shots.Bullet.Style.Base
-function M.BulletAccel(x, y, style, col, fv, v, a, mulAdd, stay, wait, time)
-    return M.BulletDecel(x, y, style, col, fv, v, a, mulAdd, stay, wait or 60, time or 120)
+---@param type STG.Shots.Bullet.Type
+function M.BulletAccel(x, y, type, col, fv, v, a, mulAdd, stay, wait, time)
+    return M.BulletDecel(x, y, type, col, fv, v, a, mulAdd, stay, wait or 60, time or 120)
 end
----@param style STG.Shots.Bullet.Style.Base
-function M.BulletDecAcc(x, y, style, col, fv, v, a, mulAdd, stay)
-    local self = Object.New(Base, style, col, stay)
+---@param type STG.Shots.Bullet.Type
+function M.BulletDecAcc(x, y, type, col, fv, v, a, mulAdd, stay)
+    local self = Object.New(Base, type, col, stay)
     self.x, self.y = x, y
     self._blend = mulAdd and MulAdd or self._blend
     self.time1, self.time2, self.time3 = 25, 60, 120
     self.middle_v = 0.5
-    Object.SetV(self, fv, a, not style.disable_navi)
+    Object.SetV(self, fv, a, not self.imgclass.disable_navi)
     Task.New(self, function()
-        Task.Object.ChangingV(self, fv, self.middle_v, a, self.time1, not style.disable_navi)
+        Task.Object.ChangingV(self, fv, self.middle_v, a, self.time1, not self.imgclass.disable_navi)
         Task.Wait(self.time2)
-        Task.Object.ChangingV(self, self.middle_v, v, a, self.time3, not style.disable_navi)
+        Task.Object.ChangingV(self, self.middle_v, v, a, self.time3, not self.imgclass.disable_navi)
     end)
     return self
 end
 ---离散式动作段序列子弹
 ---使用例子：M.Segmented(x, y, style, col, stay, { {v = 3, a = 0, time = 100}, {func=function(self)... end} })
 ---Separate action sequence bullet
----@param style STG.Shots.Bullet.Style.Base
-function M.BulletSegmented(x, y, style, col, stay, ...)
-    local self = Object.New(Base, style, col, stay)
+---@param type STG.Shots.Bullet.Type
+function M.BulletSegmented(x, y, type, col, stay, ...)
+    local self = Object.New(Base, type, col, stay)
     self.x, self.y = x, y
     self.segments = { ... }
-    Object.SetV(self, self.segments[1].v, self.segments[1].a, not style.disable_navi)
+    Object.SetV(self, self.segments[1].v, self.segments[1].a, not self.imgclass.disable_navi)
     Task.New(self, function()
         for i, con in ipairs(self.segments) do
             if con.v and con.a then
-                Object.SetV(self, con.v, con.a, not style.disable_navi)
+                Object.SetV(self, con.v, con.a, not self.imgclass.disable_navi)
             end
             if con.func then
                 con.func(self)
@@ -80,7 +80,7 @@ function M.BulletSegmented(x, y, style, col, stay, ...)
             if i == #self.segments then
                 break
             end
-            Task.Object.ChangingV(self, con.v, 0, con.a, int(con.time or 1), not style.disable_navi, con.easing)
+            Task.Object.ChangingV(self, con.v, 0, con.a, int(con.time or 1), not self.imgclass.disable_navi, con.easing)
             Task.Wait(con.wait or 0)
         end
     end)
@@ -90,13 +90,14 @@ end
 ---速度驱动的动态转向子弹
 ---使用例子：M.Steering(x, y, style, col, v, a, stay, { {v = 3, r = 0.1, time = 100}, {v=2,r=-2,time=50,wait=60} })
 ---Dynamic turn-around bullet with speed-driven steering
----@param style STG.Shots.Bullet.Style.Base
-function M.BulletSteering(x, y, style, col, v, a, stay, ...)
-    local self = Object.New(Base, style, col, stay)
+---@param type STG.Shots.Bullet.Type
+function M.BulletSteering(x, y, type, col, v, a, stay, ...)
+    local self = Object.New(Base, type, col, stay)
+
     self.x, self.y = x, y
     self.v, self.angle = v, a
     self.segments = { ... }
-    Object.SetV(self, self.v, self.angle, not style.disable_navi)
+    Object.SetV(self, self.v, self.angle, not self.imgclass.disable_navi)
     Task.New(self, function()
         local _v
         for _, con in ipairs(self.segments) do
@@ -107,7 +108,7 @@ function M.BulletSteering(x, y, style, col, v, a, stay, ...)
             if con.func then
                 con.func(self)
             end
-            Task.Object.ChangingVA(self, self.v, con.v, self.angle, con.r, con.time, not style.disable_navi, con.easing)
+            Task.Object.ChangingVA(self, self.v, con.v, self.angle, con.r, con.time, not self.imgclass.disable_navi, con.easing)
             self.angle = self.angle + con.r * con.time
             self.v = con.v or self.v
         end
@@ -116,11 +117,12 @@ function M.BulletSteering(x, y, style, col, v, a, stay, ...)
     return self
 end
 
-function M.BulletSetV(x, y, style, col, vx, vy, stay)
-    local self = Object.New(Base, style, col, stay)
+---@param type STG.Shots.Bullet.Type
+function M.BulletSetV(x, y, type, col, vx, vy, stay)
+    local self = Object.New(Base, type, col, stay)
     self.x, self.y = x, y
     self.vx, self.vy = vx, vy
-    if not style.disable_navi then
+    if not self.imgclass.disable_navi then
         self.rot = atan2(vy, vx)
     end
     return self
@@ -128,7 +130,7 @@ end
 
 ---创建一个雾化效果
 ---Create a fog effect
----@overload fun(x: number, y: number, sty: STG.Shots.Bullet.Style.Base, col: number, v: number, a: number, mulAdd: boolean): lstg.GameObject
+---@overload fun(x: number, y: number, sty: STG.Shots.Bullet.Type, col: number, v: number, a: number, mulAdd: boolean): lstg.GameObject
 ---@overload fun(obj: lstg.GameObject): lstg.GameObject
 function M.BulletFogEffect(x, y, sty, col, v, a, mulAdd)
     if type(x) == "table" then
@@ -137,7 +139,7 @@ function M.BulletFogEffect(x, y, sty, col, v, a, mulAdd)
         self.colli = false
         self._blend = x._blend
         Task.New(self, function()
-            for _ = 1, self.fogtime do
+            for _ = 1, self.fog_time do
                 if not Object.IsValid(x) then
                     break
                 end
@@ -152,11 +154,11 @@ function M.BulletFogEffect(x, y, sty, col, v, a, mulAdd)
         self.colli = false
         self.x, self.y = x, y
         if v and a then
-            Object.SetV(self, v, a, not sty.disable_navi)
+            Object.SetV(self, v, a, not self.imgclass.disable_navi)
         end
         self._blend = mulAdd and MulAdd or self._blend
         Task.New(self, function()
-            Task.Wait(self.fogtime)
+            Task.Wait(self.fog_time)
             Object.RawDel(self)
         end)
         return self

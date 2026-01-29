@@ -5,7 +5,7 @@ local Layer = {
     --- -600
     Enemy = -600,
     --- -500
-    PlayerBullet = -500,
+    PlayerShots = -500,
     --- -400
     Player = -400,
     --- -300

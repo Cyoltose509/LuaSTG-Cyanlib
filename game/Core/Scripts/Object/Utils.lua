@@ -2,6 +2,8 @@
 local M = {}
 Core.Object.Utils = M
 
+
+
 M.New = lstg.New
 M.SetV = lstg.SetV
 M.GetV = lstg.GetV
@@ -33,9 +35,6 @@ end
 function M.RawDel(obj)
     if M.IsValid(obj) then
         obj.status = 'del'
-        if obj._servants then
-            M.DelServants(obj)
-        end
     end
 end
 
@@ -43,9 +42,6 @@ end
 function M.RawKill(obj)
     if M.IsValid(obj) then
         obj.status = 'kill'
-        if obj._servants then
-            M.KillServants(obj)
-        end
     end
 end
 
@@ -57,7 +53,6 @@ end
 ---@param obj lstg.GameObject
 function M.Kill(obj)
     if M.IsValid(obj) then
-        M.KillServants(obj)
         lstg.Kill(obj)
     end
 end
@@ -65,7 +60,6 @@ end
 ---@param obj lstg.GameObject
 function M.Del(obj)
     if M.IsValid(obj) then
-        M.DelServants(obj)
         lstg.Del(obj)
     end
 end
@@ -92,47 +86,6 @@ function M.Stop(obj)
     obj.vx, obj.vy = 0, 0
     obj.ax, obj.ay = 0, 0
     obj.ag = 0
-end
-
----绑定主从关系
----Bind the object as a slave to the master.
----@param master lstg.GameObject@
----@param servant lstg.GameObject@
----@param dmg_transfer number@伤害传导比例
----@param con_death boolean@是否连接清理
-function M.Connect(master, servant, dmg_transfer, con_death)
-    if M.IsValid(master) and M.IsValid(servant) then
-        if con_death or con_death == nil then
-            master._servants = master._servants or {}
-            table.insert(master._servants, servant)
-        end
-        servant._master = master
-        servant._dmg_transfer = dmg_transfer or 0
-    end
-end
-
----@param obj lstg.GameObject
-function M.KillServants(obj)
-    if obj._servants then
-        for _, v in pairs(obj._servants) do
-            if M.IsValid(v) then
-                M.Kill(v)
-            end
-        end
-        obj._servants = {}
-    end
-end
-
----@param obj lstg.GameObject
-function M.DelServants(obj)
-    if obj._servants then
-        for _, v in pairs(obj._servants) do
-            if M.IsValid(v) then
-                M.Del(v)
-            end
-        end
-        obj._servants = {}
-    end
 end
 
 local OriginalSmearBlend = "mul+add"
@@ -257,3 +210,12 @@ function M.FindObject(lst, obj)
     return 0
 end
 
+
+if false then
+    ---@generic T
+    ---@param base T
+    ---@return T
+    ---@vararg any
+    function M.New(base, ...)
+    end
+end

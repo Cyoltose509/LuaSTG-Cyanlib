@@ -111,6 +111,11 @@ MainLoop.AddEvent("Frame", "Gameplay", {
     end,
     labels = { Label.Gameplay },
 })
+MainLoop.AddEvent("Frame", "Gameplay", {
+    name = "Core.GameObject.After",
+    func = Core.Object.GameObject.AfterFrame,
+    labels = { Label.Gameplay },
+})
 ------------------------------------
 MainLoop.AddEvent("Frame", "After", {
     name = "Core.Update.UI",

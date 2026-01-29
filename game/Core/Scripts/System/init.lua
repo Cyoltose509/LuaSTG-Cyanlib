@@ -18,6 +18,15 @@ M.GetRoamingAppDataPath = lstg.Platform.GetRoamingAppDataPath
 M.RestartWithCommandLineArguments = lstg.Platform.RestartWithCommandLineArguments
 M.MessageBox = lstg.Platform.MessageBox
 
+M.LogType = {
+    Debug = 1,
+    Info = 2,
+    Warning = 3,
+    Error = 4,
+    Fatal = 5,
+}
+M.Log = lstg.Log
+
 ---设置标题栏是否自动隐藏
 ---win11专属功能
 ---Set whether the title bar is automatically hidden

@@ -1,10 +1,9 @@
----@class STG.Enemy.Boss.Animator
+---@class STG.Animator
 ---@author OLC
 local M = {}
-STG.Enemy.Boss.Animator = M
+STG.Animator = M
 M.__index = M
 
-local type = type
 local setmetatable = setmetatable
 
 local function easeInOutQuad(t)
@@ -31,13 +30,10 @@ end
 ---初始化行走图系统（兼容接口）
 ---@param obj table @绑定的渲染对象
 ---@param texture string|nil @默认纹理名称
----@return STG.Enemy.Boss.Animator
 function M:init(obj, texture)
     -- 创建内部的行走图系统
     self.walkSystem = Core.Animator.Sprite.New(obj, texture)
     self.color = Core.Render.Color.Default
-
-    self.damageTimeMax = 5
 
     -- 保存对象引用
     self.obj = obj
@@ -47,14 +43,6 @@ function M:init(obj, texture)
     self.obj.cast_t = self.obj.cast_t or 0
 
     return self
-end
-function M:setDamageTimeMax(t)
-    self.damageTimeMax = t
-    return self
-end
---TODO
-function M:takeDamage()
-    self.damageTime = self.damageTimeMax
 end
 
 ---设置标准行走状态机（包含移动、施法、漂浮等默认行为）
@@ -90,10 +78,11 @@ end
 --- - 状态标志：ctx.moveEntering, ctx.moveExiting, ctx.castEntering, ctx.castExiting
 ---
 ---@param options table|nil @配置选项 {moveThreshold = 0.5, floatReturnSpeed = 0.3}
-function M:setupDefaultStates(options)
+function M:setupEnemyDefaultStates(options)
     options = options or {}
     local moveThreshold = options.moveThreshold or 0.5
     local floatReturnSpeed = options.floatReturnSpeed or 0.3
+    local floatEnabled = options.floatEnabled or false
 
     local sm = self.walkSystem.stateMachine
 
@@ -111,7 +100,7 @@ function M:setupDefaultStates(options)
     local function updateFloating(ctx, dt, enabled)
         dt = dt or 1
 
-        if not enabled then
+        if not (floatEnabled and enabled) then
             local dx = ctx.dx or 0
             local dy = ctx.dy or 0
 
@@ -438,6 +427,195 @@ function M:setupDefaultStates(options)
     end
 end
 
+function M:setupPlayerDefaultStates(options)
+    options = options or {}
+    local ws = self.walkSystem
+    local moveThreshold = options.moveThreshold or 0.5
+
+    -- 用于追踪进入/退出动画的帧对应关系
+    local leftEnterExitProgress = 0  -- 0-1 之间，表示在进入/退出序列中的位置
+    local rightEnterExitProgress = 0
+
+    -- 辅助函数：根据进度设置动画帧
+    local function setAnimationProgress(animName, progress)
+        local anim = ws.animations[animName]
+        if not anim then
+            return
+        end
+
+        local frameCount = #anim.frames
+        if frameCount == 0 then
+            return
+        end
+
+        -- 将进度转换为帧索引（1-based）
+        local frameIndex = math.floor(progress * (frameCount - 1)) + 1
+        frameIndex = math.max(1, math.min(frameIndex, frameCount))
+
+        ws.animationIndex = frameIndex
+        ws.currentFrame = anim.frames[frameIndex]
+        ws.animationTimer = 0
+        ws.animationFinished = false
+    end
+
+    -- 辅助函数：获取当前动画进度
+    local function getAnimationProgress()
+        if not ws.currentAnimation then
+            return 0
+        end
+        local frameCount = #ws.currentAnimation.frames
+        if frameCount <= 1 then
+            return 0
+        end
+        return (ws.animationIndex - 1) / (frameCount - 1)
+    end
+
+    -- 注册状态，使用自定义回调来处理帧对应
+    ws:registerAnimationState("idle")
+
+    -- 左移进入状态
+    ws:registerAnimationState("move_left_enter", nil, true, {
+        onEnter = function(ctx)
+            -- 如果从左移退出打断过来，使用对应的进度
+            if leftEnterExitProgress > 0 then
+                setAnimationProgress("move_left_enter", leftEnterExitProgress)
+                leftEnterExitProgress = 0
+            end
+        end,
+        onUpdate = function(ctx, dt)
+            -- 记录当前进度
+            leftEnterExitProgress = getAnimationProgress()
+        end
+    })
+
+    -- 左移循环状态
+    ws:registerAnimationState("move_left_loop", nil, true, {
+        onEnter = function(ctx)
+            -- 进入循环时，重置进度为满（用于后续可能的退出）
+            leftEnterExitProgress = 1
+        end
+    })
+
+    -- 左移退出状态
+    ws:registerAnimationState("move_left_exit", nil, true, {
+        onEnter = function(ctx)
+            -- 从进入或循环状态过来时，使用反向进度
+            setAnimationProgress("move_left_exit", 1 - leftEnterExitProgress)
+        end,
+        onUpdate = function(ctx, dt)
+            -- 记录当前进度（反向，用于可能的重新进入）
+            leftEnterExitProgress = 1 - getAnimationProgress()
+        end
+    })
+
+    -- 右移进入状态
+    ws:registerAnimationState("move_right_enter", nil, true, {
+        onEnter = function(ctx)
+            -- 如果从右移退出打断过来，使用对应的反向进度
+            if rightEnterExitProgress > 0 then
+                setAnimationProgress("move_right_enter", rightEnterExitProgress)
+                rightEnterExitProgress = 0
+            end
+        end,
+        onUpdate = function(ctx, dt)
+            -- 记录当前进度
+            rightEnterExitProgress = getAnimationProgress()
+        end
+    })
+
+    -- 右移循环状态
+    ws:registerAnimationState("move_right_loop", nil, true, {
+        onEnter = function(ctx)
+            -- 进入循环时，重置进度为满（用于后续可能的退出）
+            rightEnterExitProgress = 1
+        end
+    })
+
+    -- 右移退出状态
+    ws:registerAnimationState("move_right_exit", nil, true, {
+        onEnter = function(ctx)
+            -- 从进入或循环状态过来时，使用反向进度
+            setAnimationProgress("move_right_exit", 1 - rightEnterExitProgress)
+        end,
+        onUpdate = function(ctx, dt)
+            -- 记录当前进度（反向，用于可能的重新进入）
+            rightEnterExitProgress = 1 - getAnimationProgress()
+        end
+    })
+
+
+    -- 获取状态机引用（用于添加转换）
+    local sm = ws.stateMachine
+
+    local get_dx="dx"--"__move_dx"
+    -- 状态转换条件
+    local function isMovingLeft(ctx)
+        local player = ctx.owner.obj
+        local dx = player[get_dx] or 0
+        return dx < -moveThreshold
+    end
+
+    local function isMovingRight(ctx)
+        local player = ctx.owner.obj
+        local dx = player[get_dx] or 0
+        return dx > moveThreshold
+    end
+
+    local function isIdle(ctx)
+        local player = ctx.owner.obj
+        local dx = player[get_dx] or 0
+        return math.abs(dx) <= moveThreshold
+    end
+
+    local function animationFinished(ctx)
+        return ctx.owner.animationFinished
+    end
+
+    -- 从静止到移动
+    sm:addTransition("idle", "move_left_enter", isMovingLeft)
+    sm:addTransition("idle", "move_right_enter", isMovingRight)
+
+    -- 左移进入 -> 左移循环（动画播完）
+    sm:addTransition("move_left_enter", "move_left_loop", animationFinished)
+
+    -- 右移进入 -> 右移循环（动画播完）
+    sm:addTransition("move_right_enter", "move_right_loop", animationFinished)
+
+    -- 打断1：进入状态停下来 -> 退出状态（保留帧对应）
+    sm:addTransition("move_left_enter", "move_left_exit", isIdle)
+    sm:addTransition("move_right_enter", "move_right_exit", isIdle)
+
+    -- 左移循环 -> 左移退出（停止移动）
+    sm:addTransition("move_left_loop", "move_left_exit", isIdle)
+
+    -- 右移循环 -> 右移退出（停止移动）
+    sm:addTransition("move_right_loop", "move_right_exit", isIdle)
+
+    -- 打断2：退出状态重新移动 -> 进入状态（保留帧对应）
+    sm:addTransition("move_left_exit", "move_left_enter", isMovingLeft)
+    sm:addTransition("move_right_exit", "move_right_enter", isMovingRight)
+
+    -- 左移退出 -> 静止（动画播完）
+    sm:addTransition("move_left_exit", "idle", animationFinished)
+
+    -- 右移退出 -> 静止（动画播完）
+    sm:addTransition("move_right_exit", "idle", animationFinished)
+
+    -- 打断3：反向移动（在循环状态）
+    sm:addTransition("move_left_loop", "move_right_enter", isMovingRight)
+    sm:addTransition("move_right_loop", "move_left_enter", isMovingLeft)
+
+    -- 打断4：反向移动（在进入状态，动画未播完）
+    sm:addTransition("move_left_enter", "move_right_enter", isMovingRight)
+    sm:addTransition("move_right_enter", "move_left_enter", isMovingLeft)
+
+    -- 打断5：反向移动（在退出状态，动画未播完）
+    sm:addTransition("move_left_exit", "move_right_enter", isMovingRight)
+    sm:addTransition("move_right_exit", "move_left_enter", isMovingLeft)
+
+    sm:setState("idle")
+end
+
 ---设置传统行走图（兼容旧版接口）
 ---自动根据纹理布局注册帧、动画并初始化状态机
 ---
@@ -500,7 +678,7 @@ function M:setupLegacyWalkImage(texture, nCol, nRow, images, anis, interval, a, 
             idleIds[i] = i
         end
         self:registerAnimation("idle_left", buildFrameData("idle_", idleIds), interval, true)
-        self:copyAnimation("idle_left", "idle_right")
+        self:copyAnimation("idle_right", "idle_left")
 
     elseif nRow == 2 then
         -- idle、move_right
@@ -517,7 +695,7 @@ function M:setupLegacyWalkImage(texture, nCol, nRow, images, anis, interval, a, 
             idleIds[i] = i
         end
         self:registerAnimation("idle_right", buildFrameData("idle_", idleIds), interval, true)
-        self:copyAnimation("idle_right", "idle_left", false, true)
+        self:copyAnimation("idle_left", "idle_right", false, true)
 
         -- move_right 动画
         if moveLoop > 0 and moveLoop < moveFrames then
@@ -532,17 +710,17 @@ function M:setupLegacyWalkImage(texture, nCol, nRow, images, anis, interval, a, 
 
             self:registerAnimation("move_right_enter", buildFrameData("move_right_", enterIds), interval, false)
             self:registerAnimation("move_right_loop", buildFrameData("move_right_", loopIds), interval, true)
-            self:copyAnimation("move_right_enter", "move_left_enter", false, true)
-            self:copyAnimation("move_right_loop", "move_left_loop", false, true)
-            self:copyAnimation("move_right_enter", "move_right_exit", true)
-            self:copyAnimation("move_left_enter", "move_left_exit", true)
+            self:copyAnimation("move_left_enter", "move_right_enter", false, true)
+            self:copyAnimation("move_left_loop", "move_right_loop", false, true)
+            self:copyAnimation("move_right_exit", "move_right_enter", true)
+            self:copyAnimation("move_left_exit", "move_left_enter", true)
         else
             local loopIds = {}
             for i = 1, moveFrames do
                 loopIds[i] = i
             end
             self:registerAnimation("move_right_loop", buildFrameData("move_right_", loopIds), interval, true)
-            self:copyAnimation("move_right_loop", "move_left_loop", false, true)
+            self:copyAnimation("move_left_loop", "move_right_loop", false, true)
         end
 
     elseif nRow == 3 then
@@ -563,7 +741,7 @@ function M:setupLegacyWalkImage(texture, nCol, nRow, images, anis, interval, a, 
             idleIds[i] = i
         end
         self:registerAnimation("idle_right", buildFrameData("idle_", idleIds), interval, true)
-        self:copyAnimation("idle_right", "idle_left", false, true)
+        self:copyAnimation("idle_left", "idle_right", false, true)
 
         -- move 动画（镜像）
         if moveLoop > 0 and moveLoop < moveFrames then
@@ -578,17 +756,17 @@ function M:setupLegacyWalkImage(texture, nCol, nRow, images, anis, interval, a, 
 
             self:registerAnimation("move_right_enter", buildFrameData("move_right_", enterIds), interval, false)
             self:registerAnimation("move_right_loop", buildFrameData("move_right_", loopIds), interval, true)
-            self:copyAnimation("move_right_enter", "move_left_enter", false, true)
-            self:copyAnimation("move_right_loop", "move_left_loop", false, true)
-            self:copyAnimation("move_right_enter", "move_right_exit", true)
-            self:copyAnimation("move_left_enter", "move_left_exit", true)
+            self:copyAnimation("move_left_enter", "move_right_enter", false, true)
+            self:copyAnimation("move_left_loop", "move_right_loop", false, true)
+            self:copyAnimation("move_right_exit", "move_right_enter", true)
+            self:copyAnimation("move_left_exit", "move_left_enter", true)
         else
             local loopIds = {}
             for i = 1, moveFrames do
                 loopIds[i] = i
             end
             self:registerAnimation("move_right_loop", buildFrameData("move_right_", loopIds), interval, true)
-            self:copyAnimation("move_right_loop", "move_left_loop", false, true)
+            self:copyAnimation("move_left_loop", "move_right_loop", false, true)
         end
 
         -- cast 动画（镜像，保持和移动方向一致）
@@ -604,17 +782,17 @@ function M:setupLegacyWalkImage(texture, nCol, nRow, images, anis, interval, a, 
 
             self:registerAnimation("cast_right_enter", buildFrameData("cast_", enterIds), interval, false)
             self:registerAnimation("cast_right_loop", buildFrameData("cast_", loopIds), interval, true)
-            self:copyAnimation("cast_right_enter", "cast_left_enter", false, true)
-            self:copyAnimation("cast_right_loop", "cast_left_loop", false, true)
-            self:copyAnimation("cast_right_enter", "cast_right_exit", true)
-            self:copyAnimation("cast_left_enter", "cast_left_exit", true)
+            self:copyAnimation("cast_left_enter", "cast_right_enter", false, true)
+            self:copyAnimation("cast_left_loop", "cast_right_loop", false, true)
+            self:copyAnimation("cast_right_exit", "cast_right_enter", true)
+            self:copyAnimation("cast_left_exit", "cast_left_enter", true)
         else
             local loopIds = {}
             for i = 1, castFrames do
                 loopIds[i] = i
             end
             self:registerAnimation("cast_right_loop", buildFrameData("cast_", loopIds), interval, true)
-            self:copyAnimation("cast_right_loop", "cast_left_loop", false, true)
+            self:copyAnimation("cast_left_loop", "cast_right_loop", false, true)
         end
 
     elseif nRow >= 4 then
@@ -638,7 +816,7 @@ function M:setupLegacyWalkImage(texture, nCol, nRow, images, anis, interval, a, 
             idleIds[i] = i
         end
         self:registerAnimation("idle_left", buildFrameData("idle_", idleIds), interval, true)
-        self:copyAnimation("idle_left", "idle_right")
+        self:copyAnimation("idle_right", "idle_left")
 
         -- move_right 动画
         if moveRightLoop > 0 and moveRightLoop < moveRightFrames then
@@ -653,7 +831,7 @@ function M:setupLegacyWalkImage(texture, nCol, nRow, images, anis, interval, a, 
 
             self:registerAnimation("move_right_enter", buildFrameData("move_right_", enterIds), interval)
             self:registerAnimation("move_right_loop", buildFrameData("move_right_", loopIds), interval, true)
-            self:copyAnimation("move_right_enter", "move_right_exit", true)
+            self:copyAnimation("move_right_exit", "move_right_enter", true)
         else
             local loopIds = {}
             for i = 1, moveRightFrames do
@@ -675,7 +853,7 @@ function M:setupLegacyWalkImage(texture, nCol, nRow, images, anis, interval, a, 
 
             self:registerAnimation("move_left_enter", buildFrameData("move_left_", enterIds), interval)
             self:registerAnimation("move_left_loop", buildFrameData("move_left_", loopIds), interval, true)
-            self:copyAnimation("move_left_enter", "move_left_exit", true)
+            self:copyAnimation("move_left_exit", "move_left_enter", true)
         else
             local loopIds = {}
             for i = 1, moveLeftFrames do
@@ -697,7 +875,7 @@ function M:setupLegacyWalkImage(texture, nCol, nRow, images, anis, interval, a, 
 
             self:registerAnimation("cast_enter", buildFrameData("cast_", enterIds), interval)
             self:registerAnimation("cast_loop", buildFrameData("cast_", loopIds), interval, true)
-            self:copyAnimation("cast_enter", "cast_exit", true)
+            self:copyAnimation("cast_exit", "cast_enter", true)
         else
             local loopIds = {}
             for i = 1, castFrames do
@@ -707,7 +885,7 @@ function M:setupLegacyWalkImage(texture, nCol, nRow, images, anis, interval, a, 
         end
     end
 
-    self:setupDefaultStates()
+    self:setupEnemyDefaultStates()
 end
 
 ---注册图像帧
@@ -738,7 +916,7 @@ end
 
 ---注册动画
 ---@param name string @动画名称
----@param frameData (string|number|table)[] @帧数据列表
+---@param frameData (string|number|Core.Animator.Sprite.AnimationFrame)[] @帧数据列表
 ---@param interval number|nil @帧间隔（默认 8）
 ---@param loop boolean|nil @是否循环（默认 false）
 function M:registerAnimation(name, frameData, interval, loop)
@@ -748,12 +926,24 @@ end
 
 ---复制动画
 ---@param sourceName string @源动画名称
----@param targetName string @目标动画名称
+---@param name string @目标动画名称
 ---@param reverse boolean|nil @是否倒序（默认 false）
 ---@param mirror boolean|nil @是否镜像（默认 false）
----@return boolean @是否复制成功
-function M:copyAnimation(sourceName, targetName, reverse, mirror)
-    return self.walkSystem:copyAnimation(sourceName, targetName, reverse, mirror)
+function M:copyAnimation(name, sourceName, reverse, mirror)
+    self.walkSystem:copyAnimation(name, sourceName, reverse, mirror)
+    return self
+end
+
+---快速复制常用动画
+---复制左右静止和移动动画
+---复制移动退出动画为对应进入动画的倒放
+function M:fastCopyAnimation()
+    self:copyAnimation("idle_left", "idle_right", false, true)
+        :copyAnimation("move_left_enter", "move_right_enter", false, true)
+        :copyAnimation("move_left_loop", "move_right_loop", false, true)
+        :copyAnimation("move_right_exit", "move_right_enter", true)
+        :copyAnimation("move_left_exit", "move_left_enter", true)
+    return self
 end
 
 ---设置混合模式
@@ -771,6 +961,14 @@ end
 function M:setColor(a, r, g, b)
     self.walkSystem.setColor(self, a, r, g, b)
     self.walkSystem:setColor(a, r, g, b)
+    return self
+end
+
+function M:setScale(h, v)
+    h = h or 1
+    v = v or h
+    self.walkSystem:setContext("hscale", h)
+    self.walkSystem:setContext("vscale", v)
     return self
 end
 
@@ -794,13 +992,14 @@ function M:stopCast()
 end
 
 ---帧更新（兼容接口）
-function M:frame()
+function M:frame(dt)
+    dt = dt or 1
     local obj = self.obj
     -- 更新 cast 值
     if obj.cast_t > 0 then
-        obj.cast_t = obj.cast_t - 1
+        obj.cast_t = obj.cast_t - dt
         if obj.cast_t > 0 then
-            obj.cast = obj.cast + 1
+            obj.cast = obj.cast + dt
         else
             -- cast_t 减到 0，停止施法
             obj.cast = 0
@@ -815,22 +1014,7 @@ function M:frame()
     end
 
     -- 更新行走图系统
-    self.walkSystem:update(1)
-    if self.damageTime > 0 then
-        self.damageTime = max(self.damageTime - 1, 0)
-        local ratio = self.damageTimeMax > 0 and (self.damageTime / self.damageTimeMax) or 0
-        local a, r, g, b = self.color:ARGB()
-        r = r - r * ratio
-        g = g - g * ratio
-        self.walkSystem:setColor(a, r, g, b)
-    else
-        self.walkSystem:setColor(self.color)
-    end
-    --TODO:在这里设置判定大小也是很奇葩
-    if type(obj.A) == 'number' and type(obj.B) == 'number' then
-        obj.a = obj.A
-        obj.b = obj.B
-    end
+    self.walkSystem:update(dt)
 end
 
 function M:render()
@@ -854,7 +1038,7 @@ end
 ---@param obj table @绑定的渲染对象
 ---@param texture string|nil @默认纹理名称
 function M.New(obj, texture)
-    ---@type STG.Enemy.Boss.Animator
+    ---@type STG.Animator
     local instance = setmetatable({}, M)
     instance:init(obj, texture)
     return instance

@@ -7,7 +7,7 @@ local M = {
     ---2
     Enemy = 2,
     ---3
-    PlayerBullet = 3,
+    PlayerShots = 3,
     ---4
     Player = 4,
     ---5
@@ -15,7 +15,7 @@ local M = {
     ---6
     Item = 6,
     ---7
-    NonColli = 7,
+    NotCollide = 7,
     ---8
     Spell = 8,
 }
@@ -25,11 +25,11 @@ local CollisionPairs = {
     { M.Player, M.EnemyBullet },
     { M.Player, M.Enemy },
     { M.Player, M.InDes },
-    { M.Enemy, M.PlayerBullet },
-    { M.NonColli, M.PlayerBullet },
+    { M.Enemy, M.PlayerShots },
+    { M.NotCollide, M.PlayerShots },
     { M.Item, M.Player },
     { M.Spell, M.Enemy },
-    { M.Spell, M.NonColli },
+    { M.Spell, M.NotCollide },
     { M.Spell, M.EnemyBullet },
     { M.Spell, M.InDes },
 }

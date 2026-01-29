@@ -185,6 +185,7 @@ local SetMode = {
     end, -- FlashInOut
 }
 
+---@return number
 function M.Evaluate(mode, n)
     return SetMode[mode](n)
 end

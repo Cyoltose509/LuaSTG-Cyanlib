@@ -9,45 +9,33 @@ local setmetatable = setmetatable
 local StateMachine = Core.Lib.StateMachine
 local Color = Core.Render.Color
 
----@class Core.Animator.Sprite.ImageFrame
----@field texture string|nil @纹理名称（如果为 nil 则使用默认纹理）
----@field x number @纹理 X 坐标
----@field y number @纹理 Y 坐标
----@field w number @图像宽度
----@field h number @图像高度
----@field anchorX number @锚点 X 坐标（0~1，默认 0.5 中心）
----@field anchorY number @锚点 Y 坐标（0~1，默认 0.5 中心）
----@field offsetX number @相对于锚点的偏移量 X（像素单位，默认 0）
----@field offsetY number @相对于锚点的偏移量 Y（像素单位，默认 0）
----@field rot number @图像帧旋转角度（默认 0）
+---@class Core.Animator.Sprite.StateMachine.StateCallbacks
+---@field onEnter fun(ctx:Core.Animator.Sprite.StateMachine.Context)|nil @进入状态时的回调函数
+---@field onExit fun(ctx:Core.Animator.Sprite.StateMachine.Context)|nil @离开状态时的回调函数
+---@field onUpdate fun(ctx:Core.Animator.Sprite.StateMachine.Context)|nil @状态更新时的回调函数
 
----@class Core.Animator.Sprite.AnimationFrame
----@field image Core.Animator.Sprite.ImageFrame @引用的图像帧
----@field dx number @渲染偏移 X
----@field dy number @渲染偏移 Y
----@field hscale number @水平缩放
----@field vscale number @垂直缩放
----@field rot number @旋转角度
----@field duration number @帧持续时间
-
----@class Core.Animator.Sprite.AnimationState
----@field frames Core.Animator.Sprite.AnimationFrame[] @帧序列
----@field interval number @帧间隔
----@field loop boolean @是否循环
-
-
+---@class Core.Animator.Sprite.StateMachine.Context :Core.Lib.StateMachine.Context
+---@field owner Core.Animator.Sprite
+---@field dx number
+---@field dy number
+---@field hscale number
+---@field vscale number
+---@field rot number
 
 ---@private
 function M:initialize(obj, texture)
     self.obj = obj
     self.texture = texture
 
+    ---@type table<string, Core.Animator.Sprite.ImageFrame>
     self.frames = {}
 
+    ---@type table<string, Core.Animator.Sprite.AnimationState>
     self.animations = {}
 
-    ---当前渲染状态
+    ---@type Core.Animator.Sprite.AnimationFrame
     self.currentFrame = nil
+    ---@type Core.Animator.Sprite.AnimationState
     self.currentAnimation = nil
     self.animationTimer = 0
     self.animationIndex = 1
@@ -58,6 +46,8 @@ function M:initialize(obj, texture)
     self.color = Color(0xFFFFFFFF)
 
     ---创建状态机
+    ---@class Core.Animator.Sprite.StateMachine:Core.Lib.StateMachine
+    ---@field context Core.Animator.Sprite.StateMachine.Context
     self.stateMachine = StateMachine.New()
 
     ---设置状态机上下文
@@ -70,7 +60,7 @@ function M:initialize(obj, texture)
 end
 
 ---注册一个图像帧（支持位置参数和表参数两种方式）
----@param id string|number|table @帧 ID 或参数表
+---@param id string|number @帧 ID 或参数表
 ---@param x number|nil @纹理 X 坐标
 ---@param y number|nil @纹理 Y 坐标
 ---@param w number|nil @图像宽度
@@ -81,6 +71,7 @@ end
 ---@param offsetX number|nil @偏移量 X（像素，默认 0）
 ---@param offsetY number|nil @偏移量 Y（像素，默认 0）
 ---@param rot number|nil @旋转角度（默认 0）
+---@overload fun(params:Core.Animator.Sprite.ImageFrame):Core.Animator.Sprite
 function M:registerFrame(id, x, y, w, h, texture, anchorX, anchorY, offsetX, offsetY, rot)
     -- 支持表参数
     if type(id) == "table" then
@@ -103,7 +94,8 @@ function M:registerFrame(id, x, y, w, h, texture, anchorX, anchorY, offsetX, off
     offsetX = offsetX or 0
     offsetY = offsetY or 0
     rot = rot or 0
-    self.frames[id] = {
+    ---@class Core.Animator.Sprite.ImageFrame
+    local imageFrame = {
         texture = texture,
         x = x,
         y = y,
@@ -115,11 +107,12 @@ function M:registerFrame(id, x, y, w, h, texture, anchorX, anchorY, offsetX, off
         offsetY = offsetY,
         rot = rot,
     }
+    self.frames[id] = imageFrame
     return self
 end
 
----注册一组连续的图像帧（支持位置参数和表参数两种方式）
----@param idPrefix string|table @帧 ID 前缀或参数表
+---注册一组连续的图像帧
+---@param idPrefix string @帧 ID 前缀
 ---@param startX number|nil @起始纹理 X 坐标
 ---@param startY number|nil @起始纹理 Y 坐标
 ---@param w number|nil @单帧宽度
@@ -132,36 +125,7 @@ end
 ---@param offsetX number|nil @偏移量 X（像素，默认 0）
 ---@param offsetY number|nil @偏移量 Y（像素，默认 0）
 ---@param rot number|nil @旋转角度（默认 0）
----
---- 表参数格式：{
----   idPrefix = "frame",
----   startX = 0, startY = 0,
----   w = 32, h = 32,
----   cols = 4, rows = 2,
----   texture = "tex",
----   anchorX = 0.5, anchorY = 0.5,
----   offsetX = 0, offsetY = 0,
----   rot = 0
---- }
 function M:registerFrameGroup(idPrefix, startX, startY, w, h, cols, rows, texture, anchorX, anchorY, offsetX, offsetY, rot)
-    -- 支持表参数
-    if type(idPrefix) == "table" then
-        local params = idPrefix
-        idPrefix = params.idPrefix
-        startX = params.startX
-        startY = params.startY
-        w = params.w
-        h = params.h
-        cols = params.cols
-        rows = params.rows
-        texture = params.texture
-        anchorX = params.anchorX
-        anchorY = params.anchorY
-        offsetX = params.offsetX
-        offsetY = params.offsetY
-        rot = params.rot
-    end
-
     rows = rows or 1
     local index = 1
     for row = 0, rows - 1 do
@@ -185,23 +149,16 @@ end
 
 ---注册一个动画状态
 ---@param name string @动画名称
----@param frameData (string|number|table)[] @帧数据列表，可以是帧 ID 或包含变换参数的表
+---@param frameData (string|number|Core.Animator.Sprite.AnimationFrame)[] @帧数据列表，可以是帧 ID 或包含变换参数的表
 ---@param interval number|nil @帧间隔（默认 8），作为未指定 duration 的帧的默认持续时间
 ---@param loop boolean|nil @是否循环（默认 false）
----
---- frameData 可以是以下格式之一：
---- 1. 简单格式：{"frame1", "frame2", "frame3"}
---- 2. 完整格式：{
----      {id = "frame1", dx = 0, dy = 0, hscale = 1, vscale = 1, rot = 0, duration = 8},
----      {id = "frame2", dx = 10, dy = 0, hscale = 1, vscale = 1, rot = 45, duration = 12}
----    }
 --- 3. 混合格式（部分帧指定 duration，其余使用动画的 interval）
 function M:registerAnimation(name, frameData, interval, loop)
     local frames = {}
     local frameIndex = 1
     local defaultDuration = interval or 8
 
-    for i, data in ipairs(frameData) do
+    for _, data in ipairs(frameData) do
         local frameId, dx, dy, hscale, vscale, rot, duration
 
         if type(data) == "table" then
@@ -224,7 +181,8 @@ function M:registerAnimation(name, frameData, interval, loop)
 
         local imageFrame = self.frames[frameId]
         if imageFrame then
-            frames[frameIndex] = {
+            ---@class Core.Animator.Sprite.AnimationFrame
+            local frame = {
                 image = imageFrame,
                 dx = dx,
                 dy = dy,
@@ -233,17 +191,19 @@ function M:registerAnimation(name, frameData, interval, loop)
                 rot = rot,
                 duration = duration,
             }
+            frames[frameIndex] = frame
             frameIndex = frameIndex + 1
         else
-            print(string.format("[Core.Animator.Sprite] 警告: 动画 '%s' 中找不到帧 ID '%s'", name, tostring(frameId)))
+            Core.System.Log(Core.System.LogType.Warning, ("动画 %s 中找不到帧 ID %s"):format(name, tostring(frameId)))
         end
     end
-
-    self.animations[name] = {
+    ---@class Core.Animator.Sprite.AnimationState
+    local animation = {
         frames = frames,
         interval = defaultDuration,
         loop = not not loop,
     }
+    self.animations[name] = animation
     return self
 end
 
@@ -253,7 +213,7 @@ end
 ---@param reverse boolean|nil @是否倒序（默认 false）
 ---@param mirror boolean|nil @是否镜像（默认 false）
 ---@return boolean @是否复制成功
-function M:copyAnimation(sourceName, targetName, reverse, mirror)
+function M:copyAnimation(targetName, sourceName, reverse, mirror)
     local sourceAnim = self.animations[sourceName]
     if not sourceAnim then
         return false
@@ -430,17 +390,61 @@ function M:registerState(name, callbacks)
     return self
 end
 
+---注册动画状态（自动处理动画播放和更新）
+---@param stateName string @状态名称
+---@param animationName string|nil @动画名称（如果为 nil 则使用状态名）
+---@param autoUpdate boolean|nil @是否自动更新动画（默认 true）
+---@param callbacks Core.Animator.Sprite.StateMachine.StateCallbacks|nil @可选的额外回调 {onEnter, onExit, onUpdate}
+---@return number @状态ID
+function M:registerAnimationState(stateName, animationName, autoUpdate, callbacks)
+    animationName = animationName or stateName
+    autoUpdate = autoUpdate ~= false  -- 默认为 true
+    callbacks = callbacks or {}
+
+    local userOnEnter = callbacks.onEnter
+    local userOnExit = callbacks.onExit
+    local userOnUpdate = callbacks.onUpdate
+
+    local stateCallbacks = {
+        ---@param ctx Core.Animator.Sprite.StateMachine.Context
+        onEnter = function(ctx)
+            -- 自动播放动画
+            ctx.owner:playAnimation(animationName)
+            -- 调用用户自定义的 onEnter
+            if userOnEnter then
+                userOnEnter(ctx)
+            end
+        end,
+
+        onExit = userOnExit,
+    }
+
+    -- 只在启用自动更新时添加 onUpdate
+    if autoUpdate or userOnUpdate then
+        ---@param ctx Core.Animator.Sprite.StateMachine.Context
+        stateCallbacks.onUpdate = function(ctx, dt)
+            -- 自动更新动画（如果启用）
+            if autoUpdate then
+                ctx.owner:updateAnimation(dt)
+            end
+            -- 调用用户自定义的 onUpdate
+            if userOnUpdate then
+                userOnUpdate(ctx, dt)
+            end
+        end
+    end
+
+    return self.stateMachine:registerState(stateName, stateCallbacks)
+end
+
 ---帧更新
 function M:update(deltaTime)
     deltaTime = deltaTime or 1
-
     -- 更新状态机
     self.stateMachine:update(deltaTime)
 end
 
 ---渲染
----@param damageTime number|nil @受击时间
----@param damageTimeMax number|nil @受击最大时间
 function M:render()
     if not self.currentFrame then
         return
@@ -461,6 +465,7 @@ function M:render()
     local color = self.color
 
     -- 计算位置和缩放（从状态机上下文读取附加变换参数）
+    ---@type Core.Animator.Sprite.StateMachine.Context
     local ctx = self.stateMachine.context
     local ctxDx = ctx.dx or 0
     local ctxDy = ctx.dy or 0
