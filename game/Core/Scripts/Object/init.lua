@@ -3,8 +3,6 @@
 ---@field Layer Core.Object.Layer
 ---@field Group Core.Object.Group
 ---@field AttributeProxy Core.Object.AttributeProxy
----@field GameObjectMixin Core.Object.GameObjectMixin
----@field GameObject Core.Object.GameObject
 local M = {}
 Core.Object = M
 
@@ -80,8 +78,6 @@ require("Core.Scripts.Object.Layer")
 require("Core.Scripts.Object.Group")
 require("Core.Scripts.Object.Utils")
 require("Core.Scripts.Object.AttributeProxy")
-require("Core.Scripts.Object.GameObjectMixin")
-require("Core.Scripts.Object.GameObject")
 
 setmetatable(M, {
     __index = function(t, k)

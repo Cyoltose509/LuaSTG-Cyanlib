@@ -391,13 +391,13 @@ function M:registerState(name, callbacks)
 end
 
 ---注册动画状态（自动处理动画播放和更新）
----@param stateName string @状态名称
----@param animationName string|nil @动画名称（如果为 nil 则使用状态名）
+---@param name string @状态名称
+---@param aniName string|nil @动画名称（如果为 nil 则使用状态名）
 ---@param autoUpdate boolean|nil @是否自动更新动画（默认 true）
 ---@param callbacks Core.Animator.Sprite.StateMachine.StateCallbacks|nil @可选的额外回调 {onEnter, onExit, onUpdate}
----@return number @状态ID
-function M:registerAnimationState(stateName, animationName, autoUpdate, callbacks)
-    animationName = animationName or stateName
+---@return self
+function M:registerAnimationState(name, aniName, autoUpdate, callbacks)
+    aniName = aniName or name
     autoUpdate = autoUpdate ~= false  -- 默认为 true
     callbacks = callbacks or {}
 
@@ -409,7 +409,7 @@ function M:registerAnimationState(stateName, animationName, autoUpdate, callback
         ---@param ctx Core.Animator.Sprite.StateMachine.Context
         onEnter = function(ctx)
             -- 自动播放动画
-            ctx.owner:playAnimation(animationName)
+            ctx.owner:playAnimation(aniName)
             -- 调用用户自定义的 onEnter
             if userOnEnter then
                 userOnEnter(ctx)
@@ -433,8 +433,8 @@ function M:registerAnimationState(stateName, animationName, autoUpdate, callback
             end
         end
     end
-
-    return self.stateMachine:registerState(stateName, stateCallbacks)
+    self.stateMachine:registerState(name, stateCallbacks)
+    return self
 end
 
 ---帧更新

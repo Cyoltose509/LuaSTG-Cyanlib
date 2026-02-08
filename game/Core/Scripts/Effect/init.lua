@@ -3,7 +3,7 @@
 local M = {}
 Core.Effect = M
 
-local Object=Core.Object
+local Object = Core.Object
 
 local rand = Core.RNG:newRaw(Core.RNG.Algorithm.Xoshiro128ss, os.time())
 M.rand = rand
@@ -85,11 +85,11 @@ function wave:frame()
     self.time = self.time + dt
     self.lr = self.nr
     local k = min(1, self.time / self.lifetime)
-    self.alpha = max(0, 255 * (1 - k))
+    self.alpha = max(0, self.full_alpha * (1 - k))
     self.nr = self.ir + Core.Lib.Easing[2](k) * (self.sr - self.ir)
     self.dr = self.nr - self.lr
     self.smear_r = self.smear_r + self.dr
-    self.smear_r =Core.Math.ExpInterp( self.smear_r, 0, dt * 7.2)
+    self.smear_r = Core.Math.ExpInterp(self.smear_r, 0, dt * 7.2)
     if self.time > self.lifetime then
         Object.Del(self)
     end
@@ -106,7 +106,7 @@ function wave:render()
     end
 end
 
-function M.Wave(x, y, w, ir, sr, time, r, g, b, out, layer)
+function M.Wave(x, y, w, ir, sr, time, r, g, b, out, layer, full_alpha)
     local self = Object.New(wave)
     self.x, self.y = x, y
     self.layer = layer or 0
@@ -120,12 +120,14 @@ function M.Wave(x, y, w, ir, sr, time, r, g, b, out, layer)
     self.dr = 0
     self.lr = self.nr
     self.smear_r = 0
-    self.alpha = 255
+
     self.colli = false
     self._r, self._g, self._b = r or 255, g or 255, b or 255
     self.alpha_index = 1
     self.out = out
     self.time = 0
+    self.full_alpha = full_alpha or 255
+    self.alpha = self.full_alpha
     return self
 end
 
@@ -180,7 +182,6 @@ function M.PulseScreen(layer, col, blend, fade_in, stay, fade_out)
     self.t3 = fade_in + stay + fade_out
     return self
 end
-
 
 require("Core.Scripts.Effect.Post")
 

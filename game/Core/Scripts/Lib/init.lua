@@ -7,8 +7,8 @@
 ---@field Json Core.Lib.Json
 ---@field EventListener fun():Core.Lib.EventListener
 ---@field StateMachine Core.Lib.StateMachine
----@field TypeDef Core.Lib.TypeDef
 ---@field ComponentSystem Core.Lib.ComponentSystem
+---@field ComponentBase Core.Lib.ComponentBase
 local M = {}
 Core.Lib = M
 
@@ -18,7 +18,7 @@ require("Core.Scripts.Lib.Easing")
 require("Core.Scripts.Lib.Json")
 require("Core.Scripts.Lib.EventListener")
 require("Core.Scripts.Lib.StateMachine")
-require("Core.Scripts.Lib.TypeDef")
 require("Core.Scripts.Lib.ComponentSystem")
+require("Core.Scripts.Lib.ComponentBase")
 
 
