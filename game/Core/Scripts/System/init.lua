@@ -13,8 +13,15 @@ M.OpenFile = ShellIntegration.openFile
 M.OpenDirectory = ShellIntegration.openDirectory
 M.OpenURL = ShellIntegration.openUrl
 
+---获取本地应用程序数据路径
+---Get local application data path
+---@type fun():string
 M.GetLocalAppDataPath = lstg.Platform.GetLocalAppDataPath
+---获取漫游应用程序数据路径
+---Get roaming application data path
+---@type fun():string
 M.GetRoamingAppDataPath = lstg.Platform.GetRoamingAppDataPath
+
 M.RestartWithCommandLineArguments = lstg.Platform.RestartWithCommandLineArguments
 M.MessageBox = lstg.Platform.MessageBox
 
@@ -26,6 +33,7 @@ M.LogType = {
     Fatal = 5,
 }
 M.Log = lstg.Log
+
 
 ---设置标题栏是否自动隐藏
 ---win11专属功能

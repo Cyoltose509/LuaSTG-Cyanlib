@@ -15,7 +15,9 @@ local function classCreate(instance, class, ...)
 end
 
 ---声明一个类
----@param base table 基类
+---@generic T
+---@param base T 基类
+---@return T
 function M.Class(base)
     local class = { _mbc = {}, super = base }
 
