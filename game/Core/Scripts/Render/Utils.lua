@@ -185,21 +185,28 @@ function M.TexInChamferRect(texname, blend, color, l, r, b, t, rr, size, offx, o
 
 end
 
-function M.TexInCircle(texname, x, y, ux, uy, radius, rot, scale, blend, color, cut)
+function M.TexInCircle(texname, x, y, radius, rot, scale, cut, blend, color, offx, offy, offrot)
     blend = blend or Core.Render.BlendMode.Default
     color = color or Core.Render.Color.Default
+    cut = cut or 10
     local tex = Core.Resource.Texture.Get(texname):setBlend(blend)
+    local tw, th = tex:getSize()
+    offx = (offx or 0) / scale + tw / 2
+    offy = -(offy or 0) / scale + th / 2
+    offrot = offrot or 0
+
     local angle
-    local ang = 360 / cut / 2
+    local ang = 360 / cut
     local uradius = radius / scale
+
     for a = 1, cut do
-        angle = rot + 360 / cut * a
+        angle = offrot + 360 / cut * a
         tex:setUV1(x + radius * cos(angle - ang), y + radius * sin(angle - ang), 0.5,
-                ux + uradius * cos(angle + ang), uy - uradius * sin(angle + ang), color)
-           :setUV2(x, y, 0.5, ux, uy, color)
-           :setUV3(x, y, 0.5, ux, uy, color)
-           :setUV4(x + radius * cos(angle - ang), y + radius * sin(angle - ang), 0.5,
-                ux + uradius * cos(angle - ang), uy - uradius * sin(angle - ang), color)
+                offx + uradius * cos(rot + angle - ang), offy - uradius * sin(rot + angle - ang), color)
+           :setUV2(x, y, 0.5, offx, offy, color)
+           :setUV3(x, y, 0.5, offx, offy, color)
+           :setUV4(x + radius * cos(angle), y + radius * sin(angle), 0.5,
+                offx + uradius * cos(rot + angle), offy - uradius * sin(rot + angle), color)
            :draw()
     end
 end
