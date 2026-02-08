@@ -104,14 +104,14 @@ function M.Main(self)
         root:addChild(mlayout)
         local text = UI.Text():setPos(0, 0)
                        :setFont("wenkai")
-                       :setText(Core.I18n:get("welcome-message"))
+                       :setText(Core.I18n.Get("welcome-message"))
                        :setSize(60)
         root:addChild(text)
         local languageList = Core.I18n.GetAvailableLanguages()
         for _, lang in ipairs(languageList) do
             Debug.AddButton("Test", "Switch to language: " .. lang, function()
                 Core.I18n.SetLanguage(lang)
-                text:setText(Core.I18n:get("welcome-message"))
+                text:setText(Core.I18n.Get("welcome-message"))
             end)
         end
 
