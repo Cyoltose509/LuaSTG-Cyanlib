@@ -99,11 +99,11 @@ function EventListener:addEventAdvanced(group, opt)
             end
         end
         local ptr
-        if dir == "before" then
+        if dir == -1 then
             ptr = max(idx - 1, 1)
             local before = list[ptr]
             return before and (before.level + ref.level) / 2 or ref.level - 1
-        else
+        elseif dir == 1 then
             ptr = min(idx + 1, #list)
             local after = list[ptr]
             return after and (ref.level + after.level) / 2 or ref.level + 1
@@ -111,14 +111,16 @@ function EventListener:addEventAdvanced(group, opt)
     end
     local level = opt.level
     if opt.before then
-        level = calcLevel(opt.before, "before")
+        level = calcLevel(opt.before, -1)
     elseif opt.after then
-        level = calcLevel(opt.after, "after")
+        level = calcLevel(opt.after, 1)
     elseif opt.autoSort or not opt.level then
         local list = self.data[group]
         local last = list[#list]
         if last then
             level = last.level + 1
+        else
+            level = 0
         end
     end
     local m = self:addEvent(group, opt.name, level, opt.func)
