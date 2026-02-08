@@ -67,8 +67,6 @@ local default_setting = {
 ---@type Core.Data.Setting.Settings
 local setting = {}
 
-local settingfile_dir = Core.Data.GetPath()
-local settingfile = settingfile_dir .. "/setting.json"
 
 function M.GetDefault()
     return default_setting
@@ -77,6 +75,8 @@ function M.Get()
     return setting
 end
 function M.Save()
+    local settingfile_dir = Core.Data.GetPath()
+    local settingfile = settingfile_dir .. "/setting.json"
     Core.VFS.CreateDirectory(settingfile_dir)
     local f = assert(io.open(settingfile, 'w'))
     f:write(Core.Lib.Json.Serialize(setting))
@@ -84,6 +84,8 @@ function M.Save()
 end
 function M.Load()
     local f, msg
+    local settingfile_dir = Core.Data.GetPath()
+    local settingfile = settingfile_dir .. "/setting.json"
     f, msg = io.open(settingfile, 'r')
     if f == nil then
         setting = Core.Lib.Table.DeepCopy(default_setting)
@@ -104,4 +106,4 @@ function M.Load()
     end-- 补全配置项
 end
 
-M.Load()
+--M.Load()
