@@ -9,8 +9,11 @@ M.languageSet = {}
 
 M.languageDirectory = {}
 
+---@type string[]
 M.text = {}
+---@type string[]
 M.jargon = {}
+---@type fun[]
 M.command = {}
 
 local function SkimDirectory(dir)
@@ -111,24 +114,25 @@ end
 ---@param key string
 ---@return string
 ---获取纯净的多语言文本，不带术语与命令
-function M:getRaw(key)
-    return self.text[key] or key
+function M.GetRaw(key)
+    return M.text[key] or key
 end
 
-function M:exists(key)
-    return self.text[key] ~= nil
+function M.Exists(key)
+    return M.text[key] ~= nil
 end
 
 ---获取带有术语的多语言文本
-function M:get(key)
-    local text = self.text[key] or key
+---@return string
+function M.Get(key)
+    local text = M.text[key] or key
     if not text:find("/") then
         return text
     end
-    for kw, func in pairs(self.command) do
+    for kw, func in pairs(M.command) do
         text = text:gsub("/" .. kw, func)
     end
-    for i, l in pairs(self.jargon) do
+    for i, l in pairs(M.jargon) do
         text = text:gsub("/" .. i, l)
     end
     return text
