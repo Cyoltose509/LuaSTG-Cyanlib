@@ -23,7 +23,7 @@
 local M = Core.Class()
 Core.Render.Text = M
 
-M.DEFAULT_FONT = "wenkai"
+M.DEFAULT_FONT = "heiti"
 M.DEFAULT_SIZE = 16
 M.DEFAULT_COLOR = Core.Render.Color.Default
 M.DEFAULT_OBLIQUE_ANGLE = 12
@@ -476,6 +476,7 @@ function M:refreshTextSegments()
             underline = false,
             strikethrough = false,
             blend = self.blend,
+            alpha = 1,
         })
         text = data.text
         self._rich_text_data = data.runs
@@ -501,7 +502,12 @@ function M:refreshColor()
     for _, line in ipairs(self._lines) do
         for _, data in ipairs(line.data) do
             if data.style and data.style.color then
-                data.style.color.a = self.color.a
+                data.style.color.a = self.color.a * data.style.alpha
+                if not data.style.custom_color then
+                    data.style.color.r = self.color.r
+                    data.style.color.g = self.color.g
+                    data.style.color.b = self.color.b
+                end
             end
         end
     end
@@ -517,16 +523,15 @@ function M:refreshLines()
     local text = self._text_segments
     ---@type Core.Render.Text.Line[]
     local lines = {}
-    local curBuf = {}
-    ---@type Core.Render.Text.Data[]
-    local dataBuf = {}
-    local maxW = self.width
-    local curWidth = 0
-    local curHeight = 0
-    local smallBuf = {}
-    local smallWidth = 0
-    local smallHeight = 0
-    local totalHeight = 0
+    ---@type Core.Render.Text.Word[]
+    local word_buf = {}
+    local total_width = self.width
+    local line_width = 0
+    local line_height = 0
+    local tok_buf = {}
+    local word_width = 0
+    local word_height = 0
+    local total_height = 0
     local success = true
     local i = 1
     local byte_i = 0
@@ -535,38 +540,45 @@ function M:refreshLines()
     local lh = fr.GetFontLineHeight()
     local asc = fr.GetFontAscender()
     local _real_asc = 0
-    local function next(tok, tw)
-        table.insert(curBuf, tok)
-        table.insert(smallBuf, tok)
-        smallWidth = smallWidth + tw
-        curWidth = curWidth + tw
-        maxW = max(maxW, curWidth)
+    local function next_tok(tok, tw, th, size)
+        table.insert(tok_buf, tok)
+        word_width = word_width + tw
+        line_width = line_width + tw
+        total_width = max(total_width, line_width)
+        line_height = max(line_height, th)
+        word_height = max(word_height, th)
+        if #lines == 0 then
+            _real_asc = max(_real_asc, vs * size * asc)
+        end
         i = i + 1
     end
-    local function insert_line()
-        local data = {
-            text = table.concat(smallBuf),
+    local function next_word()
+        ---@class Core.Render.Text.Word
+        local word = {
+            text = table.concat(tok_buf),
             style = style,
-            width = smallWidth,
-            height = smallHeight,
+            width = word_width,
+            height = word_height,
         }
-        table.insert(dataBuf, data)
+        table.insert(word_buf, word)
+        tok_buf = {}
+        word_width = 0
+        word_height = 0
+    end
+    local function next_line()
+        next_word()
         ---@class Core.Render.Text.Line
         local line = {
-            width = curWidth,
-            height = curHeight,
-            data = dataBuf,
+            width = line_width,
+            height = line_height,
+            data = word_buf,
         }
         -- print(curWidth, curHeight, smallWidth, smallHeight)
         table.insert(lines, line)
-        totalHeight = totalHeight + curHeight
-        curHeight = 0
-        curBuf = {}
-        dataBuf = {}
-        smallBuf = {}
-        smallWidth = 0
-        smallHeight = 0
-        curWidth = 0
+        total_height = total_height + line_height
+        line_height = 0
+        word_buf = {}
+        line_width = 0
     end
 
     while i <= #text do
@@ -575,55 +587,39 @@ function M:refreshLines()
         if rich_data and #rich_data > 0 then
             local run = rich_data[1]
             if run.start <= byte_i and byte_i <= run.stop then
-
-                ---@class Core.Render.Text.Data
-                local data = {
-                    text = table.concat(smallBuf),
-                    style = style,
-                    width = smallWidth,
-                    height = smallHeight,
-                }
-                table.insert(dataBuf, data)
-                smallBuf = {}
-                smallWidth = 0
-                smallHeight = 0
+                next_word()
                 style = run.style
                 table.remove(rich_data, 1)
             end
         end
         if tok == "\n" then
-            insert_line()
+            next_line()
             i = i + 1
         else
             local size = style and style.size or 1
             fr.SetScale(hs * size, vs * size)
             local tw = fr.MeasureTextAdvance(tok)
             local th = size * vs * lh
-            if #lines == 0 then
-                _real_asc = max(_real_asc, vs * size * asc)
-            end
-            curHeight = max(curHeight, th)
-            smallHeight = max(smallHeight, th)
+
             if tok ~= "" and tw == 0 then
                 success = false
             end
-            local overflow = curWidth + tw > self.width
             if self.word_break or self.wrap_word then
-                if overflow then
-                    insert_line()
+                if line_width + tw > self.width then
+                    next_line()
                 end
-                next(tok, tw)
+                next_tok(tok, tw, th, size)
             else
-                next(tok, tw)
+                next_tok(tok, tw, th, size)
             end
         end
     end
-    if #curBuf > 0 then
-        insert_line()
+    if #tok_buf > 0 then
+        next_line()
     end
     self._lines = lines
-    self._total_height = totalHeight
-    self._total_width = maxW
+    self._total_height = total_height
+    self._total_width = total_width
     self._ascender = _real_asc
     self:refreshColor()
     if self.auto_fit_height then
@@ -736,10 +732,7 @@ function M:draw(no_update)
         local y = _y
         local z = _z
         local lw = line.width
-        local index = 1
-        if self.auto_fit_width then
-            index = min(self.width / lw, 1)
-        end
+        local index = self.auto_fit_width and min(self.width / lw, 1) or 1
         local xoffset = -self.h_align * lw * index
         x = x + xv[1] * xoffset
         y = y + xv[2] * xoffset
@@ -757,17 +750,17 @@ function M:draw(no_update)
             if style and style.oblique or self.is_oblique then
                 y1, y2, y3 = yv[1], yv[2], yv[3]
             end
+            local hsize, vsize = hs * index * size, vs * size
             if self.lock_aspect_ratio then
                 local m = min(hs * index, vs)
-                fr.SetScale(m * size, m * size)
-            else
-                fr.SetScale(hs * index * size, vs * size)
+                hsize, vsize = m * size, m * size
             end
+            fr.SetScale(hsize, vsize)
             local blend = style and style.blend or self.blend
             if style and style.shadow or P.enabled then
                 for i = 1, P.div do
-                    local dx = P.dir_x * i / P.div
-                    local dy = P.dir_y * i / P.div
+                    local dx = P.dir_x * i / P.div * hsize * self.size / 15
+                    local dy = P.dir_y * i / P.div * vsize * self.size / 15
                     fr.RenderTextInSpace(data.text, x + dx, y + dy, z, xv[1], xv[2], xv[3], y1, y2, y3,
                             blend, P.color * (1 - i / P.div))
                 end
@@ -787,9 +780,9 @@ function M:draw(no_update)
                 draw_line(x, y, z, x + dw * xv[1], y + dw * xv[2], z + dw * xv[3], wv,
                         h - w, h + w, blend, _color)
             end
-            x = x + dw * xv[1]
-            y = y + dw * xv[2]
-            z = z + dw * xv[3]
+            x = x + dw * xv[1] * index
+            y = y + dw * xv[2] * index
+            z = z + dw * xv[3] * index
         end
         if self._lines[k + 1] then
             local h = self._lines[k + 1].height
