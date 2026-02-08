@@ -32,3 +32,16 @@ function M.Clear()
     M.Queue = {}
     M.ptr = 1
 end
+
+function M.EnumFliesWithFunction(path, extend, func, prefix, suffix)
+    prefix = prefix or ""
+    suffix = suffix or ""
+    for _, v in ipairs(Core.VFS.EnumFiles(path, extend, true)) do
+        local name = v[1]:sub(#path + 1, -5)
+        name = prefix .. name .. suffix
+        M.Add(function()
+            func(name, v[1])
+        end)
+    end
+
+end
