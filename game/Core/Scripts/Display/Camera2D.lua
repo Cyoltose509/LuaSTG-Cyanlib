@@ -25,10 +25,10 @@ end
 ---@param width number
 ---@param height number
 function M:setView(centerX, centerY, width, height)
-    self.view.centerX = centerX
-    self.view.centerY = centerY
-    self.view.width = width
-    self.view.height = height
+    self.view.centerX = centerX or self.view.centerX
+    self.view.centerY = centerY or self.view.centerY
+    self.view.width = width or self.view.width
+    self.view.height = height or self.view.height
     return self
 end
 function M:setZoom(zoom)
@@ -219,15 +219,7 @@ function M:reset()
     local sw, sh = Core.Display.Screen.GetSize()
     local w, h = Core.Display.Window.GetSize()
     self:setViewport(0, w, 0, h)
-        :setView(sw / 2, sh / 2, sw, sh)
+        :setView(nil, nil, sw, sh)
     return self
 end
 
----以此相机视角创建一个world对象
----Create a world object with this camera view
----@param outside number@边界外围的距离，单位为像素
----@return Core.World
-function M:getWorld(outside)
-    local view = self:getView()
-    return Core.World.New(view.left, view.right, view.bottom, view.top, outside)
-end
