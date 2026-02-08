@@ -4,12 +4,14 @@ Core.Render.Text.RichText = M
 
 ---@class Core.Render.Text.RichText.Style
 ---@field color Core.Render.Color
+---@field custom_color boolean
 ---@field size number
 ---@field oblique boolean
 ---@field shadow boolean
 ---@field underline boolean
 ---@field strikethrough boolean
 ---@field blend boolean
+---@field alpha number
 
 local Color = Core.Render.Color
 local color = {
@@ -39,6 +41,7 @@ local function current_style(now_style, default)
     for k, v in pairs(default) do
         style[k] = v
     end
+    style.custom_color = false
     for name, value in pairs(now_style) do
         if name == "oblique" or name == "i" then
             style.oblique = true
@@ -51,13 +54,17 @@ local function current_style(now_style, default)
         elseif name == "blend" then
             style.blend = value
         elseif name == "color" or name == "col" then
-            if color[value:lower()] then
-                style.color = Color(color[value:lower()]:ARGB())
+            local cache = color[value:lower()]
+            if cache then
+                style.color = Color(cache:ARGB())
             else
                 style.color = Color(tonumber("FF" .. (value or "FFFFFF"), 16))
             end
+            style.custom_color = true
         elseif name == "size" then
             style.size = tonumber(value) or default.size
+        elseif name == "alpha" then
+            style.alpha = tonumber(value) or default.alpha
         end
     end
     return style
