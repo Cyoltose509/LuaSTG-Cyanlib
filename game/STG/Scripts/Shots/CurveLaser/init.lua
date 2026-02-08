@@ -103,7 +103,7 @@ local function render_laser(self)
     local tLeft, tTop = data.x, data.y
     local tWidth, tHeight = data.w, data.h
     local wRatio = data.wRatio
-    local tex = data.tex
+    local tex = Core.Resource.Texture.Get(data.tex)
     local color = Core.Render.Color(self._a, self._r, self._g, self._b)
     local band_width = self.w * wRatio
     local half_width = band_width / 2

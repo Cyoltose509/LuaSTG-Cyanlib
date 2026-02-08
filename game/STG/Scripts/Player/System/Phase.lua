@@ -1,6 +1,6 @@
-local base = STG.Player.System.SystemBase
+local base = STG.Player.ComponentBase
 
----@class STG.Player.System.Phase:STG.Player.System.SystemBase
+---@class STG.Player.System.Phase:STG.Player.ComponentBase
 local M = Core.Class(base)
 STG.Player.System.Phase = M
 
@@ -19,19 +19,15 @@ function M:init(player, system)
     self.sm:registerState("stun")
     self.sm:registerState("dead")
     self.sm:setContext("system", self)
-    self.sm:setContext("stun_time", 0.5)
 
+
+    self.sm:setState("normal")
     self.sm:setOnStateChanged(function(from, to)
         self.phase_timer = 0
         if system.onPhaseChanged then
             system:onPhaseChanged(from, to)
         end
     end)
-    self.sm:addTransition("stun", "normal", function(ctx)
-        return self.phase_timer > ctx.stun_time
-    end)
-
-    self.sm:setState("normal")
 end
 
 function M:update(dt)

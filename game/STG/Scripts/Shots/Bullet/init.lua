@@ -57,7 +57,7 @@ function Base:render()
     end
 end
 
----@param type STG.Shots.Bullet.Type
+---@param type string
 ---@param index number
 ---@param stay boolean
 ---@param destroyable boolean

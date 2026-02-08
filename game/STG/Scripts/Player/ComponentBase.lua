@@ -1,12 +1,12 @@
----@class STG.Player.ComponentBase
-local M = Core.Class()
+---@class STG.Player.ComponentBase:Core.Lib.ComponentBase
+local M = Core.Class(Core.Lib.ComponentBase)
 STG.Player.ComponentBase = M
 
+---@param player STG.Player.Base
+---@param system STG.Player.System
 function M:init(player, system)
-    self.owner = player
+    self.player = player
     self.system = system
-    self.config = {}
-    return self
 end
 
 function M:update()
@@ -15,19 +15,20 @@ end
 function M:render()
 
 end
+
+function M:setProfile()
+end
+
 function M:getViewData()
     return nil
 end
----@param info STG.Player.System.onDamageInfo
-function M:onDamage(info)
-end
 
 function M:onDeath()
-end
-
-function M:onRemove()
 
 end
-function M:onPhaseChanged()
+function M:onDamage()
+
+end
+function M:onPhaseChanged(from, to)
 
 end

@@ -1,6 +1,6 @@
-local base = STG.Player.System.SystemBase
+local base = STG.Player.ComponentBase
 
----@class STG.Player.System.Death:STG.Player.System.SystemBase
+---@class STG.Player.System.Death:STG.Player.ComponentBase
 local M = Core.Class(base)
 STG.Player.System.Death = M
 

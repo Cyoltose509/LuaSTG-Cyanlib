@@ -1,5 +1,5 @@
-local base = STG.Player.System.SystemBase
----@class STG.Player.System.Shoot:STG.Player.System.SystemBase
+local base = STG.Player.ComponentBase
+---@class STG.Player.System.Shoot:STG.Player.ComponentBase
 local M = Core.Class(base)
 STG.Player.System.Shoot = M
 

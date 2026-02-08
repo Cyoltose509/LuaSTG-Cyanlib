@@ -10,7 +10,7 @@ function M:init()
 end
 
 function M:getDelta(dt)
-    dt = dt and (dt * 60) or Time.GetSpeed()
+    dt = dt  or Time.GetSpeed()
     return self.scale
 end
 

@@ -84,9 +84,10 @@ function M:setupEnemyDefaultStates(options)
     local floatReturnSpeed = options.floatReturnSpeed or 0.3
     local floatEnabled = options.floatEnabled or false
 
-    local sm = self.walkSystem.stateMachine
+    local ws = self.walkSystem
+    local sm = ws.stateMachine
 
-    -- 根据移动方向更新面向
+    ---@param ctx Core.Animator.Sprite.StateMachine.Context
     local function updateFacing(ctx)
         local dx = ctx.owner.obj.dx or 0
         if dx < -moveThreshold then
@@ -96,7 +97,7 @@ function M:setupEnemyDefaultStates(options)
         end
     end
 
-    -- 漂浮效果更新函数
+    ---@param ctx Core.Animator.Sprite.StateMachine.Context
     local function updateFloating(ctx, dt, enabled)
         dt = dt or 1
 
@@ -133,122 +134,127 @@ function M:setupEnemyDefaultStates(options)
         end
     end
 
-    sm:registerState("idle_left", {
-        onEnter = function(ctx)
-            ctx.owner:playAnimation("idle_left")
-            ctx.facing = "left"
-            -- 如果不是从 idle 状态进入的，重置漂浮计时器
-            if not ctx.isInIdle then
-                ctx.floatTimer = 0
+    local function create_idle_callback(facing)
+        return {
+            ---@param ctx Core.Animator.Sprite.StateMachine.Context
+            onEnter = function(ctx)
+                ctx.facing = facing
+                if not ctx.isInIdle then
+                    ctx.floatTimer = 0
+                end
+                ctx.isInIdle = true
+            end,
+            ---@param ctx Core.Animator.Sprite.StateMachine.Context
+            onUpdate = function(ctx, dt)
+                updateFloating(ctx, dt, true)
             end
-            ctx.isInIdle = true
-        end,
-        onUpdate = function(ctx, dt)
-            ctx.owner:updateAnimation(dt)
-            updateFloating(ctx, dt, true)
-        end
-    })
-      :registerState("idle_right", {
-        onEnter = function(ctx)
-            ctx.owner:playAnimation("idle_right")
-            ctx.facing = "right"
-            -- 如果不是从 idle 状态进入的，重置漂浮计时器
-            if not ctx.isInIdle then
-                ctx.floatTimer = 0
+        }
+    end
+    local function create_move_enter_callback(facing)
+        local enter = "move_" .. facing .. "_enter"
+        local loop = "move_" .. facing .. "_loop"
+        return {
+            ---@param ctx Core.Animator.Sprite.StateMachine.Context
+            onEnter = function(ctx)
+                ctx.isInIdle = false
+                if ctx.owner:playAnimation(enter) then
+                    ctx.moveEntering = true
+                else
+                    ctx.owner.stateMachine:setState(loop)
+                end
+            end,
+            ---@param ctx Core.Animator.Sprite.StateMachine.Context
+            onUpdate = function(ctx, dt)
+                ctx.owner:updateAnimation(dt)
+                updateFloating(ctx, dt, false)
+            end,
+            ---@param ctx Core.Animator.Sprite.StateMachine.Context
+            onExit = function(ctx)
+                ctx.moveEntering = false
             end
-            ctx.isInIdle = true
-        end,
-        onUpdate = function(ctx, dt)
-            ctx.owner:updateAnimation(dt)
-            updateFloating(ctx, dt, true)
-        end
-    })
-      :registerState("move_left_enter", {
-        onEnter = function(ctx)
-            ctx.isInIdle = false
-            if ctx.owner:playAnimation("move_left_enter") then
-                ctx.moveEntering = true
-            else
-                ctx.owner.stateMachine:setState("move_left_loop")
+        }
+    end
+    local function create_move_loop_callback(facing)
+        return {
+            ---@param ctx Core.Animator.Sprite.StateMachine.Context
+            onEnter = function(ctx)
+                ctx.facing = facing
+            end,
+            ---@param ctx Core.Animator.Sprite.StateMachine.Context
+            onUpdate = function(ctx, dt)
+                updateFloating(ctx, dt, false)
             end
-        end,
-        onUpdate = function(ctx, dt)
-            ctx.owner:updateAnimation(dt)
-            updateFloating(ctx, dt, false)
-        end,
-        onExit = function(ctx)
-            ctx.moveEntering = false
-        end
-    })
-      :registerState("move_left_loop", {
-        onEnter = function(ctx)
-            ctx.owner:playAnimation("move_left_loop")
-            ctx.facing = "left"
-        end,
-        onUpdate = function(ctx, dt)
-            ctx.owner:updateAnimation(dt)
-            updateFloating(ctx, dt, false)
-        end
-    })
-      :registerState("move_left_exit", {
-        onEnter = function(ctx)
-            if ctx.owner:playAnimation("move_left_exit") then
-                ctx.moveExiting = true
-            else
-                ctx.owner.stateMachine:setState("idle_left")
+        }
+    end
+    local function create_move_exit_callback(facing)
+        local exit = "move_" .. facing .. "_exit"
+        local idle = "idle_" .. facing
+        return {
+            onEnter = function(ctx)
+                if ctx.owner:playAnimation(exit) then
+                    ctx.moveExiting = true
+                else
+                    ctx.owner.stateMachine:setState(idle)
+                end
+            end,
+            onUpdate = function(ctx, dt)
+                ctx.owner:updateAnimation(dt)
+                updateFloating(ctx, dt, false)
+            end,
+            onExit = function(ctx)
+                ctx.moveExiting = false
             end
-        end,
-        onUpdate = function(ctx, dt)
-            ctx.owner:updateAnimation(dt)
-            updateFloating(ctx, dt, false)
-        end,
-        onExit = function(ctx)
-            ctx.moveExiting = false
+        }
+    end
+
+    ---@param ctx Core.Animator.Sprite.StateMachine.Context
+    local function toMoveLoop(ctx)
+        if not ctx.moveEntering then
+            return false
         end
-    })
-      :registerState("move_right_enter", {
-        onEnter = function(ctx)
-            ctx.isInIdle = false
-            if ctx.owner:playAnimation("move_right_enter") then
-                ctx.moveEntering = true
-            else
-                ctx.owner.stateMachine:setState("move_right_loop")
+        local anim = ctx.owner.currentAnimation
+        if not anim or anim.loop then
+            return true
+        end
+        return ctx.owner.animationFinished
+    end
+
+    ---@param ctx Core.Animator.Sprite.StateMachine.Context
+    local function exitMoveLoop(ctx)
+        if not ctx.moveExiting then
+            return false
+        end
+        local anim = ctx.owner.currentAnimation
+        if not anim or anim.loop then
+            return true
+        end
+        return ctx.owner.animationFinished
+    end
+    ---@param ctx Core.Animator.Sprite.StateMachine.Context
+    local function isCast(ctx)
+        local cast = ctx.owner.obj.cast or 0
+        return cast > 0
+    end
+    local function castToIdle(facing)
+        ---@param ctx Core.Animator.Sprite.StateMachine.Context
+        return function(ctx)
+            if not ctx.castExiting then
+                return false
             end
-        end,
-        onUpdate = function(ctx, dt)
-            ctx.owner:updateAnimation(dt)
-            updateFloating(ctx, dt, false)
-        end,
-        onExit = function(ctx)
-            ctx.moveEntering = false
+            local anim = ctx.owner.currentAnimation
+            local animDone = not anim or anim.loop or ctx.owner.animationFinished
+            return animDone and ctx.facing == facing
         end
-    })
-      :registerState("move_right_loop", {
-        onEnter = function(ctx)
-            ctx.owner:playAnimation("move_right_loop")
-            ctx.facing = "right"
-        end,
-        onUpdate = function(ctx, dt)
-            ctx.owner:updateAnimation(dt)
-            updateFloating(ctx, dt, false)
-        end
-    })
-      :registerState("move_right_exit", {
-        onEnter = function(ctx)
-            if ctx.owner:playAnimation("move_right_exit") then
-                ctx.moveExiting = true
-            else
-                ctx.owner.stateMachine:setState("idle_right")
-            end
-        end,
-        onUpdate = function(ctx, dt)
-            ctx.owner:updateAnimation(dt)
-            updateFloating(ctx, dt, false)
-        end,
-        onExit = function(ctx)
-            ctx.moveExiting = false
-        end
-    })
+    end
+
+    ws:registerAnimationState("idle_left", nil, true, create_idle_callback("left"))
+      :registerAnimationState("idle_right", nil, true, create_idle_callback("right"))
+      :registerAnimationState("move_left_loop", nil, true, create_move_loop_callback("left"))
+      :registerAnimationState("move_right_loop", nil, true, create_move_loop_callback("left"))
+      :registerState("move_left_enter", create_move_enter_callback("left"))
+      :registerState("move_left_exit", create_move_exit_callback("left"))
+      :registerState("move_right_enter", create_move_enter_callback("right"))
+      :registerState("move_right_exit", create_move_exit_callback("right"))
       :registerState("cast_enter", {
         onEnter = function(ctx)
             ctx.isInIdle = false
@@ -311,7 +317,8 @@ function M:setupEnemyDefaultStates(options)
             ctx.castExiting = false
         end
     })
-      :addTransition("idle_left", "move_left_enter", function(ctx)
+
+    sm:addTransition("idle_left", "move_left_enter", function(ctx)
         local dx = ctx.owner.obj.dx or 0
         local cast = ctx.owner.obj.cast or 0
         return dx < -moveThreshold and cast <= 0
@@ -321,54 +328,18 @@ function M:setupEnemyDefaultStates(options)
         local cast = ctx.owner.obj.cast or 0
         return dx > moveThreshold and cast <= 0
     end)
-      :addTransition("move_left_enter", "move_left_loop", function(ctx)
-        if not ctx.moveEntering then
-            return false
-        end
-        local anim = ctx.owner.currentAnimation
-        if not anim or anim.loop then
-            return true
-        end
-        return ctx.owner.animationFinished
-    end)
+      :addTransition("move_left_enter", "move_left_loop", toMoveLoop)
       :addTransition("move_left_loop", "move_left_exit", function(ctx)
         local dx = ctx.owner.obj.dx or 0
         return dx >= -moveThreshold
     end)
-      :addTransition("move_left_exit", "idle_left", function(ctx)
-        if not ctx.moveExiting then
-            return false
-        end
-        local anim = ctx.owner.currentAnimation
-        if not anim or anim.loop then
-            return true
-        end
-        return ctx.owner.animationFinished
-    end)
-      :addTransition("move_right_enter", "move_right_loop", function(ctx)
-        if not ctx.moveEntering then
-            return false
-        end
-        local anim = ctx.owner.currentAnimation
-        if not anim or anim.loop then
-            return true
-        end
-        return ctx.owner.animationFinished
-    end)
+      :addTransition("move_left_exit", "idle_left", exitMoveLoop)
+      :addTransition("move_right_enter", "move_right_loop", toMoveLoop)
       :addTransition("move_right_loop", "move_right_exit", function(ctx)
         local dx = ctx.owner.obj.dx or 0
         return dx <= moveThreshold
     end)
-      :addTransition("move_right_exit", "idle_right", function(ctx)
-        if not ctx.moveExiting then
-            return false
-        end
-        local anim = ctx.owner.currentAnimation
-        if not anim or anim.loop then
-            return true
-        end
-        return ctx.owner.animationFinished
-    end)
+      :addTransition("move_right_exit", "idle_right", exitMoveLoop)
       :addTransition("idle_left", "move_right_enter", function(ctx)
         local dx = ctx.owner.obj.dx or 0
         local cast = ctx.owner.obj.cast or 0
@@ -379,14 +350,8 @@ function M:setupEnemyDefaultStates(options)
         local cast = ctx.owner.obj.cast or 0
         return dx < -moveThreshold and cast <= 0
     end)
-      :addTransition("idle_left", "cast_enter", function(ctx)
-        local cast = ctx.owner.obj.cast or 0
-        return cast > 0
-    end)
-      :addTransition("idle_right", "cast_enter", function(ctx)
-        local cast = ctx.owner.obj.cast or 0
-        return cast > 0
-    end)
+      :addTransition("idle_left", "cast_enter", isCast)
+      :addTransition("idle_right", "cast_enter", isCast)
       :addTransition("cast_enter", "cast_loop", function(ctx)
         if not ctx.castEntering then
             return false
@@ -401,22 +366,8 @@ function M:setupEnemyDefaultStates(options)
         local cast = ctx.owner.obj.cast or 0
         return cast <= 0
     end)
-      :addTransition("cast_exit", "idle_left", function(ctx)
-        if not ctx.castExiting then
-            return false
-        end
-        local anim = ctx.owner.currentAnimation
-        local animDone = not anim or anim.loop or ctx.owner.animationFinished
-        return animDone and ctx.facing == "left"
-    end)
-      :addTransition("cast_exit", "idle_right", function(ctx)
-        if not ctx.castExiting then
-            return false
-        end
-        local anim = ctx.owner.currentAnimation
-        local animDone = not anim or anim.loop or ctx.owner.animationFinished
-        return animDone and ctx.facing == "right"
-    end)
+      :addTransition("cast_exit", "idle_left", castToIdle("left"))
+      :addTransition("cast_exit", "idle_right", castToIdle("right"))
 
     -- 设置初始状态
     local initialDx = self.obj.dx or 0
@@ -449,7 +400,7 @@ function M:setupPlayerDefaultStates(options)
         end
 
         -- 将进度转换为帧索引（1-based）
-        local frameIndex = math.floor(progress * (frameCount - 1)) + 1
+        local frameIndex = int(progress * (frameCount - 1)) + 1
         frameIndex = math.max(1, math.min(frameIndex, frameCount))
 
         ws.animationIndex = frameIndex
@@ -472,7 +423,6 @@ function M:setupPlayerDefaultStates(options)
 
     -- 注册状态，使用自定义回调来处理帧对应
     ws:registerAnimationState("idle")
-
     -- 左移进入状态
     ws:registerAnimationState("move_left_enter", nil, true, {
         onEnter = function(ctx)
@@ -487,7 +437,6 @@ function M:setupPlayerDefaultStates(options)
             leftEnterExitProgress = getAnimationProgress()
         end
     })
-
     -- 左移循环状态
     ws:registerAnimationState("move_left_loop", nil, true, {
         onEnter = function(ctx)
@@ -495,7 +444,6 @@ function M:setupPlayerDefaultStates(options)
             leftEnterExitProgress = 1
         end
     })
-
     -- 左移退出状态
     ws:registerAnimationState("move_left_exit", nil, true, {
         onEnter = function(ctx)
@@ -507,7 +455,6 @@ function M:setupPlayerDefaultStates(options)
             leftEnterExitProgress = 1 - getAnimationProgress()
         end
     })
-
     -- 右移进入状态
     ws:registerAnimationState("move_right_enter", nil, true, {
         onEnter = function(ctx)
@@ -522,7 +469,6 @@ function M:setupPlayerDefaultStates(options)
             rightEnterExitProgress = getAnimationProgress()
         end
     })
-
     -- 右移循环状态
     ws:registerAnimationState("move_right_loop", nil, true, {
         onEnter = function(ctx)
@@ -530,7 +476,6 @@ function M:setupPlayerDefaultStates(options)
             rightEnterExitProgress = 1
         end
     })
-
     -- 右移退出状态
     ws:registerAnimationState("move_right_exit", nil, true, {
         onEnter = function(ctx)
@@ -547,7 +492,7 @@ function M:setupPlayerDefaultStates(options)
     -- 获取状态机引用（用于添加转换）
     local sm = ws.stateMachine
 
-    local get_dx="dx"--"__move_dx"
+    local get_dx = "dx"--"__move_dx"
     -- 状态转换条件
     local function isMovingLeft(ctx)
         local player = ctx.owner.obj

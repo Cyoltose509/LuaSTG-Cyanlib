@@ -14,7 +14,7 @@ function M.Register(name, opt)
     local data = Core.Class()
     function data:init(master)
         self.node_img = opt.node_img or "stg:laser_fog" .. master.index ---@type string
-        self.tex = opt.tex ---@type Core.Resource.Texture
+        self.tex = opt.tex ---@type string
         self.x = opt.x or 0 ---采样x坐标
         self.y = opt.y or 0 ---采样y坐标
         self.w = opt.w or 0 ---采样宽度

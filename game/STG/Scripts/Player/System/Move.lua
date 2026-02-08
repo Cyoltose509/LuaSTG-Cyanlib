@@ -1,6 +1,6 @@
-local base = STG.Player.System.SystemBase
+local base = STG.Player.ComponentBase
 
----@class STG.Player.System.Move:STG.Player.System.SystemBase
+---@class STG.Player.System.Move:STG.Player.ComponentBase
 local M = Core.Class(base)
 STG.Player.System.Move = M
 
@@ -30,7 +30,7 @@ function M:update(dt)
     end
     local p = self.player
     local input = self.system:getInput()
-    local speed = input.slow and self.low_speed or self.high_speed
+    local speed = self.system:isSlow() and self.low_speed or self.high_speed
     self.move_vec = input.move * speed * dt
     p.x = p.x + self.move_vec.x
     p.y = p.y + self.move_vec.y

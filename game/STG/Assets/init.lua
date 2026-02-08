@@ -16,4 +16,6 @@ LazyLoader.Add(function()
     for i, img in ipairs(Image.res_group["stg:bullet_fog"]) do
         img:copy("stg:laser_fog" .. i)
     end
+    Image.NewFromFile("stg:player_aura", path .. "player_aura.png")
+    Image.NewFromFile("stg:player_center", path .. "player_center.png")
 end)

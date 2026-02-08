@@ -1,6 +1,6 @@
-local base = STG.Player.System.SystemBase
+local base = STG.Player.ComponentBase
 
----@class STG.Player.System.Input:STG.Player.System.SystemBase
+---@class STG.Player.System.Input:STG.Player.ComponentBase
 local M = Core.Class(base)
 STG.Player.System.Input = M
 

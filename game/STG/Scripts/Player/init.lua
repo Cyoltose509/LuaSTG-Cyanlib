@@ -3,6 +3,7 @@
 ---@field System STG.Player.System
 ---@field Profiles STG.Player.Profiles
 ---@field Resource STG.Player.Resource
+---@field ComponentBase STG.Player.ComponentBase
 local M = {}
 STG.Player = M
 
@@ -13,6 +14,7 @@ M.RawRand = rawRand
 M.Rand = Core.RNG:getRNG("player")
 
 M.Current = nil
+
 
 ---@class STG.Player.Base : Core.Object.Base
 local Base = Object.Define()
