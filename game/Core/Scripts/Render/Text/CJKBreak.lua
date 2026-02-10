@@ -49,7 +49,7 @@ do
     end
 
     -- 禁止行首的闭/中符号（Closing + Middle）
-    for _, c in utf8.codes(".。!！?？,，;；:：·…⋯•─—～~」』》〉】〕）]}｝〙〗〛｠｣>»›.．｡､") do
+    for _, c in utf8.codes(").。!！?？,，;；:：·…⋯•─—～~」』》〉】〕）]}｝〙〗〛｠｣>»›.．｡､") do
         char_class[c] = M.Type.Closing
     end
     for _, b in ipairs({

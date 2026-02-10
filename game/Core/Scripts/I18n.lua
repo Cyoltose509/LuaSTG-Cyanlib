@@ -125,6 +125,9 @@ end
 ---获取带有术语的多语言文本
 ---@return string
 function M.Get(key)
+    if key == "" then
+        return key
+    end
     local text = M.text[key] or key
     if not text:find("/") then
         return text

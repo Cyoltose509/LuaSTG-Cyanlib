@@ -592,15 +592,17 @@ function M:refreshLines()
                 table.remove(rich_data, 1)
             end
         end
+
+
+
         if tok == "\n" then
             next_line()
             i = i + 1
         else
             local size = style and style.size or 1
             fr.SetScale(hs * size, vs * size)
-            local tw = fr.MeasureTextAdvance(tok)
             local th = size * vs * lh
-
+            local tw = fr.MeasureTextAdvance(tok)
             if tok ~= "" and tw == 0 then
                 success = false
             end
