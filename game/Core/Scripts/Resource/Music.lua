@@ -19,10 +19,10 @@ function M.New(name, path, loopEnd, loopLength)
 
     self.name = name
     self.path = path
-    ---会受循环节影响的timer，单位为帧
+    ---会受循环节影响的timer，单位为秒
     self.timer = 0
     ---@private
-    ---不受循环节影响的timer，单位为帧
+    ---不受循环节影响的timer，单位为秒
     self._timer = 0
     self.volume = 1
     self.speed = 1
@@ -88,7 +88,7 @@ function M:unload()
 end
 
 function M:play(volume, time)
-    time = time or (self._timer / 60)
+    time = time or self._timer
     self:load()
     self:setTimer(time)
     self.volume = volume
@@ -126,14 +126,13 @@ function M:stop()
 end
 
 function M:setTimer(time)
-    self._timer = math.floor(time * 60)
+    self._timer = time
     self.timer = Core.Math.Wrap(self._timer, self.loopData.start_in_seconds, self.loopData.end_in_seconds)
     return self
 end
 
-function M:addTimer(add)
-    add = add or 1
-    self._timer = self._timer + add
+function M:addTimer(dt)
+    self._timer = self._timer + dt
     self.timer = Core.Math.Wrap(self._timer, self.loopData.start_in_seconds, self.loopData.end_in_seconds)
     return self
 end
@@ -193,24 +192,31 @@ function M:setLoop(loop)
 end
 
 function M:fadePlay(time, volume, start_time)
+    time = time or 1
     volume = volume or 1
     self:play(0, start_time)
     Core.Task.Clear(self)
-    Core.Task.New(self, function()
-        for i = 1, time do
-            self:setVolume(i / time * volume)
-            Core.Task.Wait()
+    Core.Task.New(self, function(dt)
+        local T = 0
+        while T < time do
+            self:setVolume(T / time * volume)
+            T = T + dt
+            Core.Task.Yield()
         end
+        self:setVolume(volume)
     end)
     return self
 end
 
 function M:fadeStop(time)
     Core.Task.Clear(self)
-    Core.Task.New(self, function()
-        for i = self.volume, 0, -1 / time do
-            self:setVolume(i)
-            Core.Task.Wait()
+    Core.Task.New(self, function(dt)
+        local T = 0
+        local v = self.volume
+        while T < time do
+            self:setVolume((1 - T / time) * v)
+            T = T + dt
+            Core.Task.Yield()
         end
         self:stop()
     end)

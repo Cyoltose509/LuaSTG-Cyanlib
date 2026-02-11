@@ -88,7 +88,7 @@ function M:shake(time, strength, interval, way, fadeout_size_mode)
                 timer = timer % interval
             end
             timer = timer + dt
-            Core.Task.Wait()
+            Core.Task.Yield()
         end
         self._shake_x = 0
         self._shake_y = 0

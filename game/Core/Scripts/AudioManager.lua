@@ -19,10 +19,11 @@ M.GetMusic = Core.Resource.Music.Get
 M.GetSound = Core.Resource.Sound.Get
 
 function M.Update()
+    local dt = Core.Time.GetDelta()
     for music in pairs(M.CurrentBGM) do
-        Core.Task.Do(music)
+        Core.Task.Do(music, dt)
         if music:isPlaying() then
-            music:addTimer()
+            music:addTimer(dt)
         elseif music:isStopped() then
             M.CurrentBGM[music] = nil
         end
@@ -47,6 +48,13 @@ end
 ---@param device_name string
 function M.SetDevice(device_name)
     return lsg.ChangeAudioDevice(device_name)
+end
+
+function M.PlaySound(name, volume, pan)
+    Core.Resource.Sound.Get(name):play(volume, pan)
+end
+function M.PlayBGM(name, volume, start_time)
+    Core.Resource.Music.Get(name):play(volume, start_time)
 end
 
 function M.Init()

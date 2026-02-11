@@ -371,7 +371,7 @@ function M:init()
     Core.Lib.Debug.AddButton("Test", "Add Core node", function()
         self:newNode("Core", Core, nil).hide = false
     end)
-    Core.Resource.Music.Get("test"):fadePlay(60)
+    Core.Resource.Music.Get("test"):fadePlay(1)
 
     self.skybox = Core.Render.Skybox.NewSphere("Test\\Assets\\Textures\\night.jpg")
 

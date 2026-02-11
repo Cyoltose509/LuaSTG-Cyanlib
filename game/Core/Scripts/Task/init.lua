@@ -90,6 +90,8 @@ function M.Wait(t)
     end
 end
 
+M.Yield = coroutine.yield
+
 function M.getSelf()
     local c = stack[#stack]
     if c.taskself then
