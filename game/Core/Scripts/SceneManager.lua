@@ -27,7 +27,6 @@ function M.NewScene(name)
 
     end
     self.name = name
-    self.timer = 0
     M.Scenes[name] = self
     return self
 end
@@ -72,7 +71,6 @@ function M.Update()
     for _, scene in ipairs(M.PushQueue) do
         table.insert(M.Stack, scene)
         scene:init()
-        scene.timer = 0
     end
     M.PushQueue = {}
 
@@ -88,9 +86,7 @@ function M.Update()
             doFrame = M.Stack[i + 1].frameBelow
         end
         if doFrame then
-            Core.Task.Do(scene)
             scene:frame()
-            scene.timer = scene.timer + 1
         end
     end
 end
