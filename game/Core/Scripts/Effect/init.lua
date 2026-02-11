@@ -96,7 +96,7 @@ function wave:frame()
     end
 end
 function wave:render()
-    local N = 60
+    local N = self.cut
     Render.Draw.SetState(Render.BlendMode.MulAdd, self.alpha * self.alpha_index, self._r, self._g, self._b)
     Render.Draw.Sector(self.x, self.y, self.nr - self.w / 2, self.nr + self.w / 2, 0, 360, N)
     local c1, c2 = Render.Color(self.alpha * self.alpha_index / 2, self._r, self._g, self._b), Render.Color(0, self._r, self._g, self._b)
@@ -107,11 +107,12 @@ function wave:render()
     end
 end
 
-function M.Wave(x, y, w, ir, sr, time, r, g, b, out, layer, full_alpha)
+function M.Wave(x, y, w, ir, sr, time, r, g, b, out, layer, full_alpha,cut)
     local self = Object.New(wave)
     self.x, self.y = x, y
     self.layer = layer or 0
     self.group = 0
+    self.cut =cut or  60
     self.w = w
     self.sr = sr
     self.bound = false
