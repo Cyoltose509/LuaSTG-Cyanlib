@@ -109,4 +109,5 @@ end
 _G.combinNum = combinNum
 
 ---legacy
+---@deprecated
 ran = lstg.Rand()

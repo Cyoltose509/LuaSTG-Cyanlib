@@ -73,6 +73,16 @@ function genClass:sign()
     return self.rng:sign()
 end
 
+function genClass:expectedInt(E)
+    local base = math.floor(E)
+    local frac = E - base
+    if self:prob(frac) then
+        return base + 1
+    else
+        return base
+    end
+end
+
 ---设置种子
 function genClass:setSeed(seed)
     self.seed = seed
