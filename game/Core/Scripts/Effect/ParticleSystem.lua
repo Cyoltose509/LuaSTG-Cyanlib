@@ -267,6 +267,9 @@ function M:newParticle(count)
     local icount = int(count)
     self._emit_fraction = self._emit_fraction + (count - icount)
     for _ = 1, icount + self._emit_fraction do
+        if #self.objects >= self.max_count then
+            return
+        end
         local a = ran:float(f.angle1, f.angle2)
         local r = ran:float(f.radius1, f.radius2)
         local cosa, sina = cos(a), sin(a)
