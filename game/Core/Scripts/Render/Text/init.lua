@@ -463,6 +463,14 @@ function M:enableOblique(enable)
     return self
 end
 
+local function segText(text)
+    local segs = {}
+    for i, ch in ipairs(string.utf8_byte(text)) do
+        segs[i] = string.utf8_char(ch)
+    end
+    return segs
+end
+
 ---@private
 function M:refreshTextSegments()
     self._text_segments = {}
@@ -484,12 +492,11 @@ function M:refreshTextSegments()
     if self.wrap_word then
         self._text_segments = M.CJKBreak.Tokenize(text)
     else
-        for i, ch in ipairs(string.utf8_byte(text)) do
-            self._text_segments[i] = string.utf8_char(ch)
-        end
+        self._text_segments = segText(text)
     end
     self._lines_dirty = true
 end
+
 ---@private
 function M:refreshSize()
     local s = self.size / self.font_res:getSize()
@@ -512,6 +519,7 @@ function M:refreshColor()
         end
     end
 end
+
 ---@private
 function M:refreshLines()
     local fr = lstg.FontRenderer
@@ -519,7 +527,7 @@ function M:refreshLines()
     local hs, vs = self._real_hscale, self._real_vscale
     fr.SetScale(hs, vs)
     --self._line_height = fh * vs * self.line_height_factor
-    local rich_data = Core.Lib.Table.Copy(self._rich_text_data)
+    local rich_data = Core.Lib.Table.DeepCopy(self._rich_text_data)
     local text = self._text_segments
     ---@type Core.Render.Text.Line[]
     local lines = {}
@@ -540,18 +548,6 @@ function M:refreshLines()
     local lh = fr.GetFontLineHeight()
     local asc = fr.GetFontAscender()
     local _real_asc = 0
-    local function next_tok(tok, tw, th, size)
-        table.insert(tok_buf, tok)
-        word_width = word_width + tw
-        line_width = line_width + tw
-        total_width = max(total_width, line_width)
-        line_height = max(line_height, th)
-        word_height = max(word_height, th)
-        if #lines == 0 then
-            _real_asc = max(_real_asc, vs * size * asc)
-        end
-        i = i + 1
-    end
     local function next_word()
         ---@class Core.Render.Text.Word
         local word = {
@@ -583,38 +579,48 @@ function M:refreshLines()
 
     while i <= #text do
         local tok = text[i]
-        byte_i = byte_i + #tok
-        if rich_data and #rich_data > 0 then
-            local run = rich_data[1]
-            if run.start <= byte_i and byte_i <= run.stop then
-                next_word()
-                style = run.style
-                table.remove(rich_data, 1)
-            end
-        end
-
-
-
-        if tok == "\n" then
-            next_line()
-            i = i + 1
-        else
-            local size = style and style.size or 1
-            fr.SetScale(hs * size, vs * size)
-            local th = size * vs * lh
-            local tw = fr.MeasureTextAdvance(tok)
-            if tok ~= "" and tw == 0 then
-                success = false
-            end
-            if self.word_break or self.wrap_word then
-                if line_width + tw > self.width then
-                    next_line()
+        local seg_tok = segText(tok)
+        for _, seg in ipairs(seg_tok) do
+            byte_i = byte_i + #seg
+            if rich_data and #rich_data > 0 then
+                local run = rich_data[1]
+                if run.start <= byte_i and byte_i <= run.stop then
+                    if style then
+                        next_word()
+                    end
+                    style = run.style
+                    table.remove(rich_data, 1)
                 end
-                next_tok(tok, tw, th, size)
+            end
+
+            if seg == "\n" then
+                next_line()
+                --i = i + 1
             else
-                next_tok(tok, tw, th, size)
+                local size = style and style.size or 1
+                fr.SetScale(hs * size, vs * size)
+                local th = size * vs * lh
+                local tw = fr.MeasureTextAdvance(seg)
+                if seg ~= "" and tw == 0 then
+                    success = false
+                end
+                if self.word_break or self.wrap_word then
+                    if line_width + tw > self.width then
+                        next_line()
+                    end
+                end
+                table.insert(tok_buf, seg)
+                word_width = word_width + tw
+                line_width = line_width + tw
+                total_width = max(total_width, line_width)
+                line_height = max(line_height, th)
+                word_height = max(word_height, th)
+                if #lines == 0 then
+                    _real_asc = max(_real_asc, vs * size * asc)
+                end
             end
         end
+        i = i + 1
     end
     if #tok_buf > 0 then
         next_line()
