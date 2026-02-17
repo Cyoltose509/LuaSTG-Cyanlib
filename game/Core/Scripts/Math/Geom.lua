@@ -2,23 +2,14 @@
 local M = {}
 Core.Math.Geom = M
 
-function M.PointInRect(px, py, x1, y1, x2, y2)
-    if x1 == x2 or y1 == y2 then
-        return false
-    end
-    if x2 < x1 then
+function M.PointInRect(px, py, x1, x2, y1, y2)
+    if x1 > x2 then
         x1, x2 = x2, x1
     end
-    if y2 < y1 then
+    if y1 > y2 then
         y1, y2 = y2, y1
     end
-    if px < x1 or px > x2 then
-        return false
-    end
-    if py < y1 or py > y2 then
-        return false
-    end
-    return true
+    return px >= x1 and px <= x2 and py >= y1 and py <= y2
 end
 
 function M.PerspectiveProjection(x, y, z, x0, y0, z0, zp, fovy)
@@ -73,7 +64,7 @@ function M.PointOnSegment(mp, p1, p2, offset)
     return distance <= offset
 end
 
-local SQRT3=sqrt(3)
+local SQRT3 = sqrt(3)
 ---判断点是否在正六边形内
 function M.PointInHexagon(px, py, cx, cy, a)
     local dx = abs(px - cx)
