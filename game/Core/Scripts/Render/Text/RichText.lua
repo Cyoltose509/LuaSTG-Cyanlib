@@ -42,6 +42,8 @@ local function current_style(now_style, default)
         style[k] = v
     end
     style.custom_color = false
+    ---@param name string
+    ---@param value string
     for name, value in pairs(now_style) do
         if name == "oblique" or name == "i" then
             style.oblique = true
@@ -58,7 +60,7 @@ local function current_style(now_style, default)
             if cache then
                 style.color = Color(cache:ARGB())
             else
-                style.color = Color(tonumber("FF" .. (value or "FFFFFF"), 16))
+                style.color = Color(tonumber("FF" .. (value:sub(2) or "FFFFFF"), 16))
             end
             style.custom_color = true
         elseif name == "size" then
