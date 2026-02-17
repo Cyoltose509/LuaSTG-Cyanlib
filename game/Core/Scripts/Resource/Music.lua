@@ -88,7 +88,7 @@ function M:unload()
 end
 
 function M:play(volume, time)
-    time = time or self._timer
+    time = time or self.timer
     self:load()
     self:setTimer(time)
     self.volume = volume
