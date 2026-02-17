@@ -6,6 +6,8 @@ local Render4V = lstg.Render4V
 local Render = lstg.Render
 local RenderRect = lstg.RenderRect
 
+local DEFAULT_TEX = "white"
+
 ---@overload fun(blend:string, c1:lstg.Color, c2:lstg.Color, c3:lstg.Color, c4:lstg.Color)
 ---@overload fun(blend:string, a:number, r:number, g:number, b:number)
 ---@overload fun(blend:string, color:lstg.Color)
@@ -13,8 +15,7 @@ function M.SetState(blend, c1, c2, c3, c4)
     if not blend and not c1 then
         return
     end
-    assert(type(blend) == "string", "blend must be a string")
-    local white = Core.Resource.Image.Get("white")
+    local white = Core.Resource.Image.Get(DEFAULT_TEX)
     if type(c1) == "number" then
         white:setState(blend, lstg.Color(c1, c2, c3, c4))
     else
@@ -24,7 +25,18 @@ end
 
 ---渲染矩形
 function M.Rect(left, right, bottom, top, z)
-    RenderRect("white", left, right, bottom, top, z)
+    RenderRect(DEFAULT_TEX, left, right, bottom, top, z)
+end
+
+---渲染一个纯色遮罩
+---需传入一个相机
+---@param camera Core.Display.Camera2D
+function M.Mask(camera)
+    camera = camera or Core.Display.Camera.GetCurrent()
+    if camera and camera.getView then
+        local v = camera:getView()
+        RenderRect(DEFAULT_TEX, v.left, v.right, v.bottom, v.top)
+    end
 end
 
 ---渲染两点之间的连线
@@ -67,11 +79,11 @@ function M.Line(x, y, rot, w, h, z)
     rot = rot or 0
     w = w or 1
     h = h or w
-    Render("white", x, y, rot, w / 16, h / 16, z)
+    Render(DEFAULT_TEX, x, y, rot, w / 16, h / 16, z)
 end
 ---渲染四边形
 function M.Quad(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4)
-    Render4V("white", x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4)
+    Render4V(DEFAULT_TEX, x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4)
 end
 
 function M.Circle(x, y, r1, r2, point, z)
@@ -116,7 +128,7 @@ function M.RectOutline(x, y, w, h, rot, outl)
 end
 
 function M.RectBrightOutline(x1, x2, y1, y2, ws, alpha, r, g, b, blend)
-    blend = blend or "mul+add"
+    blend = blend or Core.Render.BlendMode.MulAdd
     local col1 = lstg.Color(0, r, g, b)
     local col2 = lstg.Color(alpha, r, g, b)
     M.SetState(blend, col1, col1, col2, col2)
