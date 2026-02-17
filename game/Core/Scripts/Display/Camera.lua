@@ -77,10 +77,14 @@ function base:release()
     --TODO：是否需要释放RenderTarget？
 end
 
-function base:worldToScreen()
+---@return number,number
+---@overload fun(x:number, y:number):number,number
+function base:worldToScreen(x, y, z)
 end
 
-function base:screenToWorld()
+---@return number,number,number?
+---@overload fun(x:number, y:number):number,number
+function base:screenToWorld(x, y, z)
 end
 
 ---将当前摄像机下的世界坐标，通过屏幕坐标映射，转换为另一摄像机下的世界坐标
@@ -115,6 +119,14 @@ function base:reset()
 
 end
 
+---应用Camera的裁剪矩形参数
+function base:applyClipRect()
+    local vp = self.viewport
+    if vp then
+        lstg.SetViewport(vp.left, vp.right, vp.bottom, vp.top)
+        lstg.SetScissorRect(vp.left, vp.right, vp.bottom, vp.top)
+    end
+end
 ---应用Camera参数
 function base:apply()
 

@@ -100,11 +100,9 @@ function M:apply()
     local fx, fy, fz = self:getForward()
     local ux, uy, uz = self:getUp()
     local vp = self.viewport
-    local vl, vr, vb, vt = vp.left, vp.right, vp.bottom, vp.top
     local w, h = vp.right - vp.left, vp.top - vp.bottom
     local x, y, z = self.x + self._shake_x, self.y + self._shake_y, self.z + self._shake_z
-    lstg.SetViewport(vl, vr, vb, vt)
-    lstg.SetScissorRect(vl, vr, vb, vt)
+    self:applyClipRect()
     lstg.SetPerspective(x, y, z,
             x + fx, y + fy, z + fz,
             ux, uy, uz,
@@ -431,7 +429,7 @@ function M:applyPostEffect()
     end
     --TODO
     Core.UI.Camera:apply()
-        self.postEffect(self.renderTarget, self.viewport.left, self.viewport.bottom, 1 / Core.Display.Screen.GetScale())
+    self.postEffect(self.renderTarget, self.viewport.left, self.viewport.bottom, 1 / Core.Display.Screen.GetScale())
 end
 
 function M:reset()

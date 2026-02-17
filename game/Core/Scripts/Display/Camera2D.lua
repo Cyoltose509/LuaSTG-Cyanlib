@@ -197,8 +197,7 @@ end
 ---应用相机参数
 ---Apply the camera parameters
 function M:apply()
-    lstg.SetViewport(self.viewport.left, self.viewport.right, self.viewport.bottom, self.viewport.top)
-    lstg.SetScissorRect(self.viewport.left, self.viewport.right, self.viewport.bottom, self.viewport.top)
+    self:applyClipRect()
     local vw, vh = self:getViewSize()
     local cx, cy = self:getCenter()
     if self.rot == 0 then
