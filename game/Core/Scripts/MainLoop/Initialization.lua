@@ -87,8 +87,8 @@ MainLoop.AddEvent("Frame", "Gameplay", {
     labels = { Label.Gameplay },
 })
 MainLoop.AddEvent("Frame", "Gameplay", {
-    name = "Core.Screen.RT.Stop",
-    func = Core.Render.ScreenRT.Stop,
+    name = "Core.ScreenFX.Stop",
+    func = Core.Effect.ScreenFX.Stop,
     labels = { Label.Gameplay },
 })
 MainLoop.AddEvent("Frame", "Gameplay", {
@@ -123,8 +123,8 @@ MainLoop.AddEvent("Frame", "After", {
 ------------------------------------
 ------------------------------------
 MainLoop.AddEvent("Render", "Default", {
-    name = "Core.Screen.RT.Before",
-    func = Core.Render.ScreenRT.BeforeRender,
+    name = "Core.ScreenFX.Before",
+    func = Core.Effect.ScreenFX.BeforeRender,
 })
 MainLoop.AddEvent("Render", "Default", {
     name = "Core.Render.Scene",
@@ -135,8 +135,8 @@ MainLoop.AddEvent("Render", "Default", {
     func = Core.UI.Manager.Draw,
 })
 MainLoop.AddEvent("Render", "Default", {
-    name = "Core.Screen.RT.After",
-    func = Core.Render.ScreenRT.AfterRender,
+    name = "Core.ScreenFX.After",
+    func = Core.Effect.ScreenFX.AfterRender,
 })
 
 MainLoop.AddEvent("Render", "Default", {

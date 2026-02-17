@@ -1,6 +1,7 @@
 ---@class Core.Effect
 ---@field Post Core.Effect.Post
 ---@field ParticleSystem Core.Effect.ParticleSystem
+---@field ScreenFX Core.Effect.ScreenFX
 local M = {}
 Core.Effect = M
 
@@ -185,6 +186,7 @@ function M.PulseScreen(layer, col, blend, fade_in, stay, fade_out)
     return self
 end
 
+require("Core.Scripts.Effect.ScreenFX")
 require("Core.Scripts.Effect.Post")
 require("Core.Scripts.Effect.ParticleSystem")
 

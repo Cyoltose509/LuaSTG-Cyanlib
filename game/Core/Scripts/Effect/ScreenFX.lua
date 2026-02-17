@@ -1,4 +1,4 @@
----@class Core.Render.ScreenRT
+---@class Core.Effect.ScreenFX
 local M = {
     col00000000 = lstg.Color(0, 0, 0, 0),
     colFFFFFFF = lstg.Color(255, 255, 255, 255),
@@ -6,24 +6,24 @@ local M = {
     ---@type Core.Render.ScreenFX.Event[]
     Event = {},
     ---@type table<string, number>
-    rtcount = {},
+    rt_timer = {},
 }
-Core.Render.ScreenRT = M
+Core.Effect.ScreenFX = M
 
 ---自定义全屏效果
 ---@param func fun(name:string, x:number, y:number, scale:number)@处理函数
 ---@param level number@优先级，数字越大优先级越高
----@param RenderOrigin boolean@是否渲染原有画面
----@param texname string@纹理名称
----@param noCapture boolean@不捕捉画面覆盖纹理
-function M.Do(level, func, RenderOrigin, texname, noCapture)
+---@param render_origin boolean@是否渲染原有画面
+---@param no_capture boolean@不捕捉画面覆盖纹理
+---@param tex_name string@纹理名称，不填则默认用level命名
+function M.Do(level, func, render_origin, no_capture, tex_name)
     M.flag = true
-    local name = texname or ("ScreenFX:level%d"):format(level)
+    local name = tex_name or ("ScreenFX:level%d"):format(level)
     for _, e in ipairs(M.Event) do
         if e.level == level then
             e.func = func
-            e.RenderOrigin = RenderOrigin
-            e.Capture = not noCapture
+            e.render_origin = render_origin
+            e.capture = not no_capture
             e.name = name
             return name
         end
@@ -32,8 +32,8 @@ function M.Do(level, func, RenderOrigin, texname, noCapture)
     local event = {
         func = func,
         level = level,
-        RenderOrigin = RenderOrigin,
-        Capture = not noCapture,
+        render_origin = render_origin,
+        capture = not no_capture,
         name = name,
     }
     table.insert(M.Event, event)
@@ -70,21 +70,21 @@ function M.GetScreenUV(copy)
     end
 end
 function M.CreateRenderTarget(name)
-    if not M.rtcount[name] then
-        M.rtcount[name] = 1--初始时多计一次
+    if not M.rt_timer[name] then
+        M.rt_timer[name] = 1--初始时多计一次
         Core.Resource.RenderTarget.New(name)
         --lstg.CreateRenderTarget(name)
     end
-    M.rtcount[name] = M.rtcount[name] + 1
+    M.rt_timer[name] = M.rt_timer[name] + 1
 
 end
 ---下一帧再移除纹理，避免冗余处理
 function M.RemoveRenderTarget(name)
-    if M.rtcount[name] then
-        M.rtcount[name] = M.rtcount[name] - 1
-        if M.rtcount[name] <= 0 then
+    if M.rt_timer[name] then
+        M.rt_timer[name] = M.rt_timer[name] - 1
+        if M.rt_timer[name] <= 0 then
             Core.Resource.RenderTarget.Remove(name)
-            M.rtcount[name] = nil
+            M.rt_timer[name] = nil
         end
     end
 end
@@ -106,16 +106,16 @@ function M.AfterRender()
         --TODO：借用UI的摄像机
         Core.UI.Camera:apply()
         for _, e in ipairs(M.Event) do
-            if e.Capture then
+            if e.capture then
                 lstg.PopRenderTarget()
             end
-            if e.RenderOrigin then
+            if e.render_origin then
                 lstg.RenderTexture(e.name, "", M.GetScreenUV())
             end
             e.func(e.name, 0, 0, 1 / Core.Display.Screen.GetScale())
         end
     end
-    for n in pairs(M.rtcount) do
+    for n in pairs(M.rt_timer) do
         M.RemoveRenderTarget(n)
     end
 end

@@ -4,7 +4,6 @@
 ---@field Skybox Core.Render.Skybox
 ---@field Color Core.Render.Color
 ---@field GPU Core.Render.GPU
----@field ScreenRT Core.Render.ScreenRT
 ---@field Ball Core.Render.Ball
 ---@field Utils Core.Render.Utils
 ---@field Text Core.Render.Text
@@ -17,7 +16,6 @@ require("Core.Scripts.Render.Mesh")
 require("Core.Scripts.Render.Skybox")
 require("Core.Scripts.Render.Color")
 require("Core.Scripts.Render.GPU")
-require("Core.Scripts.Render.ScreenRT")
 require("Core.Scripts.Render.Ball")
 require("Core.Scripts.Render.Text")
 
@@ -51,6 +49,41 @@ M.SamplerState = {
     LinearWrap = "linear+wrap",
     LinearClamp = "linear+clamp",
 }
+
+
+local function SetClipRect(l, r, b, t, scrl, scrr, scrb, scrt)
+    lstg.SetOrtho(l, r, b, t)
+    lstg.SetViewport(scrl, scrr, scrb, scrt)
+    lstg.SetScissorRect(scrl, scrr, scrb, scrt)
+end
+
+M._clip_stack = {}
+--TODO:有隐患
+function M.PushClipRect(left, right, bottom, top)
+    local scrl, scrr, scrb, scrt = left, right, bottom, top
+    local cam = Core.Display.Camera.GetCurrent()
+    if cam then
+        scrl, scrb = cam:worldToScreen(scrl, scrb)
+        scrr, scrt = cam:worldToScreen(scrr, scrt)
+    end
+    SetClipRect(left, right, bottom, top, scrl, scrr, scrb, scrt)
+    M._clip_stack[#M._clip_stack + 1] = { left, right, bottom, top, scrl, scrr, scrb, scrt }
+end
+function M.PopClipRect()
+    table.remove(M._clip_stack)
+    local size = #M._clip_stack
+    if size > 0 then
+        local last = M._clip_stack[size]
+        SetClipRect(last[1], last[2], last[3], last[4], last[5], last[6], last[7], last[8])
+
+    else
+        local cam = Core.Display.Camera.GetCurrent()
+        if cam then
+            cam:apply()
+        end
+    end
+end
+
 
 require("Core.Scripts.Render.Utils")
 setmetatable(M, {
