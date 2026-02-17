@@ -141,4 +141,6 @@ function M.Get(key)
     return text
 end
 
+---你可以覆盖它
+M.RegisterKey("default-font","heiti")
 
