@@ -53,13 +53,49 @@ function M.Section(list, n, pos, s)
     return cut, m
 end
 
----@generic T
----@param t1 T[]
----@param t2 T[]
----@return T[]
 function M.Merge(t1, t2)
     for k, v in pairs(t2) do
         t1[k] = v
+    end
+    return t1
+end
+
+function M.DeepMerge(t1, t2)
+    for k, v in pairs(t2) do
+        if type(v) == "table" then
+            if type(t1[k]) ~= "table" then
+                t1[k] = {}
+            end
+            M.DeepMerge(t1[k], v)
+        else
+            t1[k] = v
+        end
+    end
+    return t1
+end
+
+function M.MergeIf(t1, t2)
+    for k, v in pairs(t2) do
+        if t1[k] == nil then
+            t1[k] = v
+        end
+    end
+    return t1
+
+end
+
+function M.DeepMergeIf(t1, t2)
+    for k, v in pairs(t2) do
+        local v1 = t1[k]
+        if v1 == nil then
+            if type(v) == "table" then
+                t1[k] = M.DeepMergeIf({}, v)
+            else
+                t1[k] = v
+            end
+        elseif type(v1) == "table" and type(v) == "table" then
+            M.DeepMergeIf(v1, v)
+        end
     end
     return t1
 end

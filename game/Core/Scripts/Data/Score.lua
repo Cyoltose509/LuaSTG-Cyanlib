@@ -118,10 +118,6 @@ function M.Get()
     return _scoredata
 end
 
-function M.SetDefaultValue(key, value)
-    _scoredata[key] = _scoredata[key] or value
-end
-
 function M.SetSlot(slot)
     M.current_slot = slot
     M.Init()
@@ -135,6 +131,21 @@ function M.AddSaveBeforeEvent(name, level, func)
 end
 function M.AddSaveAfterEvent(name, level, func)
     return M.event_listener:addEvent("Score.afterSave", name, level, func)
+end
+
+---设置默认值
+---key
+---@param key string 支持解析"."
+function M.SetDefaultValue(key, value)
+    local obj = _scoredata
+    local fields = key:split(".")
+    for i = 1, #fields - 1 do
+        local field = fields[i]
+        obj[field] = obj[field] or {}
+        obj = obj[field]
+    end
+    local field = fields[#fields]
+    obj[field] = obj[field] or value
 end
 
 
