@@ -82,11 +82,13 @@ function M:init()
     self.rect_anchor = false
     self.rect_anchor_x, self.rect_anchor_y = 0.5, 0.5
     self.underline_params = {
+        enabled = false,
         width = M.DEFAULT_UNDERLINE_WIDTH,
         y = M.DEFAULT_UNDERLINE_Y_OFFSET,
         y_factor = M.DEFAULT_UNDERLINE_Y_FACTOR,
     }
     self.strikethrough_params = {
+        enabled = false,
         width = M.DEFAULT_STRIKE_WIDTH,
         y = M.DEFAULT_STRIKE_Y_OFFSET,
         y_factor = M.DEFAULT_STRIKE_Y_FACTOR,
@@ -99,7 +101,6 @@ function M:init()
     self._lines = {}
     self._real_hscale = 1
     self._real_vscale = 1
-    self._fit_height_scale = 1
     --self._line_height = 0
     self._total_width = 0
     self._total_height = 0
@@ -403,7 +404,15 @@ end
 ---Set whether to lock the aspect ratio
 ---If locked, the text size will be scaled based on the minimum value of width and height to maintain the aspect ratio
 function M:enableLockAspectRatio(enable)
-    self.lock_aspect_ratio = enable or false
+    enable = enable or false
+    if self.auto_fit_width or self.auto_fit_height then
+        if self.lock_aspect_ratio ~= enable then
+            self.lock_aspect_ratio = enable
+            self._lines_dirty = true
+        end
+    else
+        self.lock_aspect_ratio = enable or false
+    end
     return self
 end
 
@@ -440,12 +449,12 @@ end
 ---设置是否自动适应宽度或高度
 ---Set whether to automatically adapt the width or height
 function M:enableAutoFit(width, height)
-    self.auto_fit_width = width or false
+    width = width or false
     height = height or false
-    if height ~= self.auto_fit_height then
+    if width ~= self.auto_fit_width or height ~= self.auto_fit_height then
+        self.auto_fit_width = width
         self.auto_fit_height = height
         self._lines_dirty = true
-        return self
     end
     return self
 end
@@ -454,6 +463,20 @@ end
 ---Set whether to enable the shadow
 function M:enableShadow(enable)
     self.shadow_params.enabled = enable or false
+    return self
+end
+
+---设置是否开启下划线
+---Set whether to enable the underline
+function M:enableUnderline(enable)
+    self.underline_params.enabled = enable or false
+    return self
+end
+
+---设置是否开启删除线
+---Set whether to enable the strikethrough
+function M:enableStrikethrough(enable)
+    self.strikethrough_params.enabled = enable or false
     return self
 end
 
@@ -503,7 +526,7 @@ end
 function M:refreshSize()
     local s = self.size / self.font_res:getSize()
     self._real_hscale = self.hscale * s
-    self._real_vscale = self.vscale * s * self._fit_height_scale
+    self._real_vscale = self.vscale * s
     self._lines_dirty = true
 end
 ---@private
@@ -535,7 +558,8 @@ function M:refreshLines()
     local total_height = 0
     local total_width = self.width
 
-
+    local lh = fr.GetFontLineHeight()
+    local asc = fr.GetFontAscender()
 
     ---@type Core.Render.Text.Line[]
     local lines = {}
@@ -560,15 +584,12 @@ function M:refreshLines()
     local word_cache_width = 0
     local word_cache_height = 0
 
-
-
     local success = true
     local i = 1
     local byte_i = 0
     ---@type Core.Render.Text.RichText.Style
     local style
-    local lh = fr.GetFontLineHeight()
-    local asc = fr.GetFontAscender()
+
     local _real_asc = 0
     local function merge_word()
         Core.Lib.Table.Concat(word_buf, word_cache_buf)
@@ -594,6 +615,8 @@ function M:refreshLines()
                 style = style,
                 width = field_width,
                 height = field_height,
+                fit_size_w = 1,
+                fit_size_h = 1,
             }
             field_buf[#field_buf + 1] = field
             line_width = line_width + field_width
@@ -606,7 +629,7 @@ function M:refreshLines()
         end
     end
     local function cache_field()
-        if #word_cache_buf >0 then
+        if #word_cache_buf > 0 then
             local field_cache = {
                 text = table.concat(word_cache_buf),
                 style = style,
@@ -625,15 +648,22 @@ function M:refreshLines()
     end
     local function next_line()
         next_field()
+        local _line_height = line_height
+        if _line_height == 0 then
+            --空行的情况
+            local size = style and style.size or 1
+            _line_height = size * vs * lh
+        end
         ---@class Core.Render.Text.Line
         local line = {
             width = line_width,
-            height = line_height,
+            height = _line_height,
             data = field_buf,
+
         }
         lines[#lines + 1] = line
         total_width = max(total_width, line_width)
-        total_height = total_height + line_height
+        total_height = total_height + _line_height
         line_height = 0
         line_width = 0
         field_buf = {}
@@ -642,6 +672,7 @@ function M:refreshLines()
     while i <= #text do
         local tok = text[i]
         local seg_tok = segText(tok)
+        local has_next_line = false
         for _, seg in ipairs(seg_tok) do
             byte_i = byte_i + #seg
             if rich_data and #rich_data > 0 then
@@ -652,6 +683,8 @@ function M:refreshLines()
                         cache_field()
                     end
                     style = run.style
+                    local size = style and style.size or 1
+                    fr.SetScale(hs * size, vs * size)
                     table.remove(rich_data, 1)
                 end
             end
@@ -662,7 +695,6 @@ function M:refreshLines()
                 --i = i + 1
             else
                 local size = style and style.size or 1
-                fr.SetScale(hs * size, vs * size)
                 local th = size * vs * lh
                 if #lines == 0 then
                     _real_asc = max(_real_asc, vs * size * asc)
@@ -672,9 +704,16 @@ function M:refreshLines()
                     success = false
                 end
 
-                if line_width + field_width + word_cache_width + tw > self.width then
-                    if self.word_break or self.wrap_word then
-                        next_line()
+                if self.word_break or self.wrap_word then
+                    if line_width + field_width + word_cache_width + tw > self.width then
+                        if not has_next_line then
+                            next_line()
+                            has_next_line = true
+                        else
+                            merge_word()
+                            merge_field()
+                            next_line()
+                        end
                     end
                 end
                 word_cache_buf[#word_cache_buf + 1] = seg
@@ -684,7 +723,6 @@ function M:refreshLines()
         end
         merge_word()
         merge_field()
-
         i = i + 1
     end
     if #word_buf > 0 then
@@ -695,12 +733,28 @@ function M:refreshLines()
     self._total_width = total_width
     self._ascender = _real_asc
     self:refreshColor()
-    if self.auto_fit_height then
-        self._fit_height_scale = min(1, self.height / self._total_height)
-        -- self._line_height = self._line_height * self._fit_height_scale
-    else
-        self._fit_height_scale = 1
+    local fh = self.auto_fit_width and min(1, self.width / self._total_width) or 1
+    local fv = self.auto_fit_height and min(1, self.height / self._total_height) or 1
+    if self.lock_aspect_ratio then
+        local m = min(fh, fv)
+        fh = m
+        fv = m
     end
+    self._total_width = self._total_width * fh
+    self._total_height = self._total_height * fv
+    self._ascender = self._ascender * fv
+
+    for _, line in ipairs(lines) do
+        line.height = line.height * fv
+        line.width = line.width * fh
+        for _, field in ipairs(line.data) do
+            field.height = field.height * fv
+            field.width = field.width * fh
+            field.fit_size_w = fh
+            field.fit_size_h = fv
+        end
+    end
+
     self._anchor_dirty = true
     return success
 end
@@ -715,7 +769,7 @@ function M:refreshAnchor()
     local startX = 0
     if self.rect_anchor then
         startX = startX + (self.h_align - self.rect_anchor_x) * self.width * self.hscale
-        startY = startY + (self.v_align - self.rect_anchor_y) * self.height * self.vscale * self._fit_height_scale
+        startY = startY + (self.v_align - self.rect_anchor_y) * self.height * self.vscale
     end
     local x, y, z = startX, startY, 0
     if self.pitch ~= 0 then
@@ -792,21 +846,22 @@ function M:draw(no_update)
     end
     local fr = lstg.FontRenderer
     fr.SetFontProvider(self.font)
-    local hs, vs = self._real_hscale, self._real_vscale * self._fit_height_scale
+    local hs, vs = self._real_hscale, self._real_vscale
 
     local xv, yv = self._xVector, self._yVector
     local wv = self._writeVector
     local _x = self._anchorX
     local _y = self._anchorY
     local _z = self._anchorZ
-    local P = self.shadow_params
+    local shadow_p = self.shadow_params
+    local underline_p = self.underline_params
+    local strikethrough_p = self.strikethrough_params
     for k, line in ipairs(self._lines) do
         local x = _x
         local y = _y
         local z = _z
         local lw = line.width
-        local index = self.auto_fit_width and min(self.width / lw, 1) or 1
-        local xoffset = -self.h_align * lw * index
+        local xoffset = -self.h_align * lw
         x = x + xv[1] * xoffset
         y = y + xv[2] * xoffset
         z = z + xv[3] * xoffset
@@ -823,40 +878,38 @@ function M:draw(no_update)
             if style and style.oblique or self.is_oblique then
                 y1, y2, y3 = yv[1], yv[2], yv[3]
             end
-            local hsize, vsize = hs * index * size, vs * size
+            local hsize, vsize = hs * size, vs * size
             if self.lock_aspect_ratio then
-                local m = min(hs * index, vs)
+                local m = min(hs, vs)
                 hsize, vsize = m * size, m * size
             end
-            fr.SetScale(hsize, vsize)
+            fr.SetScale(hsize * data.fit_size_w, vsize * data.fit_size_h)
             local blend = style and style.blend or self.blend
-            if style and style.shadow or P.enabled then
-                for i = 1, P.div do
-                    local c = i / P.div
-                    local dx = P.dir_x * hsize * c
-                    local dy = P.dir_y * vsize * c
+            if style and style.shadow or shadow_p.enabled then
+                for i = 1, shadow_p.div do
+                    local c = i / shadow_p.div
+                    local dx = shadow_p.dir_x * hsize * c
+                    local dy = shadow_p.dir_y * vsize * c
                     fr.RenderTextInSpace(data.text, x + dx, y + dy, z, xv[1], xv[2], xv[3], y1, y2, y3,
-                            blend, P.color * (1 - i / P.div))
+                            blend, shadow_p.color * (1 - i / shadow_p.div))
                 end
             end
             fr.RenderTextInSpace(data.text, x, y, z, xv[1], xv[2], xv[3], y1, y2, y3, blend, _color)
-            if style and style.underline then
-                local up = self.underline_params
-                local w = up.width / 2
-                local h = up.y + up.y_factor * dh
+            if style and style.underline or underline_p.enabled then
+                local w = underline_p.width / 2
+                local h = underline_p.y + underline_p.y_factor * dh
                 draw_line(x, y, z, x + dw * xv[1], y + dw * xv[2], z + dw * xv[3], wv,
                         h - w, h + w, blend, _color)
             end
-            if style and style.strikethrough then
-                local sp = self.strikethrough_params
-                local w = sp.width / 2
-                local h = sp.y + sp.y_factor * dh
+            if style and style.strikethrough or strikethrough_p.enabled then
+                local w = strikethrough_p.width / 2
+                local h = strikethrough_p.y + strikethrough_p.y_factor * dh
                 draw_line(x, y, z, x + dw * xv[1], y + dw * xv[2], z + dw * xv[3], wv,
                         h - w, h + w, blend, _color)
             end
-            x = x + dw * xv[1] * index
-            y = y + dw * xv[2] * index
-            z = z + dw * xv[3] * index
+            x = x + dw * xv[1]
+            y = y + dw * xv[2]
+            z = z + dw * xv[3]
         end
         if self._lines[k + 1] then
             local h = self._lines[k + 1].height
@@ -911,11 +964,13 @@ function M:serialize()
         oblique_angle = self.oblique_angle,
         lock_aspect_ratio = self.lock_aspect_ratio,
         underline_params = {
+            enabled = self.underline_params.enabled,
             width = self.underline_params.width,
             y_factor = self.underline_params.y_factor,
             y = self.underline_params.y,
         },
         strikethrough_params = {
+            enabled = self.strikethrough_params.enabled,
             width = self.strikethrough_params.width,
             y_factor = self.strikethrough_params.y_factor,
             y = self.strikethrough_params.y,
@@ -936,23 +991,31 @@ function M:deserialize(data)
         :setSize(data.size)
         :setScale(data.hscale, data.vscale)
         :setBlendMode(data.blend)
+
         :setShadowColor(Core.Render.Color.Parse(data.shadow_params.color))
         :setShadowDiv(data.shadow_params.div)
         :setShadowDirection(data.shadow_params.dir_x, data.shadow_params.dir_y)
-        :setObliqueAngle(data.oblique_angle)
+        :enableShadow(data.shadow_params.enabled)
+
         :setUnderlineWidth(data.underline_params.width)
         :setUnderlineYFactor(data.underline_params.y_factor)
         :setUnderlineY(data.underline_params.y)
+        :enableUnderline(data.underline_params.enabled)
+
         :setStrikethroughWidth(data.strikethrough_params.width)
         :setStrikethroughYFactor(data.strikethrough_params.y_factor)
         :setStrikethroughY(data.strikethrough_params.y)
+        :enableStrikethrough(data.strikethrough_params.enabled)
 
+
+        :setObliqueAngle(data.oblique_angle)
+        :enableOblique(data.is_oblique)
         :enableRectAnchor(data.rect_anchor)
         :enableWordBreak(data.word_break)
         :enableWrapWord(data.wrap_word)
         :enableAutoFit(data.auto_fit_width, data.auto_fit_height)
-        :enableShadow(data.shadow_params.enabled)
-        :enableOblique(data.is_oblique)
+
+
         :enableLockAspectRatio(data.lock_aspect_ratio)
         :enableRichText(data.rich_text)
 end
