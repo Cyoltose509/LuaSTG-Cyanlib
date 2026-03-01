@@ -87,7 +87,7 @@ function M.Reset()
         else
             _fullW, _fullH = FullH, FullH / scale
         end
-        local ui_scale = M.scale_factor / 100
+        local ui_scale = M.scale_factor
         _fullW = _fullW / ui_scale
         _fullH = _fullH / ui_scale
         screen.width = _fullW --/ 2

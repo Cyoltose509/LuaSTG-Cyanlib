@@ -6,6 +6,7 @@ M.width = 100
 M.height = 100
 M.fullscreen = false
 M.vsync = true
+M.auto_match_resolution_in_fullscreen = false
 
 local Window = require("lstg.Window")
 local SwapChain = require("lstg.SwapChain")
@@ -52,6 +53,10 @@ function M.IsVsync()
     return M.vsync
 end
 
+function M.AutoMatchResolutionInFullscreen(flag)
+    M.auto_match_resolution_in_fullscreen = flag
+end
+
 ---设置垂直同步
 ---Set vertical synchronization
 function M.SetVsync(vsync)
@@ -59,13 +64,14 @@ function M.SetVsync(vsync)
     M.Refresh()
 end
 
-
 function M.Refresh()
+    if M.fullscreen and M.auto_match_resolution_in_fullscreen then
+        M.width, M.height = Core.Display.GetSize()
+    end
     if not lstg.ChangeVideoMode(M.width, M.height, not M.fullscreen, M.vsync) then
         error("Failed to change video mode")
     end
 end
-
 
 M.SetSplash = lstg.SetSplash
 M.SetTitle = lstg.SetTitle

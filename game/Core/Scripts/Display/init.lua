@@ -34,7 +34,7 @@ function M.Update()
         if not M.Window.fullscreen then
             if curW ~= lastW or curH ~= lastH then
                 M.Window.SetSize(curW, curH)
-                M.Screen.Reset(curW, curH)
+                M.Screen.Reset()
             end
         end
     end
@@ -49,7 +49,7 @@ function M.Import(set)
     M.Window.height = gs.height or 720
     M.Window.fullscreen = gs.fullscreen or false
     M.Window.vsync = gs.vsync or true
-    M.Screen.scale_factor = set.ui_scaling or 1
+    --M.Screen.scale_factor = set.ui_scaling or 1
 end
 
 ---导出设置
@@ -61,7 +61,7 @@ function M.Export(set)
     gs.height = M.Window.height
     gs.fullscreen = M.Window.fullscreen
     gs.vsync = M.Window.vsync
-    set.ui_scaling = M.Screen.scale_factor
+    --set.ui_scaling = M.Screen.scale_factor
 end
 
 ---获取显示器分辨率
