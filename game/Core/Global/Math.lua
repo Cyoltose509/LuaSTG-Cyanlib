@@ -5,10 +5,6 @@
 ----------------------------------------
 ---常量
 local math = math
-PI = math.pi
-PIx2 = math.pi * 2
-PI_2 = math.pi * 0.5
-PI_4 = math.pi * 0.25
 SQRT2 = math.sqrt(2)
 SQRT3 = math.sqrt(3)
 SQRT2_2 = math.sqrt(0.5)
