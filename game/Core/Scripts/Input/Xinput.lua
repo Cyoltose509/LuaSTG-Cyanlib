@@ -121,7 +121,7 @@ M.KeyTriggering = {}
 for i = 1, M.MaxSlot do
     M.KeyTriggering[i] = {}
     for _, v in pairs(M.Key) do
-        M.KeyTriggering[i][v] = Core.Input.NewTriggerRecord(v, (i - 1) * 25)
+        M.KeyTriggering[i][v] = Core.Input.NewTriggerRecord(v)
     end
 end
 
