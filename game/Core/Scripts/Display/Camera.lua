@@ -18,6 +18,7 @@ function M.Frame()
     for _, camera in ipairs(M.List) do
         Core.Task.Do(camera._shakeTask, dt)
         Core.Task.Do(camera, dt)
+        camera:update(dt)
         camera.renderEvents:dispatch("update")
     end
 end
@@ -43,6 +44,15 @@ function base:init()
     self.responsiveViewport = false
     ---@type Core.Effect.Post.Func
     self.postEffect = nil
+    self.x = 0
+    self.y = 0
+    self.z = 0
+    self.dx = 0
+    self.dy = 0
+    self.dz = 0
+    self._last_x = 0
+    self._last_y = 0
+    self._last_z = 0
 end
 ---@return self
 function base:register(level)
@@ -52,6 +62,14 @@ function base:register(level)
         return a.level < b.level
     end)
     return self
+end
+function base:update(dt)
+    self.dx = self.x - self._last_x
+    self.dy = self.y - self._last_y
+    self.dz = self.z - self._last_z
+    self._last_x = self.x
+    self._last_y = self.y
+    self._last_z = self.z
 end
 function base:fixedShake(time, strength, interval, way, fadeout_size_mode)
 

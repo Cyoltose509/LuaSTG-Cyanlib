@@ -4,10 +4,10 @@ Core.Display.Camera2D = M
 function M:init()
     Core.Display.Camera.Base.init(self)
     self.rot = 0
+    self.x = 0
+    self.y = 0
     self._is_2d = true
     self.view = {
-        centerX = 0,
-        centerY = 0,
         width = 100,
         height = 100,
         zoom = 1,
@@ -20,13 +20,13 @@ function M:init()
     }
 end
 
----@param centerX number
----@param centerY number
+---@param x number
+---@param y number
 ---@param width number
 ---@param height number
-function M:setView(centerX, centerY, width, height)
-    self.view.centerX = centerX or self.view.centerX
-    self.view.centerY = centerY or self.view.centerY
+function M:setView(x, y, width, height)
+    self.x= x or self.x
+    self.y= y or self.y
     self.view.width = width or self.view.width
     self.view.height = height or self.view.height
     return self
@@ -66,11 +66,11 @@ function M:getViewSize()
     return self.view.width / zoom, self.view.height / zoom
 end
 function M:getCenter()
-    return self.view.centerX, self.view.centerY
+    return self.x,self.y
 end
 function M:setCenter(x, y)
-    self.view.centerX = x
-    self.view.centerY = y
+    self.x=x or self.x
+    self.y=y or self.y
     return self
 end
 
@@ -118,8 +118,8 @@ end
 ---将世界坐标转换为相机坐标
 ---Convert world coordinates to camera coordinates
 function M:worldToScreen(x, y)
-    x = x - self.view.centerX
-    y = y - self.view.centerY
+    x = x - self.x
+    y = y - self.y
     if self.rot ~= 0 then
         local cosR, sinR = cos(-self.rot), sin(-self.rot)
         x, y = x * cosR - y * sinR, x * sinR + y * cosR
@@ -137,7 +137,7 @@ function M:screenToWorld(x, y)
     y = y - self.viewport.bottom
     local w, h = self:getViewportSize()
     local vw, vh = self:getViewSize()
-    local left, bottom = self.view.centerX - vw / 2, self.view.centerY - vh / 2
+    local left, bottom = self.x - vw / 2, self.y - vh / 2
     local wX = left + x / w * vw
     local wY = bottom + y / h * vh
     if self.rot ~= 0 then
