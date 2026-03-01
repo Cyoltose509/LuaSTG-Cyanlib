@@ -23,10 +23,6 @@ MainLoop.AddEvent("Init", "Default", {
     func = Core.Input.Init,
 })
 MainLoop.AddEvent("Init", "Default", {
-    name = "Core.Init.Audio",
-    func = Core.AudioManager.Init,
-})
-MainLoop.AddEvent("Init", "Default", {
     name = "Core.Init.Object",
     func = Core.Object.InitAll,
 })

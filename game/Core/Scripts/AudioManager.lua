@@ -56,9 +56,3 @@ end
 function M.PlayBGM(name, volume, start_time)
     Core.Resource.Music.Get(name):play(volume, start_time)
 end
-
-function M.Init()
-    local setting = Core.Data.Setting.Get()
-    M.SetBGMVolume(setting.bgmvolume / 100)
-    M.SetSoundVolume(setting.sevolume / 100)
-end
