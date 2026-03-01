@@ -30,8 +30,10 @@ require("Core.Scripts.Math.Geom")
 M.Point2 = M.Vector2
 M.Point3 = M.Vector3
 
-function M.Wrap(value, _min, _max)
-    return (value - _min) % (_max - _min + 1) + _min
+local exp = math.exp
+
+function M.Wrap(value, MIN, MAX)
+    return (value - MIN) % (MAX - MIN + 1) + MIN
 end
 
 function M.IsReal(x)
@@ -78,9 +80,18 @@ function M.Lerp(a, b, t)
     return (1 - t) * a + t * b
 end
 
-local exp = math.exp
+
 function M.ExpInterp(a, b, k)
     return a + (b - a) * (1 - exp(-k))
+end
+
+---四舍五入吸附到最近网格
+---Snap to the nearest grid
+---@param x number
+---@param start number
+---@param step number
+function M.Snap(x, start, step)
+    return start + int((x - start) / step + 0.5) * step
 end
 
 M.Dist = lstg.Dist
