@@ -93,6 +93,18 @@ function M.ButtonUp(name)
     return false
 end
 
+function M.ButtonTriggered(name)
+    local btn = M.Buttons[name]
+    if not btn then
+        return false
+    end
+    for key in pairs(btn) do
+        if M.IsTriggered(key) then
+            return true
+        end
+    end
+    return false
+end
 
 --- Register an axis with left and right functions and optional smooth strength.
 --- The left and right functions should return true if the respective direction is active.
@@ -198,8 +210,7 @@ M.REPEAT_DELAY = 30
 
 M.TriggerList = {}
 ---用于记录触发的按键
-function M.NewTriggerRecord(key, offset)
-    offset = offset or 0
+function M.NewTriggerRecord(key)
     ---@class Core.Input.TriggerRecord
     local m = {
         key = key,
@@ -264,6 +275,11 @@ local DeviceNames = {
     [0x0100] = "Mouse",
     [0x0200] = "Xinput",
 }
+
+function M.IsTriggered(keyCode)
+    local t = M.TriggerList[keyCode]
+    return t and t.triggered or false
+end
 
 function M.IsDown(keyCode)
     local dev = DeviceMap[bit.band(keyCode, 0xFF00)]
