@@ -44,8 +44,8 @@ end
 function M:setImage(image)
     self.img_name = image
     if self.img_name then
-        ---@type Core.Resource.Image
-        self.img = assert(Core.Resource.Image.Get(self.img_name), "Image not found: " .. self.img_name)
+        ---@type Core.Resource.Sprite
+        self.img = assert(Core.Resource.Sprite.Get(self.img_name), "Image not found: " .. self.img_name)
         self:setWH(self.img.width, self.img.height)
     end
     return self

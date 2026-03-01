@@ -27,7 +27,7 @@ function M.New(name, path, mipmap)
     self._uv4 = { 0, 0, 0, 0, 0, white }
     lstg.LoadTexture(name, path, mipmap)
     self.is_texture = true
-    self.sampler_state = Core.Render.SamplerState.LinearClamp
+    self.sampler_state = Core.Resource.SamplerState.LinearClamp
     self.width, self.height = lstg.GetTextureSize(name)
     self.res_pool = Core.Resource.GetResourcePool()
     M.res[name] = self

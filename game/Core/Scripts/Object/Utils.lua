@@ -118,8 +118,8 @@ function M.SmearRender(obj, mode, R, G, B)
     B = B or 200
     if obj.smear then
         for _, s in ipairs(obj.smear) do
-            Core.Render.SetImageState(s.img, mode, max(0, s.alpha), R, G, B)
-            Core.Render.Image(s.img, s.x, s.y, s.rot, s.hscale, s.vscale)
+            Core.Render.SetSpriteState(s.img, mode, max(0, s.alpha), R, G, B)
+            Core.Render.SimpleSprite(s.img, s.x, s.y, s.rot, s.hscale, s.vscale)
         end
     end
 end
@@ -134,7 +134,7 @@ function M.SmearRenderAnimation(obj, mode, R, G, B)
     if obj.smear then
         for i, s in ipairs(obj.smear) do
             Core.Render.SetAnimationState(s.img, mode, max(0, s.alpha), R, G, B)
-            Core.Render.Animation(s.img, obj.ani + i, s.x, s.y, s.rot, s.hscale, s.vscale)
+            Core.Render.SimpleAnimation(s.img, obj.ani + i, s.x, s.y, s.rot, s.hscale, s.vscale)
         end
     end
 end

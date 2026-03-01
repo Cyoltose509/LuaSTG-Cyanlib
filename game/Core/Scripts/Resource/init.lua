@@ -8,7 +8,7 @@
 ---@field Particle Core.Resource.Particle
 ---@field Shader Core.Resource.Shader
 ---@field Texture Core.Resource.Texture
----@field Image Core.Resource.Image
+---@field Sprite Core.Resource.Sprite
 ---@field RenderTarget Core.Resource.RenderTarget
 ---@field LazyLoader Core.Resource.LazyLoader
 local M = {}
@@ -20,7 +20,7 @@ M.resPool = lstg.GetResourceStatus()
 M.ResType = {
     RenderTarget = 1,--和Texture同类
     Texture = 1,
-    Image = 2,
+    Sprite = 2,
     Animation = 3,
     Music = 4,
     Sound = 5,
@@ -38,7 +38,13 @@ M.PoolType = {
     Global = "global",
 }
 
-
+---@class lstg.KnownSamplerState
+M.SamplerState = {
+    PointWrap = "point+wrap",
+    PointClamp = "point+clamp",
+    LinearWrap = "linear+wrap",
+    LinearClamp = "linear+clamp",
+}
 
 
 require("Core.Scripts.Resource.RenderTarget")
@@ -50,7 +56,7 @@ require("Core.Scripts.Resource.TTF")
 require("Core.Scripts.Resource.Particle")
 require("Core.Scripts.Resource.Shader")
 require("Core.Scripts.Resource.Texture")
-require("Core.Scripts.Resource.Image")
+require("Core.Scripts.Resource.Sprite")
 require("Core.Scripts.Resource.Animation")
 require("Core.Scripts.Resource.LazyLoader")
 

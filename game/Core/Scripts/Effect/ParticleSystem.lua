@@ -98,8 +98,8 @@ function M:init()
     self.ignore_end_color = false---粒子颜色是否相等（忽视结束颜色）
 
     self.img = "white"
-    ---@type Core.Resource.Image|Core.Resource.Animation
-    self.img_res = Core.Resource.Image.Get(self.img)
+    ---@type Core.Resource.Sprite|Core.Resource.Animation
+    self.img_res = Core.Resource.Sprite.Get(self.img)
     self.ani_timer_multi = 10---动画播放速度倍数
 end
 function M:setMaxCount(c)
@@ -255,7 +255,7 @@ end
 function M:setImage(ani, ani_timer_multi)
     self.img = ani or self.img
 
-    self.img_res = (ani_timer_multi and Core.Resource.Animation.Get or Core.Resource.Image.Get)(self.img)
+    self.img_res = (ani_timer_multi and Core.Resource.Animation.Get or Core.Resource.Sprite.Get)(self.img)
     self.ani_timer_multi = ani_timer_multi or 1
     assert(self.img_res, ("Particle Image: %s not found."):format(ani))
     return self
@@ -380,9 +380,10 @@ function M:update(dt)
 
 end
 local Color = Core.Render.Color
-function M:render()
+function M:render(A)
+    A = A or 1
     for _, o in ipairs(self.objects) do
-        self.img_res:setState(self.blend, Color(o.A * o.alpha, o.R, o.G, o.B))
+        self.img_res:setState(self.blend, Color(o.A * o.alpha * A, o.R, o.G, o.B))
             :setPos(o.x, o.y)
             :setRotation(o.rot)
             :setScale(o.size, o.size)

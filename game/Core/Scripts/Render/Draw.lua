@@ -15,7 +15,7 @@ function M.SetState(blend, c1, c2, c3, c4)
     if not blend and not c1 then
         return
     end
-    local white = Core.Resource.Image.Get(DEFAULT_TEX)
+    local white = Core.Resource.Sprite.Get(DEFAULT_TEX)
     if type(c1) == "number" then
         white:setState(blend, lstg.Color(c1, c2, c3, c4))
     else
@@ -86,13 +86,14 @@ function M.Quad(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4)
     Render4V(DEFAULT_TEX, x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4)
 end
 
-function M.Circle(x, y, r1, r2, point, z)
+function M.Circle(x, y, r1, r2, point, rotation, z)
     point = point or 30
+    rotation = rotation or 0
     z = z or 0.5
     local ang = (360) / point
     local angle
     for i = 1, point do
-        angle = i * ang
+        angle = i * ang + rotation
         M.Quad(x + r2 * cos(angle - ang), y + r2 * sin(angle - ang), z,
                 x + r1 * cos(angle - ang), y + r1 * sin(angle - ang), z,
                 x + r1 * cos(angle), y + r1 * sin(angle), z,
@@ -169,15 +170,11 @@ end
 ---默认是横向拉伸的正六边形长框
 function M.HexRect(x1, x2, y1, y2)
     local r = (y2 - y1) / SQRT3
-    local _x1, _y1 = x1 - r / 2, y1
-    local _x2, _y2 = x2 + r / 2, y1
-    local _x3, _y3 = x2 + r, (y1 + y2) / 2
-    local _x4, _y4 = x2 + r / 2, y2
-    local _x5, _y5 = x1 - r / 2, y2
-    local _x6, _y6 = x1 - r, (y1 + y2) / 2
+    local bx1, bx2, bx3, bx4 = x1, x1 + r / 2, x2 - r / 2, x2
+    local by1, by2, by3 = y1, (y1 + y2) / 2, y2
     local z = 0.5
-    M.Quad(_x6, _y6, z, _x1, _y1, z, _x2, _y2, z, _x3, _y3, z)
-    M.Quad(_x6, _y6, z, _x5, _y5, z, _x4, _y4, z, _x3, _y3, z)
+    M.Quad(bx1, by2, z, bx2, by1, z, bx3, by1, z, bx4, by2, z)
+    M.Quad(bx1, by2, z, bx2, by3, z, bx3, by3, z, bx4, by2, z)
 end
 
 local pos_map = {
@@ -195,7 +192,7 @@ function M.HexRectOutline(x1, x2, y1, y2, outline)
     local angle
     local r2 = (y2 - y1) / SQRT3
     local r1 = r2 - outline
-    center[1], center[2], center[3], center[4] = x1, (y1 + y2) / 2, x2, (y1 + y2) / 2
+    center[1], center[2], center[3], center[4] = x1 + r2, (y1 + y2) / 2, x2 - r2, (y1 + y2) / 2
     for i = 1, 6 do
         angle = ang * i
         M.Quad(center[pos_map[i][1]] + r2 * cos(angle - ang), center[pos_map[i][2]] + r2 * sin(angle - ang), 0.5,

@@ -43,7 +43,7 @@ function sparkle:render()
     local blend = Render.BlendMode.MulAdd
     for _, p in ipairs(self.particle) do
         Object.SetImgState(self, blend, p.alpha, self._r, self._g, self._b)
-        Render.Image(self.img, p.x, p.y, 0, p.size)
+        Render.SimpleSprite(self.img, p.x, p.y, 0, p.size)
     end
     if self.alpha > 0 then
         Object.SetImgState(self, blend, self.alpha * 255, self._r, self._g, self._b)
@@ -98,27 +98,30 @@ function wave:frame()
 end
 function wave:render()
     local N = self.cut
-    Render.Draw.SetState(Render.BlendMode.MulAdd, self.alpha * self.alpha_index, self._r, self._g, self._b)
-    Render.Draw.Sector(self.x, self.y, self.nr - self.w / 2, self.nr + self.w / 2, 0, 360, N)
+    local MulAdd = Render.BlendMode.MulAdd
+    Render.Draw.SetState(MulAdd, self.alpha * self.alpha_index, self._r, self._g, self._b)
+    Render.Draw.Sector(self.x, self.y, self.nr - self.w / 2, self.nr + self.w / 2, 0, 360, N, self.rot)
     local c1, c2 = Render.Color(self.alpha * self.alpha_index / 2, self._r, self._g, self._b), Render.Color(0, self._r, self._g, self._b)
-    Render.Draw.SetState(Render.BlendMode.MulAdd, c1, c2, c2, c1)
-    Render.Draw.Sector(self.x, self.y, self.nr - self.smear_r, self.nr, 0, 360, N)
+    Render.Draw.SetState(MulAdd, c1, c2, c2, c1)
+    Render.Draw.Sector(self.x, self.y, self.nr - self.smear_r, self.nr, 0, 360, N, self.rot)
     if self.out then
-        Render.Draw.Sector(self.x, self.y, self.nr + self.smear_r, self.nr, 0, 360, N)
+        Render.Draw.Sector(self.x, self.y, self.nr + self.smear_r, self.nr, 0, 360, N, self.rot)
     end
 end
 
-function M.Wave(x, y, w, ir, sr, time, r, g, b, out, layer, full_alpha,cut)
+function M.Wave(x, y, w, ir, sr, time, r, g, b, out, layer, full_alpha, cut, rotation)
     local self = Object.New(wave)
     self.x, self.y = x, y
     self.layer = layer or 0
     self.group = 0
-    self.cut =cut or  60
+    self.cut = cut or 60
     self.w = w
+    self.ir = ir or 0
     self.sr = sr
+    self.rot = rotation or 0
     self.bound = false
     self.lifetime = time
-    self.ir = ir or 0
+
     self.nr = self.ir
     self.dr = 0
     self.lr = self.nr

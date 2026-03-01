@@ -2,23 +2,21 @@
 local M = {}
 Core.Render.Utils = M
 
-M.Image = lstg.Render
-M.QuadImage = lstg.Render4V
-M.RenderTarget = lstg.RenderTexture
-M.Texture = lstg.RenderTexture
-M.Animation = lstg.RenderAnimation
-M.BeginScene = lstg.BeginScene
-M.EndScene = lstg.EndScene
+M.SimpleSprite = lstg.Render
+M.QuadSprite = lstg.Render4V
+M.SimpleRenderTarget = lstg.RenderTexture
+M.SimpleTexture = lstg.RenderTexture
+M.SimpleAnimation = lstg.RenderAnimation
 
-function M.RectImage(imgname, left, right, bottom, top, z)
+function M.RectSprite(imgname, left, right, bottom, top, z)
     lstg.RenderRect(imgname, left, right, bottom, top, z)
 end
 
 ---@overload fun(image:string, blend:string, c1:lstg.Color, c2:lstg.Color, c3:lstg.Color, c4:lstg.Color)
 ---@overload fun(image:string, blend:string, a:number, r:number, g:number, b:number)
 ---@overload fun(image:string, blend:string, color:lstg.Color)
-function M.SetImageState(image, blend, c1, c2, c3, c4)
-    local img = Core.Resource.Image.Get(image)
+function M.SetSpriteState(image, blend, c1, c2, c3, c4)
+    local img = Core.Resource.Sprite.Get(image)
     assert(img, "Image not found: " .. image)
     if type(c1) == "number" then
         img:setState(blend, lstg.Color(c1, c2, c3, c4))
@@ -49,20 +47,6 @@ function M.SetFontState(font, blend, a, r, g, b)
         fnt:setState(blend, lstg.Color(a, r, g, b))
     else
         fnt:setState(blend, a)
-    end
-end
-
----图片组渲染成环状
-function M.ImageGroupRing(img, x, y, r1, r2, rot, n, maximgs)
-    local da = 360 / n
-    local a
-    for i = 1, n do
-        a = rot - da * i
-        M.QuadImage(img .. ((i - 1) % maximgs + 1),
-                r1 * cos(a + da) + x, r1 * sin(a + da) + y, 0.5,
-                r2 * cos(a + da) + x, r2 * sin(a + da) + y, 0.5,
-                r2 * cos(a) + x, r2 * sin(a) + y, 0.5,
-                r1 * cos(a) + x, r1 * sin(a) + y, 0.5)
     end
 end
 
@@ -109,7 +93,7 @@ function M.ImagePolyline(img, line, width, close)
         local y2l = p2.y - ny2 * hw
         local x2r = p2.x + nx2 * hw
         local y2r = p2.y + ny2 * hw
-        M.QuadImage(img, x1l, y1l, z, x1r, y1r, z, x2r, y2r, z, x2l, y2l, z)
+        M.QuadSprite(img, x1l, y1l, z, x1r, y1r, z, x2r, y2r, z, x2l, y2l, z)
     end
     if close then
         M.ImagePolyline(img, { line[#line], line[1] }, width, false)
@@ -167,22 +151,50 @@ function M.TexInChamferRect(texname, blend, color, l, r, b, t, rr, size, offx, o
     local w = (r - l) / size / 2
     local h = (t - b) / size / 2
     local _rr = rr / size
-    tex:setUV1(l + rr, t, 0.5, offx - w + _rr, offy - h, color)
-       :setUV2(r - rr, t, 0.5, offx + w - _rr, offy - h, color)
-       :setUV3(r - rr, b, 0.5, offx + w - _rr, offy + h, color)
-       :setUV4(l + rr, b, 0.5, offx - w + _rr, offy + h, color)
+    local z = 0.5
+    tex:setUV1(l + rr, t, z, offx - w + _rr, offy - h, color)
+       :setUV2(r - rr, t, z, offx + w - _rr, offy - h, color)
+       :setUV3(r - rr, b, z, offx + w - _rr, offy + h, color)
+       :setUV4(l + rr, b, z, offx - w + _rr, offy + h, color)
        :draw()
-       :setUV1(l, t - rr, 0.5, offx - w, offy - h + _rr)
-       :setUV2(l + rr, t, 0.5, offx - w + _rr, offy - h)
-       :setUV3(l + rr, b, 0.5, offx - w + _rr, offy + h)
-       :setUV4(l, b + rr, 0.5, offx - w, offy + h - _rr)
+       :setUV1(l, t - rr, z, offx - w, offy - h + _rr)
+       :setUV2(l + rr, t, z, offx - w + _rr, offy - h)
+       :setUV3(l + rr, b, z, offx - w + _rr, offy + h)
+       :setUV4(l, b + rr, z, offx - w, offy + h - _rr)
        :draw()
-       :setUV1(r - rr, t, 0.5, offx + w - _rr, offy - h)
-       :setUV2(r, t - rr, 0.5, offx + w, offy - h + _rr)
-       :setUV3(r, b + rr, 0.5, offx + w, offy + h - _rr)
-       :setUV4(r - rr, b, 0.5, offx + w - _rr, offy + h)
+       :setUV1(r - rr, t, z, offx + w - _rr, offy - h)
+       :setUV2(r, t - rr, z, offx + w, offy - h + _rr)
+       :setUV3(r, b + rr, z, offx + w, offy + h - _rr)
+       :setUV4(r - rr, b, z, offx + w - _rr, offy + h)
        :draw()
 
+end
+
+function M.TexInHexRect(texname, blend, color, x1, x2, y1, y2, size, offx, offy)
+    blend = blend or Core.Render.BlendMode.Default
+    color = color or Core.Render.Color.Default
+    local tex = Core.Resource.Texture.Get(texname):setBlend(blend)
+    local tw, th = tex:getSize()
+    offx = offx or (tw / 2)
+    offy = offy or (th / 2)
+    size = size or 1
+    local r = (y2 - y1) / SQRT3
+    local bx1, bx2, bx3, bx4 = x1, x1 + r / 2, x2 - r / 2, x2
+    local by1, by2, by3 = y1, (y1 + y2) / 2, y2
+    local w = (x2 - x1) / size / 2
+    local h = (y2 - y1) / size / 2
+    local _rr = r / size / 2
+    local z = 0.5
+    tex:setUV1(bx1, by2, z, offx - w, offy, color)
+       :setUV2(bx2, by1, z, offx - w + _rr, offy - h, color)
+       :setUV3(bx3, by1, z, offx + w - _rr, offy - h, color)
+       :setUV4(bx4, by2, z, offx + w, offy, color)
+       :draw()
+       :setUV1(bx1, by2, z, offx - w, offy, color)
+       :setUV2(bx2, by3, z, offx - w + _rr, offy + h, color)
+       :setUV3(bx3, by3, z, offx + w - _rr, offy + h, color)
+       :setUV4(bx4, by2, z, offx + w, offy, color)
+       :draw()
 end
 
 function M.TexInCircle(texname, x, y, radius, rot, scale, cut, blend, color, offx, offy, offrot)
@@ -200,18 +212,18 @@ function M.TexInCircle(texname, x, y, radius, rot, scale, cut, blend, color, off
     local uradius = radius / scale
 
     for a = 1, cut do
-        angle = offrot + 360 / cut * a
+        angle = rot + 360 / cut * a
         tex:setUV1(x + radius * cos(angle - ang), y + radius * sin(angle - ang), 0.5,
-                offx + uradius * cos(rot + angle - ang), offy - uradius * sin(rot + angle - ang), color)
+                offx + uradius * cos(offrot + angle - ang), offy - uradius * sin(offrot + angle - ang), color)
            :setUV2(x, y, 0.5, offx, offy, color)
            :setUV3(x, y, 0.5, offx, offy, color)
            :setUV4(x + radius * cos(angle), y + radius * sin(angle), 0.5,
-                offx + uradius * cos(rot + angle), offy - uradius * sin(rot + angle), color)
+                offx + uradius * cos(offrot + angle), offy - uradius * sin(offrot + angle), color)
            :draw()
     end
 end
 
-local ENUM_TTF_FMT = setmetatable({
+local ENUM_TTF_FMT = {
     left = 0x00000000,
     center = 0x00000001,
     right = 0x00000002,
@@ -223,25 +235,23 @@ local ENUM_TTF_FMT = setmetatable({
     wordbreak = 0x00000010,
 
     centerpoint = 0x00000105,
-}, {
-    __index = function()
-        return 0
-    end
-})
+}
 local function buildFmt(...)
     local fmt = 0
     for _, t in ipairs({ ... }) do
-        fmt = fmt + ENUM_TTF_FMT[t]
+        fmt = fmt + (ENUM_TTF_FMT[t] or 0)
     end
     return fmt
 end
 
-function M.Font(fontname, text, x, y, size, ...)
+function M.SimpleText(fontname, text, x, y, size, ...)
     lstg.RenderText(fontname, text, x, y, size, buildFmt(...))
 end
 
-function M.TextSimple(ttfname, text, x, y, scale, color, ...)
+local TTF = Core.Resource.TTF
+function M.SimpleTTF(ttfname, text, x, y, size, color, ...)
     local fmt = buildFmt(...)
+    local scale = size / TTF.Get(ttfname):getSize() * 2--TODO
     lstg.RenderTTF(ttfname, text, x, x, y, y, fmt, color, scale)
 end
 

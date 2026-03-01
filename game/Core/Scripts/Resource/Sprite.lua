@@ -1,12 +1,12 @@
----@class Core.Resource.Image
+---@class Core.Resource.Sprite
 local M = {}
-Core.Resource.Image = M
+Core.Resource.Sprite = M
 M.__index = M
-M.__type = "Image"
+M.__type = "Sprite"
 
----@type Core.Resource.Image[]
+---@type Core.Resource.Sprite[]
 M.res = {}
----@type Core.Resource.Image[][]
+---@type Core.Resource.Sprite[][]
 M.res_group = {}
 
 ---@param name string
@@ -18,7 +18,7 @@ M.res_group = {}
 ---@param a number?
 ---@param b number?
 ---@param rect boolean?
----@return Core.Resource.Image
+---@return Core.Resource.Sprite
 function M.New(name, tex, x, y, width, height, a, b, rect)
     if type(tex) == "string" then
         tex = Core.Resource.Texture.Get(tex)
@@ -34,7 +34,7 @@ function M.New(name, tex, x, y, width, height, a, b, rect)
     a = a or 0
     b = b or 0
     rect = rect or false
-    ---@type Core.Resource.Image
+    ---@type Core.Resource.Sprite
     local self = setmetatable({}, M)
     self.name = name
     self.texture = tex
@@ -72,7 +72,7 @@ end
 ---@param a number?
 ---@param b number?
 ---@param rect boolean?
----@return Core.Resource.Image
+---@return Core.Resource.Sprite
 function M.NewFromFile(name, path, mipmap, a, b, rect)
     local tex = Core.Resource.Texture.New(name, path, mipmap)
     return M.New(name, tex, 0, 0, tex.width, tex.height, a, b, rect)
@@ -80,7 +80,7 @@ end
 
 function M.Remove(name)
     if M.res[name] then
-        lstg.RemoveResource(M.res[name].res_pool, Core.Resource.ResType.Image, name)
+        lstg.RemoveResource(M.res[name].res_pool, Core.Resource.ResType.Sprite, name)
         M.res[name] = nil
     end
 end
@@ -90,7 +90,7 @@ function M.Clear()
     end
 end
 
----@return Core.Resource.Image
+---@return Core.Resource.Sprite
 function M.Get(name)
     return M.res[name]
 end
@@ -100,7 +100,7 @@ function M:unload()
 end
 
 ---@param newname string
----@return Core.Resource.Image
+---@return Core.Resource.Sprite
 function M:copy(newname)
     return M.New(newname, self.texture, self.x, self.y, self.width, self.height, self.a, self.b, self.rect)
 end
@@ -123,6 +123,10 @@ function M:setScaling(s)
 end
 function M:getScaling()
     return self.scaling or lstg.GetImageScale(self.name)
+end
+
+function M:getSize()
+    return self.width, self.height
 end
 
 ---@private
@@ -157,7 +161,7 @@ function M:setColor(c1, c2, c3, c4)
         end
     else
         -- 单色版本
-        if c1 ~= self._color1 then
+        if (c1 ~= self._color1) or self._color2 then
             self._color1 = c1
             self._color2 = nil  -- 标记为单色模式
             self._color3 = nil
@@ -184,7 +188,7 @@ function M:setState(blend, c1, c2, c3, c4)
             changed = true
         end
     elseif c1 then
-        if c1 ~= self._color1 then
+        if (c1 ~= self._color1) or self._color2 then
             self._color1 = c1
             self._color2 = nil
             self._color3 = nil
@@ -237,7 +241,7 @@ end
 ---@param a number?
 ---@param b number?
 ---@param rect boolean?
----@return Core.Resource.Image[]
+---@return Core.Resource.Sprite[]
 function M.NewGroup(groupName, tex, x, y, w, h, cols, rows, a, b, rect)
     local group = {}
     M.res_group[groupName] = group

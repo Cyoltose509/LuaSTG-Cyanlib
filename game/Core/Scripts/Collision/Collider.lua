@@ -472,8 +472,8 @@ end
 ---@class Core.Collision.Collider.Circle : Core.Collision.Collider.Base
 local Circle = Core.Class(Base)
 function Circle:drawCollider()
-    Core.Render.SetImageState("pure_circle", "", 200, 255, 100, 100)
-    Core.Render.Image("pure_circle", self.x, self.y, 0, self.a / 125)
+    Core.Render.SetSpriteState("pure_circle", "", 200, 255, 100, 100)
+    Core.Render.SimpleSprite("pure_circle", self.x, self.y, 0, self.a / 125)
 end
 M.Circle = Circle
 
@@ -496,8 +496,8 @@ M.Line = Line
 ---@class Core.Collision.Collider.Ellipse : Core.Collision.Collider.Base
 local Ellipse = Core.Class(Base)
 function Ellipse:drawCollider()
-    Core.Render.SetImageState("pure_circle", "", 200, 100, 255, 100)
-    Core.Render.Image("pure_circle", self.x, self.y, 0, self.a / 125, self.b / 125)
+    Core.Render.SetSpriteState("pure_circle", "", 200, 100, 255, 100)
+    Core.Render.SimpleSprite("pure_circle", self.x, self.y, 0, self.a / 125, self.b / 125)
 end
 M.Ellipse = Ellipse
 

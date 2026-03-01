@@ -78,7 +78,7 @@ end
 ---@param a number?
 ---@param b number?
 ---@param rect boolean?
----@return Core.Resource.Image
+---@return Core.Resource.Sprite
 function M.NewFromFile(name, path, mipmap, col, row, interval, a, b, rect)
     local tex = Core.Resource.Texture.New(name, path, mipmap)
     return M.New(name, tex, 0, 0, tex.width, tex.height, col, row, interval, a, b, rect)
@@ -96,7 +96,7 @@ function M.Clear()
     end
 end
 
----@return Core.Resource.Image
+---@return Core.Resource.Sprite
 function M.Get(name)
     return M.res[name]
 end

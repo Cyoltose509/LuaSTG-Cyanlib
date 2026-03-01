@@ -7,9 +7,11 @@
 ---@field Ball Core.Render.Ball
 ---@field Utils Core.Render.Utils
 ---@field Text Core.Render.Text
+---@field Sprite Core.Render.Sprite
 local M = {}
 Core.Render = M
 
+require("Core.Scripts.Render.Sprite")
 
 require("Core.Scripts.Render.Draw")
 require("Core.Scripts.Render.Mesh")
@@ -18,6 +20,7 @@ require("Core.Scripts.Render.Color")
 require("Core.Scripts.Render.GPU")
 require("Core.Scripts.Render.Ball")
 require("Core.Scripts.Render.Text")
+
 
 ---@class lstg.BlendMode
 M.BlendMode = {
@@ -42,13 +45,7 @@ M.BlendMode = {
     Force = "one",
 }
 
----@class lstg.KnownSamplerState
-M.SamplerState = {
-    PointWrap = "point+wrap",
-    PointClamp = "point+clamp",
-    LinearWrap = "linear+wrap",
-    LinearClamp = "linear+clamp",
-}
+
 
 
 local function SetClipRect(l, r, b, t, scrl, scrr, scrb, scrt)

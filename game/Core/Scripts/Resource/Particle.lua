@@ -9,13 +9,13 @@ M.res = {}
 
 ---@param name string
 ---@param path string
----@param sprite Core.Resource.Image|string
+---@param sprite Core.Resource.Sprite|string
 ---@param a number?
 ---@param b number?
 ---@param rect boolean?
 function M.New(name, path, sprite, a, b, rect)
     if type(sprite) == "string" then
-        sprite = Core.Resource.Image.Get(sprite)
+        sprite = Core.Resource.Sprite.Get(sprite)
     end
     assert(sprite and sprite.__type == "Image", "Invalid sprite.")
     ---@type Core.Resource.Particle
