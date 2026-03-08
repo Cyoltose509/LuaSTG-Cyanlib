@@ -287,14 +287,12 @@ function M.ShockWave(x, y, T, strength, waveR, maxR, cutR, cutN)
 end
 
 ---@type Core.Resource.Shader
-local GrayEffect
+---@return Core.Effect.Post.Func
 function M.Gray(strength)
-    if not GrayEffect then
-        GrayEffect = Core.Resource.Shader.Get("core:gray")
-    end
+    local GrayEffect = Core.Resource.Shader.Get("core:gray")
     GrayEffect:setFloat("alpha", strength)
-    return function(rtName, x0, y0, scale)
+    return function(rtName)
         GrayEffect:setTexture("screen_texture", rtName)
-        GrayEffect:post("")
+                  :post()
     end
 end
