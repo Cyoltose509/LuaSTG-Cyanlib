@@ -31,13 +31,12 @@ M.Key = {
     --CTRL = 0x11,
     --ALT = 0x12,
 
-    --很奇怪的东西？只能自己加了
     LCtrl = 0xA2,
     RCtrl = 0xA3,
     LAlt = 0xA4,
     RAlt = 0xA5,
     Shift = 0xA0,
-    NumEnter = 0xE8,
+
     --RSHIFT = 0xA1,
 
     LWin = 0x5B,
@@ -111,6 +110,7 @@ M.Key = {
     Period = 0xBE,
     Slash = 0xBF,
 
+    NumEnter = 0xE8,
     Numpad0 = 0x60,
     Numpad1 = 0x61,
     Numpad2 = 0x62,
