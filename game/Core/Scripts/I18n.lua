@@ -16,6 +16,8 @@ M.jargon = {}
 ---@type fun[]
 M.command = {}
 
+M._cache = {}
+
 local function SkimDirectory(dir)
     for _, files in ipairs(Core.VFS.EnumFiles(dir, nil, true)) do
         if files[2] then
@@ -47,6 +49,7 @@ function M.Reload()
     end
     M.text = {}
     M.jargon = {}
+    M._cache = {}
 
     for _, dir in pairs(M.languageDirectory) do
         SkimDirectory(dir .. lang .. "/")
@@ -92,9 +95,11 @@ end
 ---@param value string
 function M.RegisterJargon(key, value)
     if type(key) == "table" then
-        Core.Lib.Table.Merge(M.jargon, key)
+        for k, v in pairs(key) do
+            M.jargon["/" .. k] = v
+        end
     else
-        M.jargon[key] = value
+        M.jargon["/" .. key] = value
     end
 end
 
@@ -104,7 +109,7 @@ end
 ---命令是不会被重置的
 ---@see string.gsub
 function M.RegisterCommand(pattern, repl)
-    M.command[pattern] = repl
+    M.command["/" .. pattern] = repl
 end
 
 function M.GetAvailableLanguages()
@@ -128,19 +133,24 @@ function M.Get(key)
     if key == "" then
         return key
     end
+    if M._cache[key] then
+        return M._cache[key]
+    end
     local text = M.text[key] or key
-    if not text:find("/") then
-        return text
+    if text:find("/", 1, true) then
+        for i, l in pairs(M.jargon) do
+            text = text:gsub(i, l)
+        end
     end
-    for kw, func in pairs(M.command) do
-        text = text:gsub("/" .. kw, func)
+    if text:find("/", 1, true) then
+        for kw, func in pairs(M.command) do
+            text = text:gsub(kw, func)
+        end
     end
-    for i, l in pairs(M.jargon) do
-        text = text:gsub("/" .. i, l)
-    end
+    M._cache[key] = text
     return text
 end
 
 ---你可以覆盖它
-M.RegisterKey("default-font","heiti")
+M.RegisterKey("default-font", "heiti")
 
