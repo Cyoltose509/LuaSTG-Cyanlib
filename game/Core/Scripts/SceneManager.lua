@@ -64,7 +64,6 @@ function M.Update()
         end
         M.Stack = { M.NextScene }
         M.NextScene:init()
-        M.NextScene.timer = 0
         M.NextScene = nil
         Core.MainLoop.OnSceneChangeAfter()
     end
