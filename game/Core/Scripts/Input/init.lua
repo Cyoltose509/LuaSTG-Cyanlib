@@ -20,32 +20,40 @@ M.Axes = {}
 
 --- Register a button with optional keyboard, xinput, and mouse bindings.
 ---@param name string
----@param keys Core.Input.Key[]
-function M.RegisterButton(name, keys)
+---@param key Core.Input.Key[]|Core.Input.Key
+function M.RegisterButton(name, key)
     assert(type(name) == "string", "Button name must be string")
-    assert(type(keys) == "table", "Keys must be a table")
     local list = M.Buttons[name]
     if not list then
         list = {}
         M.Buttons[name] = list
     end
-    for _, key in ipairs(keys or {}) do
+    if type(key) == "table" then
+        for _, k in ipairs(key or {}) do
+            list[k] = true
+        end
+    else
         list[key] = true
     end
 end
 
 --- Unregister specific keys or the entire button.
 ---@param name string
----@param keys Core.Input.Key[]|nil
-function M.UnregisterButton(name, keys)
+---@param key Core.Input.Key[]|Core.Input.Key|nil
+function M.UnregisterButton(name, key)
     local set = M.Buttons[name]
     if not set then
         return
     end
-    if keys then
-        for _, key in ipairs(keys) do
+    if key then
+        if type(key) == "table" then
+            for _, k in ipairs(key) do
+                set[k] = nil
+            end
+        else
             set[key] = nil
         end
+
         if next(set) == nil then
             M.Buttons[name] = nil
         end
