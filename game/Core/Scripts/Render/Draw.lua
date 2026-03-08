@@ -167,39 +167,88 @@ function M.RoundedRectOutline(x1, x2, y1, y2, rr, outline, point)
     M.Sector(x2 - rr, y1 + rr, rr - outline, rr, 270, 360, point)
 end
 
----默认是横向拉伸的正六边形长框
-function M.HexRect(x1, x2, y1, y2)
-    local r = (y2 - y1) / SQRT3
-    local bx1, bx2, bx3, bx4 = x1, x1 + r / 2, x2 - r / 2, x2
-    local by1, by2, by3 = y1, (y1 + y2) / 2, y2
+local HALF = 0.5
+local SIN60 = 0.8660254037844386
+local INV_SQRT3 = 0.5773502691896257
+
+---横向拉伸的正六边形
+function M.HorizontalHex(x1, x2, y1, y2)
+    local r = (y2 - y1) * INV_SQRT3
+    local bx1, bx2, bx3, bx4 = x1, x1 + r * HALF, x2 - r * HALF, x2
+    local by1, by2, by3 = y1, (y1 + y2) * HALF, y2
     local z = 0.5
     M.Quad(bx1, by2, z, bx2, by1, z, bx3, by1, z, bx4, by2, z)
     M.Quad(bx1, by2, z, bx2, by3, z, bx3, by3, z, bx4, by2, z)
 end
+function M.VerticalHex(x1, x2, y1, y2)
+    local r = (x2 - x1) * INV_SQRT3
+    local by1, by2, by3, by4 = y1, y1 + r * HALF, y2 - r * HALF, y2
+    local bx1, bx2, bx3 = x1, (x1 + x2) * HALF, x2
+    local z = 0.5
+    M.Quad(bx2, by1, z, bx1, by2, z, bx1, by3, z, bx2, by4, z)
+    M.Quad(bx2, by1, z, bx3, by2, z, bx3, by3, z, bx2, by4, z)
 
-local pos_map = {
-    { 3, 4, 3, 4 },
-    { 3, 4, 1, 2 },
-    { 1, 2, 1, 2 },
-    { 1, 2, 1, 2, },
-    { 1, 2, 3, 4 },
-    { 3, 4, 3, 4 },
-}
-local center = { 0, 0, 0, 0 }
-local SQRT3 = math.sqrt(3)
-function M.HexRectOutline(x1, x2, y1, y2, outline)
-    local ang = 360 / 6
-    local angle
-    local r2 = (y2 - y1) / SQRT3
+end
+
+function M.HorizontalHexOutline(x1, x2, y1, y2, outline)
+    local r2 = (y2 - y1) * INV_SQRT3
     local r1 = r2 - outline
-    center[1], center[2], center[3], center[4] = x1 + r2, (y1 + y2) / 2, x2 - r2, (y1 + y2) / 2
-    for i = 1, 6 do
-        angle = ang * i
-        M.Quad(center[pos_map[i][1]] + r2 * cos(angle - ang), center[pos_map[i][2]] + r2 * sin(angle - ang), 0.5,
-                center[pos_map[i][1]] + r1 * cos(angle - ang), center[pos_map[i][2]] + r1 * sin(angle - ang), 0.5,
-                center[pos_map[i][3]] + r1 * cos(angle), center[pos_map[i][4]] + r1 * sin(angle), 0.5,
-                center[pos_map[i][3]] + r2 * cos(angle), center[pos_map[i][4]] + r2 * sin(angle), 0.5)
-    end
+    local z = 0.5
+    local cx1, cy1, cx2, cy2 = x1 + r2, (y1 + y2) * HALF, x2 - r2, (y1 + y2) * HALF
+    M.Quad(cx2 + r2, cy2, z,
+            cx2 + r1, cy2, z,
+            cx2 + r1 * HALF, cy2 + r1 * SIN60, z,
+            cx2 + r2 * HALF, cy2 + r2 * SIN60, z)
+    M.Quad(cx2 + r2 * HALF, cy2 + r2 * SIN60, z,
+            cx2 + r1 * HALF, cy2 + r1 * SIN60, z,
+            cx1 - r1 * HALF, cy1 + r1 * SIN60, z,
+            cx1 - r2 * HALF, cy1 + r2 * SIN60, z)
+    M.Quad(cx1 - r2 * HALF, cy1 + r2 * SIN60, z,
+            cx1 - r1 * HALF, cy1 + r1 * SIN60, z,
+            cx1 - r1, cy1, z,
+            cx1 - r2, cy1, z)
+    M.Quad(cx1 - r2, cy1, z,
+            cx1 - r1, cy1, z,
+            cx1 - r1 * HALF, cy1 - r1 * SIN60, z,
+            cx1 - r2 * HALF, cy1 - r2 * SIN60, z)
+    M.Quad(cx1 - r2 * HALF, cy1 - r2 * SIN60, z,
+            cx1 - r1 * HALF, cy1 - r1 * SIN60, z,
+            cx2 + r1 * HALF, cy2 - r1 * SIN60, z,
+            cx2 + r2 * HALF, cy2 - r2 * SIN60, z)
+    M.Quad(cx2 + r2 * HALF, cy2 - r2 * SIN60, z,
+            cx2 + r1 * HALF, cy2 - r1 * SIN60, z,
+            cx2 + r1, cy2, z,
+            cx2 + r2, cy2, z)
+end
+function M.VerticalHexOutline(x1, x2, y1, y2, outline)
+    local r2 = (x2 - x1) * INV_SQRT3
+    local r1 = r2 - outline
+    local z = 0.5
+    local cx1, cy1, cx2, cy2 = (x1 + x2) * HALF, y1 + r2, (x1 + x2) * HALF, y2 - r2
+    M.Quad(cx2, cy2 + r2, z,
+            cx2, cy2 + r1, z,
+            cx2 - r1 * SIN60, cy2 + r1 * HALF, z,
+            cx2 - r2 * SIN60, cy2 + r2 * HALF, z)
+    M.Quad(cx2 - r2 * SIN60, cy2 + r2 * HALF, z,
+            cx2 - r1 * SIN60, cy2 + r1 * HALF, z,
+            cx1 - r1 * SIN60, cy1 - r1 * HALF, z,
+            cx1 - r2 * SIN60, cy1 - r2 * HALF, z)
+    M.Quad(cx1 - r2 * SIN60, cy1 - r2 * HALF, z,
+            cx1 - r1 * SIN60, cy1 - r1 * HALF, z,
+            cx1, cy1 - r1, z,
+            cx1, cy1 - r2, z)
+    M.Quad(cx1, cy1 - r2, z,
+            cx1, cy1 - r1, z,
+            cx1 + r1 * SIN60, cy1 - r1 * HALF, z,
+            cx1 + r2 * SIN60, cy1 - r2 * HALF, z)
+    M.Quad(cx1 + r2 * SIN60 , cy1- r2 * HALF, z,
+            cx1+ r1 * SIN60, cy1  - r1 * HALF, z,
+            cx2+ r1 * SIN60, cy2  + r1 * HALF, z,
+            cx2+ r2 * SIN60, cy2  + r2 * HALF, z)
+    M.Quad(cx2 + r2 * SIN60 , cy2+ r2 * HALF, z,
+            cx2 + r1 * SIN60 , cy2+ r1 * HALF, z,
+            cx2 , cy2+ r1, z,
+            cx2 , cy2+ r2, z)
 end
 
 ---@angle number@底和腰的夹角
