@@ -23,7 +23,14 @@ function M.Parse(str)
     local a, r, g, b = str:match('lstg%.Color%((%d+)%s*,%s*(%d+)%s*,%s*(%d+)%s*,%s*(%d+)%)')
     if a and r and g and b then
         return M.ARGB(tonumber(a), tonumber(r), tonumber(g), tonumber(b))
+    else
+        return lstg.Color(0xFFFFFFFF)
     end
+end
+
+---@param c lstg.Color
+function M.Copy(c)
+    return lstg.Color(c:ARGB())
 end
 
 ---@overload fun(argb: number): lstg.Color
