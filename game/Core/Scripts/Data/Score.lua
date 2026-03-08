@@ -69,7 +69,7 @@ local _scoredata = { }
 local _initscoredata = function()
     local data = NewOrReadFile(M.current_slot)
     CheckData(data)
-    _scoredata = data
+    Core.Lib.Table.DeepMerge(_scoredata, data)
 end
 
 function M.Init()
@@ -100,17 +100,22 @@ function M.GetSaveIterator()
     local str = Core.Lib.Json.Encode(_scoredata)
     local strlen = #str
     local i = 1
+    local CHUNK = 1024
     return function(stop)
-        score_data_file:write(string.char((str:byte(i) + password[i % #password + 1] - 1) % 127 + 1))
-        i = i + 1
-        if i > strlen or stop then
+        if stop or i > strlen then
             score_data_file:close()
             os.remove(file)
             os.rename(fake_file, file)
             return false
-        else
-            return true
         end
+        local end_i = math.min(i + CHUNK - 1, strlen)
+        local buffer = {}
+        for j = i, end_i do
+            buffer[#buffer + 1] = string.char((str:byte(j) + password[j % #password + 1] - 1) % 127 + 1)
+        end
+        score_data_file:write(table.concat(buffer))
+        i = end_i + 1
+        return true
     end
 end
 
@@ -129,8 +134,14 @@ end
 function M.AddSaveBeforeEvent(name, level, func)
     return M.event_listener:addEvent("Score.beforeSave", name, level, func)
 end
+function M.RemoveSaveBeforeEvent(name)
+    return M.event_listener:remove("Score.beforeSave", name)
+end
 function M.AddSaveAfterEvent(name, level, func)
     return M.event_listener:addEvent("Score.afterSave", name, level, func)
+end
+function M.RemoveSaveAfterEvent(name)
+    return M.event_listener:remove("Score.afterSave", name)
 end
 
 ---设置默认值
