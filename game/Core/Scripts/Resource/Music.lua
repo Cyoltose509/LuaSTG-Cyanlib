@@ -196,11 +196,11 @@ function M:fadePlay(time, volume, start_time)
     volume = volume or 1
     self:play(0, start_time)
     Core.Task.Clear(self)
-    Core.Task.New(self, function(dt)
+    Core.Task.New(self, function()
         local T = 0
         while T < time do
             self:setVolume(T / time * volume)
-            T = T + dt
+            T = T + Core.Time.GetDelta()
             Core.Task.Yield()
         end
         self:setVolume(volume)
@@ -210,12 +210,12 @@ end
 
 function M:fadeStop(time)
     Core.Task.Clear(self)
-    Core.Task.New(self, function(dt)
+    Core.Task.New(self, function()
         local T = 0
         local v = self.volume
         while T < time do
             self:setVolume((1 - T / time) * v)
-            T = T + dt
+            T = T + Core.Time.GetDelta()
             Core.Task.Yield()
         end
         self:stop()
