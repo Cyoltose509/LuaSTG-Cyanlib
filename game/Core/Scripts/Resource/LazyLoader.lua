@@ -36,8 +36,9 @@ end
 function M.EnumFliesWithFunction(path, extend, func, prefix, suffix)
     prefix = prefix or ""
     suffix = suffix or ""
+    local l = -(#extend + 2)
     for _, v in ipairs(Core.VFS.EnumFiles(path, extend, true)) do
-        local name = v[1]:sub(#path + 1, -5)
+        local name = v[1]:sub(#path + 1, l)
         name = prefix .. name .. suffix
         M.Add(function()
             func(name, v[1])
