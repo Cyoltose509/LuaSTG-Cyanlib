@@ -123,31 +123,32 @@ function M.Init()
     M.DoLoopGroup(M.LoopGroup.Init)
 end
 
+---@private
 function M.Exit()
     M.DoLoopGroup(M.LoopGroup.Exit)
 end
-
+---@private
 function M.OnFocusLose()
     M.DoLoopGroup(M.LoopGroup.FocusLose)
 end
-
+---@private
 function M.OnFocusGain()
     M.DoLoopGroup(M.LoopGroup.FocusGain)
 end
-
+---@private
 function M.OnSceneChangeBefore()
     M.DoLoopGroup(M.LoopGroup.SceneChangeBefore)
 end
-
+---@private
 function M.OnSceneChangeAfter()
     M.DoLoopGroup(M.LoopGroup.SceneChangeAfter)
 end
-
+---@private
 function M.Frame()
     M.DoLoopGroup(M.LoopGroup.Frame)
     return M.ExitFlag
 end
-
+---@private
 function M.Render()
     lstg.BeginScene()
     M.DoLoopGroup(M.LoopGroup.Render)
@@ -177,6 +178,10 @@ function M.RemoveEvent(loopGroup, eventGroup, name)
     assert(M.LoopGroup[loopGroup][eventGroup], "Invalid event group")
     local group = M.LoopGroup[loopGroup][eventGroup].realName
     M.EventListener:remove(group, name)
+end
+
+function M.ExitGame()
+    M.ExitFlag = true
 end
 
 function M.SetSpeed(speed)
