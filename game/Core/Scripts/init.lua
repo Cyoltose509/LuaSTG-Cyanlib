@@ -23,7 +23,24 @@ function M.Class(base)
 
     local function new(t, ...)
         local instance = {}
-        setmetatable(instance, { __index = t })
+        local meta = {
+            __index = t,
+            __tostring = class.__tostring,
+            __add = class.__add,
+            __sub = class.__sub,
+            __mul = class.__mul,
+            __div = class.__div,
+            __mod = class.__mod,
+            __pow = class.__pow,
+            __unm = class.__unm,
+            __len = class.__len,
+            __concat = class.__concat,
+            __call = class.__call,
+            __eq = class.__eq,
+            __lt = class.__lt,
+            __le = class.__le,
+        }
+        setmetatable(instance, meta)
         classCreate(instance, t, ...)
         return instance
     end
@@ -38,11 +55,11 @@ function M.Class(base)
         end
         return member
     end
-
-    setmetatable(class, {
+    local meta = {
         __call = new,
         __index = indexer
-    })
+    }
+    setmetatable(class, meta)
 
     return class
 end
@@ -62,7 +79,6 @@ require("Core.Scripts.Effect")
 
 require("Core.Scripts.World")
 
-
 require("Core.Scripts.SceneManager")
 require("Core.Scripts.AudioManager")
 
@@ -70,7 +86,6 @@ require("Core.Scripts.Data")
 require("Core.Scripts.I18n")
 require("Core.Scripts.Task")
 require("Core.Scripts.Animator")
-
 
 require("Core.Scripts.UI")
 require("Core.Scripts.Collision")
