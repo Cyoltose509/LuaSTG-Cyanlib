@@ -14,7 +14,7 @@ local Render = Core.Render
 
 local sparkle = Object.Define(Object.Base)
 function sparkle:frame()
-    local dt = Core.Time.Delta
+    local dt = Core.Time.GetDelta()
     self.alpha = max(0, self.alpha - 1 / self.lifetime * dt)
     self.hscale = self.r / 75
     self.vscale = self.hscale
@@ -83,7 +83,7 @@ end
 
 local wave = Object.Define(Object.Base)
 function wave:frame()
-    local dt = Core.Time.Delta
+    local dt = Core.Time.GetDelta()
     self.time = self.time + dt
     self.lr = self.nr
     local k = min(1, self.time / self.lifetime)
@@ -139,7 +139,7 @@ end
 
 local pulse = Object.Define(Object.Base)
 function pulse:frame()
-    local dt = Core.Time.Delta
+    local dt = Core.Time.GetDelta()
     self.time = self.time + dt
     if self.time < self.t1 then
         self._a = self.fade_in_mode(self.time / self.t1) * self.__a
