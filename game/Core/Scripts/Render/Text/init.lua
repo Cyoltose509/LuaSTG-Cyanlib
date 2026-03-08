@@ -50,7 +50,7 @@ function M:init()
     self.text = ""
     self.font = M.DEFAULT_FONT
     self.font_res = Core.Resource.TTF.Get(self.font)
-    self.color = Color(M.DEFAULT_COLOR:ARGB())
+    self.color = Color.Copy(M.DEFAULT_COLOR)
     self.h_align = 0.5
     self.v_align = 0.5
     self.width = 0
@@ -68,7 +68,7 @@ function M:init()
     self.blend = Core.Render.BlendMode.Default
     self.shadow_params = {
         enabled = false,
-        color = Color(M.DEFAULT_SHADOW_COLOR:ARGB()),
+        color = Color.Copy(M.DEFAULT_SHADOW_COLOR),
         dir_x = M.DEFAULT_SHADOW_DIR_X,
         dir_y = M.DEFAULT_SHADOW_DIR_Y,
         div = M.DEFAULT_SHADOW_DIV,
@@ -506,8 +506,8 @@ function M:refreshTextSegments()
             size = 1,
             oblique = self.is_oblique,
             shadow = self.shadow_params.enabled,
-            underline = false,
-            strikethrough = false,
+            underline = self.underline_params.enabled,
+            strikethrough = self.strikethrough_params.enabled,
             blend = self.blend,
             alpha = 1,
         })
@@ -535,10 +535,14 @@ function M:refreshColor()
         for _, data in ipairs(line.data) do
             if data.style and data.style.color then
                 data.style.color.a = self.color.a * data.style.alpha
-                if not data.style.custom_color then
+                if not data.style._color then
                     data.style.color.r = self.color.r
                     data.style.color.g = self.color.g
                     data.style.color.b = self.color.b
+                else
+                    data.style.color.r = self.color.r / 255 * data.style._color.r
+                    data.style.color.g = self.color.g / 255 * data.style._color.g
+                    data.style.color.b = self.color.b / 255 * data.style._color.b
                 end
             end
         end
@@ -682,7 +686,7 @@ function M:refreshLines()
                         next_field()
                         cache_field()
                     end
-                    style = run.style
+                    style = run.style:copy()
                     local size = style and style.size or 1
                     fr.SetScale(hs * size, vs * size)
                     table.remove(rich_data, 1)
@@ -709,7 +713,7 @@ function M:refreshLines()
                         if not has_next_line then
                             next_line()
                             has_next_line = true
-                        else
+                        elseif not (self.auto_fit_height or self.auto_fit_width) then
                             merge_word()
                             merge_field()
                             next_line()
@@ -733,8 +737,8 @@ function M:refreshLines()
     self._total_width = total_width
     self._ascender = _real_asc
     self:refreshColor()
-    local fh = self.auto_fit_width and min(1, self.width / self._total_width) or 1
-    local fv = self.auto_fit_height and min(1, self.height / self._total_height) or 1
+    local fh = self.auto_fit_width and (self.width / self._total_width) or 1
+    local fv = self.auto_fit_height and (self.height / self._total_height) or 1
     if self.lock_aspect_ratio then
         local m = min(fh, fv)
         fh = m

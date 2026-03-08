@@ -2,17 +2,6 @@
 local M = {}
 Core.Render.Text.RichText = M
 
----@class Core.Render.Text.RichText.Style
----@field color Core.Render.Color
----@field custom_color boolean
----@field size number
----@field oblique boolean
----@field shadow boolean
----@field underline boolean
----@field strikethrough boolean
----@field blend boolean
----@field alpha number
-
 local Color = Core.Render.Color
 local color = {
     white = Color.White,
@@ -36,7 +25,7 @@ local color = {
 
 local function current_style(now_style, default)
 
-    ---@type Core.Render.Text.RichText.Style
+    ---@class Core.Render.Text.RichText.Style
     local style = {}
     for k, v in pairs(default) do
         style[k] = v
@@ -58,16 +47,26 @@ local function current_style(now_style, default)
         elseif name == "color" or name == "col" then
             local cache = color[value:lower()]
             if cache then
-                style.color = Color(cache:ARGB())
+                style.color = Color.Copy(cache)
             else
                 style.color = Color(tonumber("FF" .. (value:sub(2) or "FFFFFF"), 16))
             end
-            style.custom_color = true
+            style._color = Color.Copy(style.color)
         elseif name == "size" then
             style.size = tonumber(value) or default.size
         elseif name == "alpha" then
             style.alpha = tonumber(value) or default.alpha
         end
+    end
+    function style:copy()
+        local copy = {}
+        for k, v in pairs(self) do
+            copy[k] = v
+        end
+        if self.color then
+            copy.color = Color.Copy(self.color)
+        end
+        return copy
     end
     return style
 end
