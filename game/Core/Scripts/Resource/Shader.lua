@@ -14,6 +14,7 @@ function M.New(name, path)
     self.main = lstg.CreatePostEffectShader(path)
     self.name = name
     self.path = path
+    self.blend = Core.Render.BlendMode.Default
     M.res[name] = self
     return self
 end
@@ -55,8 +56,11 @@ function M:setTexture(name, resource_name)
     self.main:setTexture(name, resource_name)
     return self
 end
----@param blend lstg.BlendMode
-function M:post(blend)
-    lstg.PostEffect(self.main, blend)
+function M:setBlendMode(blend)
+    self.blend = blend or Core.Render.BlendMode.Default
+    return self
+end
+function M:post()
+    lstg.PostEffect(self.main, self.blend)
     return self
 end
