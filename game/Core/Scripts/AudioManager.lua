@@ -21,7 +21,7 @@ M.GetSound = Core.Resource.Sound.Get
 function M.Update()
     local dt = Core.Time.GetDelta()
     for music in pairs(M.CurrentBGM) do
-        Core.Task.Do(music, dt)
+        Core.Task.Do(music)
         if music:isPlaying() then
             music:addTimer(dt)
         elseif music:isStopped() then

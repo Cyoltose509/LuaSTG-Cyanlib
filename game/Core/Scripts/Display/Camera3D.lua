@@ -65,7 +65,7 @@ end
 
 function M:shake(time, strength, interval, way, fadeout_size_mode)
     Core.Task.Clear(self._shakeTask)
-    Core.Task.New(self._shakeTask, function(dt)
+    Core.Task.New(self._shakeTask, function()
         local times = int(time / interval)
         local a = 0
         local size = strength
@@ -87,7 +87,7 @@ function M:shake(time, strength, interval, way, fadeout_size_mode)
                 i = i + 1
                 timer = timer % interval
             end
-            timer = timer + dt
+            timer = timer + Core.Time.GetDelta()
             Core.Task.Yield()
         end
         self._shake_x = 0

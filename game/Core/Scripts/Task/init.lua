@@ -21,7 +21,7 @@ function M.New(unit, f)
     end
 end
 
-function M.Do(unit, ...)
+function M.Do(unit)
     if unit.task then
         for i = #unit.task, 1, -1 do
             local co = unit.task[i]
@@ -29,7 +29,7 @@ function M.Do(unit, ...)
                 if coroutine.status(co) ~= 'dead' then
                     stack[#stack + 1] = unit
                     threads[#threads + 1] = co
-                    local ok, err = coroutine.resume(co, ...)
+                    local ok, err = coroutine.resume(co)
                     if not ok then
                         error(
                                 tostring(err) ..

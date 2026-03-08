@@ -14,10 +14,10 @@ function M.Render()
     M.Current = nil
 end
 function M.Frame()
-    local dt = Core.Time.Delta
+    local dt = Core.Time.GetDelta()
     for _, camera in ipairs(M.List) do
-        Core.Task.Do(camera._shakeTask, dt)
-        Core.Task.Do(camera, dt)
+        Core.Task.Do(camera._shakeTask)
+        Core.Task.Do(camera)
         camera:update(dt)
         camera.renderEvents:dispatch("update")
     end
@@ -99,7 +99,6 @@ end
 ---@overload fun(x:number, y:number):number,number
 function base:worldToScreen(x, y, z)
 end
-
 ---@return number,number,number?
 ---@overload fun(x:number, y:number):number,number
 function base:screenToWorld(x, y, z)

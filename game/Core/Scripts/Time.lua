@@ -3,26 +3,26 @@
 local M = {}
 Core.Time = M
 
-M.Delta = 0
-M.RealDelta = 0
-M.Speed = 1
+M.delta = 0
+M.real_delta = 0
+M.speed = 1
 
-M.Elapsed = 0
-M.RealElapsed = 0
+M.elapsed = 0
+M.real_elapsed = 0
 function M.SetSpeed(s)
-    M.Speed = s
+    M.speed = s
 end
 
 function M.GetSpeed()
-    return M.Speed
+    return M.speed
 end
 
 function M.GetDelta()
-    return M.Delta
+    return M.delta
 end
 
 function M.GetRealDelta()
-    return M.RealDelta
+    return M.real_delta
 end
 
 local MainLoop = Core.MainLoop
@@ -39,9 +39,9 @@ function M.Beat(interval)
             return true
         end
     end
-    local last = Core.Time.Elapsed
+    local last = Core.Time.elapsed
     return function()
-        local t = Core.Time.Elapsed
+        local t = Core.Time.elapsed
         local cur = int(t / interval)
         if cur > last then
             last = cur
@@ -60,9 +60,9 @@ function M.RealBeat(interval)
             return true
         end
     end
-    local last = Core.Time.RealElapsed
+    local last = Core.Time.real_elapsed
     return function()
-        local t = Core.Time.RealElapsed
+        local t = Core.Time.real_elapsed
         local cur = int(t / interval)
         if cur > last then
             last = cur
@@ -76,11 +76,11 @@ MainLoop.AddEvent("Frame", "Before", {
     func = function()
         local now = watch:GetElapsed()
         local delta = now - last_time
-        M.RealDelta = delta
-        M.Delta = delta * M.Speed
+        M.real_delta = delta
+        M.delta = delta * M.speed
         last_time = now
-        M.Elapsed = M.Elapsed + M.Delta
-        M.RealElapsed = M.RealElapsed + M.RealDelta
+        M.elapsed = M.elapsed + M.delta
+        M.real_elapsed = M.real_elapsed + M.real_delta
     end,
     level = -10000
 })
