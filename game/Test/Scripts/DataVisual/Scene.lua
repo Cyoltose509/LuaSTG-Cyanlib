@@ -348,6 +348,7 @@ function M:init()
     self.spring_length = 60
     self.repulsion_k = 900
     self.gravity = 1
+    self.timer=0
 
     ---@type Test.Node
     self.selected_node = nil

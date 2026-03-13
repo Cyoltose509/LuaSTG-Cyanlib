@@ -21,15 +21,15 @@ function M.Main(self)
             local r, g, b = m.color[1], m.color[2], m.color[3]
             local rx, ry = UI.Camera:worldToUI(self.camera, m.x, m.y, m.z)
             local size = (m.r + s * 3) * self.camera:getDepthScale(m.x, m.y, m.z)
-            Render.TextSimple("exo2", ("%s"):format(m.name), rx, ry - size * 1.4,
-                    size * 0.03, Color(size * 8 * A, 255, 255, 255), "centerpoint")
+            Render.SimpleTTF("exo2", ("%s"):format(m.name), rx, ry - size * 1.4,
+                    size * 0.8, Color(size * 8 * A, 255, 255, 255), "centerpoint")
 
-            Core.Resource.Image.Get("pure_circle")
+            Core.Resource.Sprite.Get("pure_circle")
                 :setState(Render.BlendMode.Default, Color(size * 8 * A, 0, 0, 0))
                 :setPos(rx, ry):setRotation(0):setScale(size / 110):draw()
                 :setState(Render.BlendMode.MulAdd, Color(size * 8 * A, r, g, b))
                 :setPos(rx, ry):setRotation(0):setScale(size / 125):draw()
-            Core.Resource.Image.Get("bright")
+            Core.Resource.Sprite.Get("bright")
                 :setState(Render.BlendMode.MulAdd, Color(size * 8 * A, r, g, b))
                 :setPos(rx, ry):setRotation(0):setScale(size / 50):draw()--]]
 
@@ -47,14 +47,14 @@ function M.Main(self)
     end))
     hud_root:addChild(UI.Immediate("FPS", 0, function()
         local hud = UI.Camera:getView()
-        Render.TextSimple("exo2", ("%.1f"):format(lstg.GetFPS()), hud.right - 20, hud.top - 30,
-                1, Color(150, 255, 255, 255), "right")
+        Render.SimpleTTF("exo2", ("%.1f"):format(lstg.GetFPS()), hud.right - 20, hud.top - 30,
+                60, Color(150, 255, 255, 255), "right")
     end))
     local keyShow = UI.Immediate("KeyShow", 0, function()
         local hud = UI.Camera:getView()
         for _, v in ipairs(self.keyTriggerList) do
-            Render.TextSimple("exo2", ("%s"):format(v.name), hud.right - 20, hud.bottom + 30 + v.pos * 50,
-                    1, Color(v.alpha * 100, 255, 255, 255), "right")
+            Render.SimpleTTF("exo2", ("%s"):format(v.name), hud.right - 20, hud.bottom + 30 + v.pos * 50,
+                    60, Color(v.alpha * 100, 255, 255, 255), "right")
         end
     end)
     hud_root:addChild(keyShow)

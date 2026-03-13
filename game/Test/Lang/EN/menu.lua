@@ -1,3 +1,3 @@
 return {
-    ["welcome-message"] = "Welcome to /gamename!"
+    ["welcome-message"] = "Welcome to {{gamename}}!"
 }

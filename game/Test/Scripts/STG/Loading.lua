@@ -12,6 +12,7 @@ function M:init()
     self.time = os.clock()
     self.start_time = self.time
     self.black = 0
+    self.timer = 0
     Core.Task.New(self, function()
         while not self.jump do
             Core.Task.Wait()

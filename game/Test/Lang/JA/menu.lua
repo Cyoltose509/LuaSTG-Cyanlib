@@ -1,3 +1,3 @@
 return {
-    ["welcome-message"] = "ようこそ、 /gamename へ！"
+    ["welcome-message"] = "ようこそ、 {{gamename}} へ！"
 }
