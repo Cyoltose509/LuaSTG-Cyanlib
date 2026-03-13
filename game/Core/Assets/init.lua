@@ -9,6 +9,7 @@ Resource.Sprite.NewFromFile("bright_fog", spath .. "bright_fog.png", true)
 Resource.Sprite.NewFromFile("bright_big", spath .. "bright_big.png", true)
 Resource.Sprite.NewFromFile("bright_line", spath .. "bright_line.png", true)
 Resource.Sprite.NewFromFile("pure_circle", spath .. "pure_circle.png", true)
+Resource.Sprite.NewFromFile("bright_ring", spath .. "bright_ring.png", true)
 local tex = Resource.Texture.New("particles", spath .. "particles.png")
 Resource.Sprite.NewGroup("parimg", tex, 0, 0, 32, 32, 4, 4)
 
