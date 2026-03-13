@@ -17,23 +17,23 @@ local color = {
     b = Color(0, 130, 130, 255),
     c = Color(0, 130, 255, 255),
     o = Color(0, 255, 255, 130),
-    g = Color(0, 130, 255, 130),
     y = Color(0, 255, 227, 132),
     p = Color(0, 255, 130, 255),
     ["-"] = Color(0, 150, 150, 150),
 }
+local pairs = pairs
+local tonumber = tonumber
 
-local function current_style(now_style, default)
-
-    ---@class Core.Render.Text.RichText.Style
-    local style = {}
+---@class Core.Render.Text.RichText.Style
+---@param style Core.Render.Text.RichText.Style
+---@param default Core.Render.Text.RichText.Style
+local function set_style(style, target, default)
     for k, v in pairs(default) do
         style[k] = v
     end
-    style.custom_color = false
     ---@param name string
     ---@param value string
-    for name, value in pairs(now_style) do
+    for name, value in pairs(target) do
         if name == "oblique" or name == "i" then
             style.oblique = true
         elseif name == "shadow" then
@@ -52,23 +52,13 @@ local function current_style(now_style, default)
                 style.color = Color(tonumber("FF" .. (value:sub(2) or "FFFFFF"), 16))
             end
             style._color = Color.Copy(style.color)
-        elseif name == "size" then
-            style.size = tonumber(value) or default.size
         elseif name == "alpha" then
             style.alpha = tonumber(value) or default.alpha
+            style.color = Color.Copy(style.color)
+        elseif name == "size" then
+            style.size = tonumber(value) or default.size
         end
     end
-    function style:copy()
-        local copy = {}
-        for k, v in pairs(self) do
-            copy[k] = v
-        end
-        if self.color then
-            copy.color = Color.Copy(self.color)
-        end
-        return copy
-    end
-    return style
 end
 
 local function parse_simple_tag(now_style, tag_str)
@@ -101,27 +91,39 @@ local function parse_simple_tag(now_style, tag_str)
     return nil
 end
 
----@class Core.Lib.RichText.Data
----@field text string
----@field runs Core.Lib.RichText.Parsed[]
+local CLEAN_TEXT = {}
+---解析富文本数据
+---使用GC压力最低的方法
+---返回纯净文本
+---@param output_list Core.Lib.RichText.Parsed[]
 ---@param raw_text string
 ---@param default_style Core.Render.Text.RichText.Style
----@return Core.Lib.RichText.Data
-function M.Parse(raw_text, default_style)
-    local clean_text = {}
-    local runs = {}
+---@return string
+function M.Parse(output_list, raw_text, default_style)
+    local list_i = 1
+    local text_i = 1
     local now_style = {}
     local i = 1
     local m = 1 -- 纯文本的字符计数（从1开始）
     local function push_run(part)
-        table.insert(clean_text, part)
-        ---@class Core.Lib.RichText.Parsed
-        local run = {
-            start = m,
-            stop = m + #part - 1,
-            style = current_style(now_style, default_style)
-        }
-        table.insert(runs, run)
+        CLEAN_TEXT[text_i] = part
+        text_i = text_i + 1
+        local cur = output_list[list_i]
+        if cur then
+            cur.start = m
+            cur.stop = m + #part - 1
+            set_style(cur.style, now_style, default_style)
+        else
+            ---@class Core.Lib.RichText.Parsed
+            local run = {
+                start = m,
+                stop = m + #part - 1,
+                style = {}
+            }
+            set_style(run.style, now_style, default_style)
+            output_list[list_i] = run
+        end
+        list_i = list_i + 1
         m = m + #part
     end
 
@@ -153,10 +155,12 @@ function M.Parse(raw_text, default_style)
 
         i = e + 1
     end
-
-    return {
-        text = table.concat(clean_text),
-        runs = runs
-    }
+    for n = list_i, #output_list do
+        output_list[n] = nil
+    end
+    for n = text_i, #CLEAN_TEXT do
+        CLEAN_TEXT[n] = nil
+    end
+    return table.concat(CLEAN_TEXT)
 end
 

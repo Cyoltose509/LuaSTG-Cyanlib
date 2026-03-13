@@ -23,7 +23,13 @@
 local M = Core.Class()
 Core.Render.Text = M
 
+local Core = Core
+local min, max = min, max
+local table = table
+local sin, cos, tan = sin, cos, tan
 local Color = Core.Render.Color
+local tostring = tostring
+local ipairs = ipairs
 
 M.DEFAULT_FONT = "heiti"
 M.DEFAULT_SIZE = 16
@@ -63,6 +69,8 @@ function M:init()
     self.rich_text = false ---是否支持富文本
     self.auto_fit_width = false ---是否自动适应宽度（不会自动换行）
     self.auto_fit_height = false ---是否自动适应高度
+    self._auto_w_scale = 1
+    self._auto_h_scale = 1
     self.size = M.DEFAULT_SIZE
     self.hscale, self.vscale = 1, 1
     self.blend = Core.Render.BlendMode.Default
@@ -94,11 +102,15 @@ function M:init()
         y_factor = M.DEFAULT_STRIKE_Y_FACTOR,
     }
 
+    self._real_text = ""
     self._text_segments = {}
     ---@type Core.Lib.RichText.Parsed[]
     self._rich_text_data = {}
     ---@type Core.Render.Text.Line[]
     self._lines = {}
+    ---其实这是一个field对象池
+    ---@type Core.Render.Text.Field[]
+    self._text_fields = {}
     self._real_hscale = 1
     self._real_vscale = 1
     --self._line_height = 0
@@ -113,6 +125,16 @@ function M:init()
     self._size_dirty = true
     self._lines_dirty = true
     self._vector_dirty = true
+    self._default_style = {
+        color = self.color,
+        size = 1,
+        oblique = self.is_oblique,
+        shadow = self.shadow_params.enabled,
+        underline = self.underline_params.enabled,
+        strikethrough = self.strikethrough_params.enabled,
+        blend = self.blend,
+        alpha = 1,
+    }
 end
 ---在size的基础上设置横纵比
 ---Set the aspect ratio based on the size
@@ -351,6 +373,7 @@ end
 ---Set the text
 function M:setText(text)
     text = text or ""
+    text = tostring(text)
     if text ~= self.text then
         self.text = text
         self:refreshTextSegments()
@@ -365,7 +388,7 @@ function M:setFont(font)
         self.font = font
         self.font_res = Core.Resource.TTF.Get(font)
         if not self.font_res then
-            Core.System.Log(Core.System.LogType.Warning, "Core.Render.Text: Font not found: " .. tostring(font))
+            Core.System.Log(Core.System.LogType.Warning, "Core.Render.Text: Font not found: " .. font)
             self.font = M.DEFAULT_FONT
             self.font_res = Core.Resource.TTF.Get(self.font)
         end
@@ -378,7 +401,7 @@ end
 ---Set the font size (attention: not the size relative to the loaded font size)
 function M:setSize(size)
     size = size or 16
-    if size ~= self.size then
+    if size ~= self.size and size ~= 0 then
         self.size = size
         self._size_dirty = true
     end
@@ -408,6 +431,8 @@ function M:enableLockAspectRatio(enable)
     if self.auto_fit_width or self.auto_fit_height then
         if self.lock_aspect_ratio ~= enable then
             self.lock_aspect_ratio = enable
+            self._auto_w_scale = 1
+            self._auto_h_scale = 1
             self._lines_dirty = true
         end
     else
@@ -488,36 +513,26 @@ function M:enableOblique(enable)
     return self
 end
 
-local function segText(text)
-    local segs = {}
-    for i, ch in ipairs(string.utf8_byte(text)) do
-        segs[i] = string.utf8_char(ch)
-    end
-    return segs
-end
-
 ---@private
 function M:refreshTextSegments()
-    self._text_segments = {}
+    --self._text_segments = {}
     local text = self.text
     if self.rich_text then
-        local data = M.RichText.Parse(text, {
-            color = self.color,
-            size = 1,
-            oblique = self.is_oblique,
-            shadow = self.shadow_params.enabled,
-            underline = self.underline_params.enabled,
-            strikethrough = self.strikethrough_params.enabled,
-            blend = self.blend,
-            alpha = 1,
-        })
-        text = data.text
-        self._rich_text_data = data.runs
+        local ds = self._default_style
+        ds.color = self.color
+        ds.oblique = self.is_oblique
+        ds.shadow = self.shadow_params.enabled
+        ds.underline = self.underline_params.enabled
+        ds.strikethrough = self.strikethrough_params.enabled
+        ds.blend = self.blend
+        text = M.RichText.Parse(self._rich_text_data, text, self._default_style)
     end
+    self._real_text = text
     if self.wrap_word then
-        self._text_segments = M.CJKBreak.Tokenize(text)
+        M.CJKBreak.Tokenize(self._text_segments, text)
     else
-        self._text_segments = segText(text)
+        M.CJKBreak.SplitUTF8(self._text_segments, text)
+        --self._text_segments = segText(text)
     end
     self._lines_dirty = true
 end
@@ -549,42 +564,44 @@ function M:refreshColor()
     end
 end
 
+local SEG_TOK = {}
+local WORD_BUF = {}
+local WORD_CACHE_BUF = {}
+---@type Core.Render.Text.Field[]
+local FIELD_CACHE_BUF = {}
 ---@private
-function M:refreshLines()
+function M:refreshLines(second)
     local fr = lstg.FontRenderer
     fr.SetFontProvider(self.font)
-    local hs, vs = self._real_hscale, self._real_vscale
+    local hs, vs = self._real_hscale * self._auto_w_scale, self._real_vscale * self._auto_h_scale
     fr.SetScale(hs, vs)
-    --self._line_height = fh * vs * self.line_height_factor
-    local rich_data = Core.Lib.Table.DeepCopy(self._rich_text_data)
-    local text = self._text_segments
+    local rich_data = self._rich_text_data
+    local rich_data_i = 1
+    local text_seg = self._text_segments
 
     local total_height = 0
     local total_width = self.width
 
-    local lh = fr.GetFontLineHeight()
+    local lh = fr.GetFontLineHeight() * self.line_height_factor
     local asc = fr.GetFontAscender()
 
-    ---@type Core.Render.Text.Line[]
-    local lines = {}
+    local lines = self._lines
+    local line_pos = 1
     local line_width = 0
     local line_height = 0
 
-    ---@type Core.Render.Text.Field[]
-    local field_buf = {}
+    local field_buf = self._text_fields
+    local last_field_pos = 1
+    local field_pos = 1
     local field_width = 0
     local field_height = 0
 
-    ---@type Core.Render.Text.Field[]
-    local field_cache_buf = {}
     local field_cache_width = 0
     local field_cache_height = 0
 
-    ---@type string[]
-    local word_buf = {}
+    local word_pos = 1
 
-    ---@type string[]
-    local word_cache_buf = {}
+    local word_cache_pos = 1
     local word_cache_width = 0
     local word_cache_height = 0
 
@@ -596,100 +613,140 @@ function M:refreshLines()
 
     local _real_asc = 0
     local function merge_word()
-        Core.Lib.Table.Concat(word_buf, word_cache_buf)
-        word_cache_buf = {}
+        for m = 1, word_cache_pos - 1 do
+            WORD_BUF[word_pos] = WORD_CACHE_BUF[m]
+            word_pos = word_pos + 1
+            WORD_CACHE_BUF[m] = nil
+        end
         field_width = field_width + word_cache_width
         field_height = max(field_height, word_cache_height)
         word_cache_width = 0
         word_cache_height = 0
+        word_cache_pos = 1
     end
     local function merge_field()
-        Core.Lib.Table.Concat(field_buf, field_cache_buf)
-        field_cache_buf = {}
+        for m = 1, #FIELD_CACHE_BUF do
+            field_buf[field_pos] = FIELD_CACHE_BUF[m]
+            FIELD_CACHE_BUF[m] = nil
+            field_pos = field_pos + 1
+        end
         line_width = line_width + field_cache_width
         line_height = max(line_height, field_cache_height)
         field_cache_width = 0
         field_cache_height = 0
     end
     local function next_field()
-        if #word_buf > 0 then
-            ---@class Core.Render.Text.Field
-            local field = {
-                text = table.concat(word_buf),
-                style = style,
-                width = field_width,
-                height = field_height,
-                fit_size_w = 1,
-                fit_size_h = 1,
-            }
-            field_buf[#field_buf + 1] = field
+        if word_pos > 1 then
+            for m = word_pos, #WORD_BUF do
+                WORD_BUF[m] = nil
+            end
+            local cur = field_buf[field_pos]
+            if cur then
+                cur.text = table.concat(WORD_BUF)
+                cur.style = style
+                cur.width = field_width
+                cur.height = field_height
+            else
+                ---@class Core.Render.Text.Field
+                local field = {
+                    text = table.concat(WORD_BUF),
+                    style = style,
+                    width = field_width,
+                    height = field_height,
+                }
+                field_buf[field_pos] = field
+            end
+            field_pos = field_pos + 1
             line_width = line_width + field_width
             line_height = max(line_height, field_height)
-            -- line_height = max(line_height, word_height)
-            --line_width = line_width + word_width
             field_width = 0
             field_height = 0
-            word_buf = {}
+            word_pos = 1
         end
     end
     local function cache_field()
-        if #word_cache_buf > 0 then
+        if word_cache_pos > 1 then
+            for m = word_cache_pos, #WORD_CACHE_BUF do
+                WORD_CACHE_BUF[m] = nil
+            end
             local field_cache = {
-                text = table.concat(word_cache_buf),
+                text = table.concat(WORD_CACHE_BUF),
                 style = style,
                 width = word_cache_width,
                 height = word_cache_height,
             }
-            field_cache_buf[#field_cache_buf + 1] = field_cache
+            FIELD_CACHE_BUF[#FIELD_CACHE_BUF + 1] = field_cache
             field_cache_width = field_cache_width + word_cache_width
             field_cache_height = max(field_cache_height, word_cache_height)
             -- line_height = max(line_height, word_height)
             --line_width = line_width + word_width
             word_cache_width = 0
             word_cache_height = 0
-            word_cache_buf = {}
+            word_cache_pos = 1
         end
     end
     local function next_line()
         next_field()
-        local _line_height = line_height
-        if _line_height == 0 then
+        if line_height == 0 then
             --空行的情况
             local size = style and style.size or 1
-            _line_height = size * vs * lh
+            line_height = size * vs * lh
         end
-        ---@class Core.Render.Text.Line
-        local line = {
-            width = line_width,
-            height = _line_height,
-            data = field_buf,
-
-        }
-        lines[#lines + 1] = line
+        local cur = lines[line_pos]
+        if cur then
+            cur.width = line_width
+            cur.height = line_height
+            local data = cur.data
+            local n = 1
+            for m = last_field_pos, field_pos - 1 do
+                data[n] = field_buf[m]
+                n = n + 1
+            end
+            for m = n, #cur.data do
+                data[m] = nil
+            end
+        else
+            local data = {}
+            ---@class Core.Render.Text.Line
+            local line = {
+                width = line_width,
+                height = line_height,
+                data = data,
+            }
+            local n = 1
+            for m = last_field_pos, field_pos - 1 do
+                data[n] = field_buf[m]
+                n = n + 1
+            end
+            lines[line_pos] = line
+        end
+        line_pos = line_pos + 1
         total_width = max(total_width, line_width)
-        total_height = total_height + _line_height
+        total_height = total_height + line_height
         line_height = 0
         line_width = 0
-        field_buf = {}
+        last_field_pos = field_pos
+        --field_buf = {}
     end
 
-    while i <= #text do
-        local tok = text[i]
-        local seg_tok = segText(tok)
+    while i <= #text_seg do
+        local tok = text_seg[i]
+        M.CJKBreak.SplitUTF8(SEG_TOK, tok)
         local has_next_line = false
-        for _, seg in ipairs(seg_tok) do
+        for j = 1, #SEG_TOK do
+            local seg = SEG_TOK[j]
             byte_i = byte_i + #seg
-            if rich_data and #rich_data > 0 then
-                local run = rich_data[1]
-                if run.start <= byte_i and byte_i <= run.stop then
+            if rich_data then
+                local run = rich_data[rich_data_i]
+                if run and run.start <= byte_i and byte_i <= run.stop then
                     if style then
                         next_field()
                         cache_field()
                     end
-                    style = run.style:copy()
+                    style = run.style
                     local size = style and style.size or 1
                     fr.SetScale(hs * size, vs * size)
-                    table.remove(rich_data, 1)
+                    rich_data_i = rich_data_i + 1
                 end
             end
             if seg == "\n" then
@@ -700,27 +757,27 @@ function M:refreshLines()
             else
                 local size = style and style.size or 1
                 local th = size * vs * lh
-                if #lines == 0 then
+                if line_pos == 1 then
                     _real_asc = max(_real_asc, vs * size * asc)
                 end
                 local tw = fr.MeasureTextAdvance(seg)
                 if seg ~= "" and tw == 0 then
                     success = false
                 end
-
                 if self.word_break or self.wrap_word then
                     if line_width + field_width + word_cache_width + tw > self.width then
                         if not has_next_line then
                             next_line()
                             has_next_line = true
-                        elseif not (self.auto_fit_height or self.auto_fit_width) then
+                        elseif not self.auto_fit_height then
                             merge_word()
                             merge_field()
                             next_line()
                         end
                     end
                 end
-                word_cache_buf[#word_cache_buf + 1] = seg
+                WORD_CACHE_BUF[word_cache_pos] = seg
+                word_cache_pos = word_cache_pos + 1
                 word_cache_width = word_cache_width + tw
                 word_cache_height = max(word_cache_height, th)
             end
@@ -729,33 +786,28 @@ function M:refreshLines()
         merge_field()
         i = i + 1
     end
-    if #word_buf > 0 then
+    if word_pos > 1 then
         next_line()
     end
-    self._lines = lines
+    for m = line_pos, #lines do
+        lines[m] = nil
+    end
     self._total_height = total_height
     self._total_width = total_width
     self._ascender = _real_asc
     self:refreshColor()
-    local fh = self.auto_fit_width and (self.width / self._total_width) or 1
-    local fv = self.auto_fit_height and (self.height / self._total_height) or 1
-    if self.lock_aspect_ratio then
-        local m = min(fh, fv)
-        fh = m
-        fv = m
-    end
-    self._total_width = self._total_width * fh
-    self._total_height = self._total_height * fv
-    self._ascender = self._ascender * fv
-
-    for _, line in ipairs(lines) do
-        line.height = line.height * fv
-        line.width = line.width * fh
-        for _, field in ipairs(line.data) do
-            field.height = field.height * fv
-            field.width = field.width * fh
-            field.fit_size_w = fh
-            field.fit_size_h = fv
+    if not second then
+        local fh = self.auto_fit_width and min(1, self.width / self._total_width) or 1
+        local fv = self.auto_fit_height and min(1, self.height / self._total_height) or 1
+        if self.lock_aspect_ratio then
+            local m = min(fh, fv)
+            fh = m
+            fv = m
+        end
+        if fh < 0.99 or fv < 0.99 then
+            self._auto_w_scale = fh
+            self._auto_h_scale = fv
+            self:refreshLines(true)
         end
     end
 
@@ -830,6 +882,10 @@ function M:update()
         self:refreshSize()
         self._size_dirty = false
     end
+    if self._lines_dirty then
+        self._auto_w_scale = 1
+        self._auto_h_scale = 1
+    end
     while self._lines_dirty do
         if self:refreshLines() then
             self._lines_dirty = false
@@ -850,7 +906,7 @@ function M:draw(no_update)
     end
     local fr = lstg.FontRenderer
     fr.SetFontProvider(self.font)
-    local hs, vs = self._real_hscale, self._real_vscale
+    local hs, vs = self._real_hscale * self._auto_w_scale, self._real_vscale * self._auto_h_scale
 
     local xv, yv = self._xVector, self._yVector
     local wv = self._writeVector
@@ -874,10 +930,8 @@ function M:draw(no_update)
             local dw, dh = data.width, data.height
             local style = data.style
             local size = style and style.size or 1
-            local _color = self.color
-            if style and style.color then
-                _color = style.color
-            end
+            local _color = style and style.color or self.color
+            local blend = style and style.blend or self.blend
             local y1, y2, y3 = wv[1], wv[2], wv[3]
             if style and style.oblique or self.is_oblique then
                 y1, y2, y3 = yv[1], yv[2], yv[3]
@@ -887,26 +941,26 @@ function M:draw(no_update)
                 local m = min(hs, vs)
                 hsize, vsize = m * size, m * size
             end
-            fr.SetScale(hsize * data.fit_size_w, vsize * data.fit_size_h)
-            local blend = style and style.blend or self.blend
+            fr.SetScale(hsize, vsize)
+
             if style and style.shadow or shadow_p.enabled then
                 for i = 1, shadow_p.div do
                     local c = i / shadow_p.div
                     local dx = shadow_p.dir_x * hsize * c
                     local dy = shadow_p.dir_y * vsize * c
                     fr.RenderTextInSpace(data.text, x + dx, y + dy, z, xv[1], xv[2], xv[3], y1, y2, y3,
-                            blend, shadow_p.color * (1 - i / shadow_p.div))
+                            blend, shadow_p.color * (1 - c))
                 end
             end
             fr.RenderTextInSpace(data.text, x, y, z, xv[1], xv[2], xv[3], y1, y2, y3, blend, _color)
             if style and style.underline or underline_p.enabled then
-                local w = underline_p.width / 2
+                local w = underline_p.width * 0.5
                 local h = underline_p.y + underline_p.y_factor * dh
                 draw_line(x, y, z, x + dw * xv[1], y + dw * xv[2], z + dw * xv[3], wv,
                         h - w, h + w, blend, _color)
             end
             if style and style.strikethrough or strikethrough_p.enabled then
-                local w = strikethrough_p.width / 2
+                local w = strikethrough_p.width * 0.5
                 local h = strikethrough_p.y + strikethrough_p.y_factor * dh
                 draw_line(x, y, z, x + dw * xv[1], y + dw * xv[2], z + dw * xv[3], wv,
                         h - w, h + w, blend, _color)

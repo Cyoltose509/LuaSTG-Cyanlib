@@ -63,48 +63,85 @@ do
 end
 
 ---获取单个字符的类别
----@param utf8_byte number
+---@param ch string
 ---@return number
-function M.Get(utf8_byte)
-    if not char_class[utf8_byte] then
-        char_class[utf8_byte] = M.Type.Normal
+function M.Get(ch)
+    local b = utf8.codepoint(ch)
+    if not char_class[b] then
+        char_class[b] = M.Type.Normal
     end
-    return char_class[utf8_byte]
+    return char_class[b]
 end
 
----将字符串分割为词语
+local UTF8_MATCH = "[%z\1-\127\194-\244][\128-\191]*"
+---将字符串分割为单个字符，存入表中
+---使用GC压力最低的方法
+---@param list string[]
 ---@param text string
----@return string[]
-function M.Tokenize(text)
-    local tokens = {}
-    local buf = ""
-    local prev_type
+function M.SplitUTF8(list, text)
+    local i = 1
+    for ch in text:gmatch(UTF8_MATCH) do
+        list[i] = ch
+        i = i + 1
+    end
+    for j = i, #list do
+        list[j] = nil
+    end
+end
 
-    for _, ch in ipairs(string.utf8_byte(text)) do
-        local c = utf8.char(ch)
+local BUF = {}
+local concat = table.concat
+---将字符串分割为词语，存入表中
+---使用GC压力最低的方法
+---@param list string[]
+---@param text string
+function M.Tokenize(list, text)
+    local prev_type
+    local i = 1
+    local buf_i = 1
+    for ch in text:gmatch(UTF8_MATCH) do
         local t = M.Get(ch)
         if t == M.Type.Normal or t == M.Type.Opening then
-            if #buf > 0 and prev_type ~= M.Type.Opening then
-                table.insert(tokens, buf)
-                buf = ""
+            if buf_i > 1 and prev_type ~= M.Type.Opening then
+                for m = buf_i, #BUF do
+                    BUF[m] = nil
+                end
+                list[i] = concat(BUF)
+                i = i + 1
+                buf_i = 1
             end
-            buf = buf .. c
+            BUF[buf_i] = ch
+            buf_i = buf_i + 1
         elseif t == M.Type.Letter then
             if prev_type ~= M.Type.Normal then
-                buf = buf .. c
+                BUF[buf_i] = ch
+                buf_i = buf_i + 1
             else
-                if #buf > 0 then
-                    table.insert(tokens, buf)
+                if buf_i > 1 then
+                    for m = buf_i, #BUF do
+                        BUF[m] = nil
+                    end
+                    list[i] = concat(BUF)
+                    buf_i = 1
+                    i = i + 1
                 end
-                buf = c
+                BUF[1] = ch
+                buf_i = 2
             end
         elseif t == M.Type.Closing then
-            buf = buf .. c
+            BUF[buf_i] = ch
+            buf_i = buf_i + 1
         end
         prev_type = t
     end
-    if #buf > 0 then
-        table.insert(tokens, buf)
+    if buf_i > 1 then
+        for m = buf_i, #BUF do
+            BUF[m] = nil
+        end
+        list[i] = concat(BUF)
+        i = i + 1
     end
-    return tokens
+    for j = i, #list do
+        list[j] = nil
+    end
 end
