@@ -19,10 +19,6 @@ MainLoop.AddEvent("Init", "Default", {
     end,
 })
 MainLoop.AddEvent("Init", "Default", {
-    name = "Core.Init.Input",
-    func = Core.Input.Init,
-})
-MainLoop.AddEvent("Init", "Default", {
     name = "Core.Init.Object",
     func = Core.Object.InitAll,
 })
