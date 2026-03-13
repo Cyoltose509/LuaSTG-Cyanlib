@@ -9,6 +9,8 @@ M.languageSet = {}
 
 M.languageDirectory = {}
 
+M.jargonSign = "{{([^{}]+)}}"
+
 ---@type string[]
 M.text = {}
 ---@type string[]
@@ -27,6 +29,7 @@ local function SkimDirectory(dir)
             if data.isJargon then
                 data.isJargon = nil
                 M.RegisterJargon(data)
+                M.RegisterKeys(data)--如果是术语，会同时存在key和jargon
             else
                 M.RegisterKeys(data)
             end
@@ -35,11 +38,32 @@ local function SkimDirectory(dir)
             if data.isJargon then
                 data.isJargon = nil
                 M.RegisterJargon(data)
+                M.RegisterKeys(data)--如果是术语，会同时存在key和jargon
             else
                 M.RegisterKeys(data)
             end
         end
     end
+end
+
+function M.GetJargon(key, depth)
+    depth = depth or 0
+    if depth > 10 then
+        return key
+    end
+
+    local val = M.jargon[key]
+    if not val then
+        return key
+    end
+
+    local resolved = val:gsub(M.jargonSign, function(k)
+        return M.GetJargon(k, depth + 1)
+    end)
+    -- 如果解析后变了，就缓存结果
+    M.jargon[key] = resolved
+
+    return resolved
 end
 
 function M.Reload()
@@ -53,6 +77,10 @@ function M.Reload()
 
     for _, dir in pairs(M.languageDirectory) do
         SkimDirectory(dir .. lang .. "/")
+    end
+    ---扁平化
+    for k in pairs(M.jargon) do
+        M.jargon[k] = M.GetJargon(k)
     end
 end
 
@@ -96,10 +124,10 @@ end
 function M.RegisterJargon(key, value)
     if type(key) == "table" then
         for k, v in pairs(key) do
-            M.jargon["/" .. k] = v
+            M.jargon[k] = v
         end
     else
-        M.jargon["/" .. key] = value
+        M.jargon[key] = value
     end
 end
 
@@ -109,7 +137,7 @@ end
 ---命令是不会被重置的
 ---@see string.gsub
 function M.RegisterCommand(pattern, repl)
-    M.command["/" .. pattern] = repl
+    M.command[pattern] = repl
 end
 
 function M.GetAvailableLanguages()
@@ -133,21 +161,17 @@ function M.Get(key)
     if key == "" then
         return key
     end
-    if M._cache[key] then
-        return M._cache[key]
-    end
+   -- if M._cache[key] then
+   --     return M._cache[key]
+   -- end
     local text = M.text[key] or key
-    if text:find("/", 1, true) then
-        for i, l in pairs(M.jargon) do
-            text = text:gsub(i, l)
-        end
+    text = text:gsub(M.jargonSign, function(kw)
+        return M.jargon[kw] or kw
+    end)
+    for kw, func in pairs(M.command) do
+        text = text:gsub(kw, func)
     end
-    if text:find("/", 1, true) then
-        for kw, func in pairs(M.command) do
-            text = text:gsub(kw, func)
-        end
-    end
-    M._cache[key] = text
+    --M._cache[key] = text
     return text
 end
 
