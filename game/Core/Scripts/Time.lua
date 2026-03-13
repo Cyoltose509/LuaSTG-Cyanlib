@@ -24,10 +24,9 @@ end
 function M.GetRealDelta()
     return M.real_delta
 end
-
-local MainLoop = Core.MainLoop
 local watch = lstg.StopWatch()
 local last_time = 0
+local int = int
 
 ---返回一个节拍器
 ---Returns a beat timer
@@ -39,9 +38,9 @@ function M.Beat(interval)
             return true
         end
     end
-    local last = Core.Time.elapsed
+    local last = M.elapsed
     return function()
-        local t = Core.Time.elapsed
+        local t = M.elapsed
         local cur = int(t / interval)
         if cur > last then
             last = cur
@@ -60,9 +59,9 @@ function M.RealBeat(interval)
             return true
         end
     end
-    local last = Core.Time.real_elapsed
+    local last = M.real_elapsed
     return function()
-        local t = Core.Time.real_elapsed
+        local t = M.real_elapsed
         local cur = int(t / interval)
         if cur > last then
             last = cur
@@ -71,7 +70,7 @@ function M.RealBeat(interval)
     end
 end
 
-MainLoop.AddEvent("Frame", "Before", {
+Core.MainLoop.AddEvent("Frame", "Before", {
     name = "Core.Time.Delta",
     func = function()
         local now = watch:GetElapsed()

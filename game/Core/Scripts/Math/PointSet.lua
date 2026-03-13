@@ -2,6 +2,10 @@
 local M = {}
 Core.Math.PointSet = M
 
+local cos, sin, tan = cos, sin, tan
+local atan = atan
+local int = int
+
 function M.EllipsePoint(x, y, hr, vr, erot, a)
     local x0, y0 = cos(a) * hr, sin(a) * vr
     return
@@ -53,7 +57,8 @@ function M.PolygonPoint(x, y, d, n, rrot, a)
             A = A - 360
         end
         if A < (da / 2) and A >= -(da / 2) then
-            x0, y0 = Core.Math.PolarToCart(d / cos(A), A + o * da)
+            local r, _a = d / cos(A), A + o * da
+            x0, y0 = cos(_a) * r, sin(_a) * r
             break
         end
     end

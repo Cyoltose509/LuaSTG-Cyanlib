@@ -93,7 +93,7 @@ function M.BeforeRender()
         local e
         for i = #M.Event, 1, -1 do
             e = M.Event[i]
-            if e.Capture then
+            if e.capture then
                 M.CreateRenderTarget(e.name)
                 lstg.PushRenderTarget(e.name)
                 lstg.RenderClear(M.col00000000)

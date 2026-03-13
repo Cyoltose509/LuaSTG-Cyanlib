@@ -105,8 +105,10 @@ end
 ---@param t2 T[]
 ---@return T[]
 function M.Concat(t1, t2)
+    local j = #t1 + 1
     for i = 1, #t2 do
-        t1[#t1 + 1] = t2[i]
+        t1[j] = t2[i]
+        j = j + 1
     end
     return t1
 end

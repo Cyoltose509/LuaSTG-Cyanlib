@@ -10,7 +10,8 @@ function Quaternion:conjugate()
 end
 
 function Quaternion:inverse()
-    local len2 = self:length() ^ 2
+    local len = self:length()
+    local len2 = len * len
     local c = self:conjugate()
     return Quaternion.New(c.x / len2, c.y / len2, c.z / len2, c.w / len2)
 end
@@ -37,7 +38,7 @@ end
 ---@param v Core.Math.Vector3
 function Quaternion:rotateVector(v)
     local qv = Quaternion.New(v.x, v.y, v.z, 0)
-    local qi =self:inverse()
+    local qi = self:inverse()
     local r = self * qv * qi
     return Core.Math.Vector3.New(r.x, r.y, r.z)
 end

@@ -10,15 +10,17 @@ Vector2.down = Vector2.New(0, -1)
 Vector2.left = Vector2.New(-1, 0)
 Vector2.right = Vector2.New(1, 0)
 
+local abs = abs
+
 function Vector2:abs()
     return Vector2.New(abs(self.x), abs(self.y))
 end
 
 function Vector2.Max(vec1, vec2)
-    return (vec1 + vec2 + (vec1-vec2):abs()) * 0.5
+    return (vec1 + vec2 + (vec1 - vec2):abs()) * 0.5
 end
 function Vector2.Min(vec1, vec2)
-    return (vec1 - vec2 + (vec1-vec2):abs()) * 0.5
+    return (vec1 - vec2 + (vec1 - vec2):abs()) * 0.5
 end
 
 ---@class Core.Math.Vector3:lstg.Vector3

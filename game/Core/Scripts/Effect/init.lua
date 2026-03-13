@@ -11,6 +11,12 @@ local rand = Core.RNG:newRaw(Core.RNG.Algorithm.Xoshiro128ss, os.time())
 M.rand = rand
 
 local Render = Core.Render
+local min, max = min, max
+local sin, cos = sin, cos
+local Smooth = Core.Math.ExpInterp
+local Easing = Core.Lib.Easing
+local QuadOut = Easing.QuadOut
+local int = int
 
 local sparkle = Object.Define(Object.Base)
 function sparkle:frame()
@@ -25,8 +31,8 @@ function sparkle:frame()
         p = self.particle[i]
         p.x = p.x + p.vx * dt
         p.y = p.y + p.vy * dt
-        p.vx = Core.Math.ExpInterp(p.vx, 0, dt * 3)
-        p.vy = Core.Math.ExpInterp(p.vy, 0, dt * 3)
+        p.vx = Smooth(p.vx, 0, dt * 3)
+        p.vy = Smooth(p.vy, 0, dt * 3)
         if p.timer > maxtime then
             p.alpha = max(p.alpha - 300 * dt, 0)
             if p.alpha == 0 then
@@ -88,10 +94,10 @@ function wave:frame()
     self.lr = self.nr
     local k = min(1, self.time / self.lifetime)
     self.alpha = max(0, self.full_alpha * (1 - k))
-    self.nr = self.ir + Core.Lib.Easing[2](k) * (self.sr - self.ir)
+    self.nr = self.ir + QuadOut(k) * (self.sr - self.ir)
     self.dr = self.nr - self.lr
     self.smear_r = self.smear_r + self.dr
-    self.smear_r = Core.Math.ExpInterp(self.smear_r, 0, dt * 7.2)
+    self.smear_r = Smooth(self.smear_r, 0, dt * 7.2)
     if self.time > self.lifetime then
         Object.Del(self)
     end
@@ -167,7 +173,7 @@ function M.PulseScreen(layer, col, blend, fade_in, stay, fade_out)
     col = col or Core.Render.Color.Default
     local self = Core.Object.New(pulse)
     self.layer = layer or 0
-    self.group = Core.Object.Group.Ghost
+    self.group = 0
     self.blend = blend or ""
     self.__a = col.a
     self._r, self._g, self._b = col.r, col.g, col.b
@@ -180,8 +186,8 @@ function M.PulseScreen(layer, col, blend, fade_in, stay, fade_out)
     else
         self._a = 255
     end
-    self.fade_in_mode = Core.Lib.Easing.Linear
-    self.fade_out_mode = Core.Lib.Easing.Linear
+    self.fade_in_mode = Easing.Linear
+    self.fade_out_mode = Easing.Linear
     self.time = 0
     self.t1 = fade_in
     self.t2 = fade_in + stay

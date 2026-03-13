@@ -46,6 +46,8 @@ local VALUE_SET = {
 }
 
 local exp = math.exp
+local sin = sin
+local sqrt = sqrt
 
 ---@type Core.Lib.Easing
 local M = {}

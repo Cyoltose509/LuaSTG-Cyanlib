@@ -2,20 +2,22 @@
 local M = {}
 Core.Lib.Json = M
 
+local cjson = cjson
+
+---@param str string
 function M.Format(str)
     local ret = ''
     local indent = '	'
     local level = 0
     local in_string = false
     for i = 1, #str do
-        local s = string.sub(str, i, i)
+        local s = str:sub(i, i)
         if s == '{' and (not in_string) then
             level = level + 1
-            ret = ret .. '{\n' .. string.rep(indent, level)
+            ret = ret .. '{\n' .. indent:rep(level)
         elseif s == '}' and (not in_string) then
             level = level - 1
-            ret = string.format(
-                    '%s\n%s}', ret, string.rep(indent, level))
+            ret = ('%s\n%s}'):format(ret, indent:rep(level))
         elseif s == '"' then
             in_string = not in_string
             ret = ret .. '"'
@@ -23,14 +25,13 @@ function M.Format(str)
             ret = ret .. ': '
         elseif s == ',' and (not in_string) then
             ret = ret .. ',\n'
-            ret = ret .. string.rep(indent, level)
+            ret = ret .. indent:rep(level)
         elseif s == '[' and (not in_string) then
             level = level + 1
-            ret = ret .. '[\n' .. string.rep(indent, level)
+            ret = ret .. '[\n' .. indent:rep(level)
         elseif s == ']' and (not in_string) then
             level = level - 1
-            ret = string.format(
-                    '%s\n%s]', ret, string.rep(indent, level))
+            ret = ('%s\n%s]'):format(ret, indent:rep(level))
         else
             ret = ret .. s
         end
@@ -100,7 +101,7 @@ function M.Encode(t)
     if b then
         return s
     else
-        lstg.Log(4, string.format("contant to encode = %s", print_value(t, 0, false)))
+        Core.System.Log(4, string.format("contant to encode = %s", print_value(t, 0, false)))
         assert(b, s)
     end
 end

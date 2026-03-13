@@ -30,14 +30,18 @@ require("Core.Scripts.Math.Geom")
 M.Point2 = M.Vector2
 M.Point3 = M.Vector3
 
+local int = int
+local abs = abs
 local exp = math.exp
+local huge = math.huge
+local type = type
 
 function M.Wrap(value, MIN, MAX)
     return (value - MIN) % (MAX - MIN + 1) + MIN
 end
 
 function M.IsReal(x)
-    return type(x) == "number" and x == x and x ~= math.huge and x ~= -math.huge
+    return type(x) == "number" and x == x and x ~= huge and x ~= -huge
 end
 
 function M.DeltaAngle(a1, a2)
@@ -52,7 +56,7 @@ function M.Solve3x3(a, b, c, d,
                     e, f, g, h,
                     i, j, k, l)
     local D = a * (f * k - g * j) - b * (e * k - g * i) + c * (e * j - f * i)
-    if math.abs(D) < 1e-12 then
+    if abs(D) < 1e-12 then
         return nil
     end
 
@@ -68,18 +72,9 @@ function M.Solve3x3(a, b, c, d,
     return x, y, z
 end
 
-function M.CartToPolar(x, y)
-    return sqrt(x * x + y * y), atan2(y, x)
-end
-
-function M.PolarToCart(r, a)
-    return r * cos(a), r * sin(a)
-end
-
 function M.Lerp(a, b, t)
     return (1 - t) * a + t * b
 end
-
 
 function M.ExpInterp(a, b, k)
     return a + (b - a) * (1 - exp(-k))

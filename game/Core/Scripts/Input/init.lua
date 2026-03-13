@@ -11,22 +11,24 @@ Core.Input = M
 ---@alias Core.Input.Device Core.Input.Keyboard|Core.Input.Mouse|Core.Input.Xinput
 
 local bit = require("bit")
+local type = type
+local ipairs, pairs = ipairs, pairs
 
 ---@alias Core.Input.Button table<Core.Input.Key, boolean>
 ---@type Core.Input.Button[]
-M.Buttons = {}
+M.buttons = {}
 ---@type Core.Input.Axis[]
-M.Axes = {}
+M.axes = {}
 
 --- Register a button with optional keyboard, xinput, and mouse bindings.
 ---@param name string
 ---@param key Core.Input.Key[]|Core.Input.Key
 function M.RegisterButton(name, key)
     assert(type(name) == "string", "Button name must be string")
-    local list = M.Buttons[name]
+    local list = M.buttons[name]
     if not list then
         list = {}
-        M.Buttons[name] = list
+        M.buttons[name] = list
     end
     if type(key) == "table" then
         for _, k in ipairs(key or {}) do
@@ -41,7 +43,7 @@ end
 ---@param name string
 ---@param key Core.Input.Key[]|Core.Input.Key|nil
 function M.UnregisterButton(name, key)
-    local set = M.Buttons[name]
+    local set = M.buttons[name]
     if not set then
         return
     end
@@ -55,15 +57,15 @@ function M.UnregisterButton(name, key)
         end
 
         if next(set) == nil then
-            M.Buttons[name] = nil
+            M.buttons[name] = nil
         end
     else
-        M.Buttons[name] = nil
+        M.buttons[name] = nil
     end
 end
 
 function M.ButtonPressed(name)
-    local btn = M.Buttons[name]
+    local btn = M.buttons[name]
     if not btn then
         return false
     end
@@ -76,7 +78,7 @@ function M.ButtonPressed(name)
 end
 
 function M.ButtonDown(name)
-    local btn = M.Buttons[name]
+    local btn = M.buttons[name]
     if not btn then
         return false
     end
@@ -89,7 +91,7 @@ function M.ButtonDown(name)
 end
 
 function M.ButtonUp(name)
-    local btn = M.Buttons[name]
+    local btn = M.buttons[name]
     if not btn then
         return false
     end
@@ -102,7 +104,7 @@ function M.ButtonUp(name)
 end
 
 function M.ButtonTriggered(name)
-    local btn = M.Buttons[name]
+    local btn = M.buttons[name]
     if not btn then
         return false
     end
@@ -133,18 +135,18 @@ function M.RegisterAxis(name, left_func, right_func)
         left_timer = 0,
         right_timer = 0,
     }
-    M.Axes[name] = axisUnit
+    M.axes[name] = axisUnit
     return axisUnit
 end
 
 function M.UnregisterAxis(name)
-    if M.Axes[name] then
-        M.Axes[name] = nil
+    if M.axes[name] then
+        M.axes[name] = nil
     end
 end
 
 function M.GetAxis(name)
-    local axis = M.Axes[name]
+    local axis = M.axes[name]
     if not axis then
         return 0
     end
@@ -175,48 +177,19 @@ function M.GetAxis(name)
     return axis.value
 end
 
-function M.AxisUpdate()
-    for _, axis in pairs(M.Axes) do
-        local left = axis.left()
-        local right = axis.right()
-        local value = 0
-        if left then
-            axis.left_timer = axis.left_timer + 1
-            value = value - 1
-        else
-            axis.left_timer = 0
-        end
-        if right then
-            axis.right_timer = axis.right_timer + 1
-            value = value + 1
-        else
-            axis.right_timer = 0
-        end
-        if left and right then
-            if axis.left_timer < axis.right_timer then
-                value = -1
-            elseif axis.left_timer > axis.right_timer then
-                value = 1
-            end
-        end
-        axis.value = value
-
-    end
-end
 
 function M.Update()
     M.Keyboard.Update()
     M.Mouse.Update()
     M.Xinput.Update()
-    --M.AxisUpdate()
 end
 
 ---触发重复按键的间隔
-M.REPEAT_INTERVAL = 2
+M.REPEAT_INTERVAL = 0.03
 ---触发重复按键的延迟
-M.REPEAT_DELAY = 30
+M.REPEAT_DELAY = 0.5
 
-M.TriggerList = {}
+M.triggerList = {}
 ---用于记录触发的按键
 function M.NewTriggerRecord(key)
     ---@class Core.Input.TriggerRecord
@@ -224,26 +197,33 @@ function M.NewTriggerRecord(key)
         key = key,
         down = false,
         timer = 0,
+        repeat_timer = 0,
         triggered = false,
     }
-    M.TriggerList[key] = m
+    M.triggerList[key] = m
     return m
 end
 ---@param triggerList Core.Input.TriggerRecord[]
 ---@param keyState table<Core.Input.Key, boolean>
 function M.KeyTriggerUpdate(triggerList, keyState)
+    local dt = Core.Time.GetDelta()
     for key, state in pairs(triggerList) do
         state.down = keyState[key]
         state.triggered = false
         if state.down then
-            state.timer = state.timer + 1
-            if state.timer == 1 then
+            if state.timer == 0 then
                 state.triggered = true
-            elseif state.timer > M.REPEAT_DELAY and state.timer % M.REPEAT_INTERVAL == 0 then
-                state.triggered = true
+            elseif state.timer > M.REPEAT_DELAY then
+                state.repeat_timer = state.repeat_timer + dt
+                if state.repeat_timer > M.REPEAT_INTERVAL then
+                    state.triggered = true
+                    state.repeat_timer = 0
+                end
             end
+            state.timer = state.timer + dt
         else
             state.timer = 0
+            state.repeat_timer = 0
         end
 
     end
@@ -265,7 +245,7 @@ function M.GetLastTrigger(triggerList)
 end
 
 function M.GetLast()
-    return M.GetLastTrigger(M.TriggerList)
+    return M.GetLastTrigger(M.triggerList)
 end
 
 require("Core.Scripts.Input.Keyboard")
@@ -285,7 +265,7 @@ local DeviceNames = {
 }
 
 function M.IsTriggered(keyCode)
-    local t = M.TriggerList[keyCode]
+    local t = M.triggerList[keyCode]
     return t and t.triggered or false
 end
 
@@ -313,12 +293,4 @@ function M.GetKeyName(keyCode, prefix)
     else
         return name
     end
-end
-
----初始化输入模块
----定义一些常用的按钮和虚拟轴，便于使用
----Initialize the input module.
----Define some common buttons and virtual axes, which can be used easily.
-function M.Init()
-
 end

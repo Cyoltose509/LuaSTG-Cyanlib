@@ -2,9 +2,13 @@
 local M = Core.Class()
 Core.Effect.ParticleSystem = M
 
+local Core = Core
 local ran = Core.Effect.rand
 local lerp = Core.Math.Lerp
 local HUGE = math.huge
+local cos, sin = cos, sin
+local clamp = clamp
+local int = int
 
 function M:init()
     ---@type Core.Effect.ParticleSystem.Particle[]

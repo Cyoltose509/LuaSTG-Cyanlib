@@ -2,6 +2,13 @@
 local M = {}
 Core.Math.Geom = M
 
+local cos, sin = cos, sin
+local sign = sign
+local clamp = clamp
+local hypot = hypot
+local sqrt = sqrt
+local abs = abs
+
 function M.PointInRect(px, py, x1, x2, y1, y2)
     if x1 > x2 then
         x1, x2 = x2, x1
@@ -38,29 +45,15 @@ function M.InversePerspectiveProjection(x_proj, y_proj, zp, x0, y0, z0, z)
     return x, y, z
 end
 
-function M.PointOnSegment(mp, p1, p2, offset)
-    local x1, y1 = p1.x, p1.y
-    local x2, y2 = p2.x, p2.y
-    local x0, y0 = mp.x, mp.y
-    -- 计算线段的长度平方
+
+function M.PointOnSegment(x0, y0, x1, y1, x2, y2, offset)
     local dx, dy = x2 - x1, y2 - y1
     local lengthSquared = dx * dx + dy * dy
-    --[[
-    -- 特殊情况：线段长度为0
-    if lengthSquared == 0 then
-        -- 直接计算点到起点的距离
-        return Dist(mp, p1) <= offset
-    end--]]
-    -- 计算点到线段的投影
     local t = ((x0 - x1) * dx + (y0 - y1) * dy) / lengthSquared
-    -- 限制t在区间[0, 1]
     t = clamp(t, 0, 1)
-    -- 计算最近点的坐标
     local closestX = x1 + t * dx
     local closestY = y1 + t * dy
-    -- 计算点到该投影点的距离
     local distance = hypot(x0 - closestX, y0 - closestY)--Dist(mp, { x = closestX, y = closestY })
-    -- 检查距离是否在误差范围内
     return distance <= offset
 end
 
