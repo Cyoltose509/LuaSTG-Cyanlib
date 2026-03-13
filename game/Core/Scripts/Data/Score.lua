@@ -92,7 +92,10 @@ function M.Save()
     M.event_listener:dispatch("Score.afterSave")
 end
 
-function M.GetSaveIterator()
+function M.GetSaveIterator(doEvent)
+    if doEvent then
+        M.event_listener:dispatch("Score.beforeSave")
+    end
     Core.VFS.CreateDirectory(getPath(M.current_slot))
     local file = getSlotFile(M.current_slot)
     local fake_file = file .. ".tmp"
@@ -106,6 +109,9 @@ function M.GetSaveIterator()
             score_data_file:close()
             os.remove(file)
             os.rename(fake_file, file)
+            if doEvent then
+                M.event_listener:dispatch("Score.afterSave")
+            end
             return false
         end
         local end_i = math.min(i + CHUNK - 1, strlen)
@@ -158,6 +164,8 @@ function M.SetDefaultValue(key, value)
     local field = fields[#fields]
     obj[field] = obj[field] or value
 end
+
+
 
 
 
