@@ -1,8 +1,14 @@
+local Base = Core.Display.Camera.Base
 ---@class Core.Display.Camera2D : Core.Display.Camera.Base
-local M = Core.Class(Core.Display.Camera.Base)
+local M = Core.Class(Base)
 Core.Display.Camera2D = M
+
+local cos, sin = cos, sin
+local int = int
+local abs = abs
+
 function M:init()
-    Core.Display.Camera.Base.init(self)
+    Base.init(self)
     self.rot = 0
     self.x = 0
     self.y = 0
@@ -18,15 +24,52 @@ function M:init()
         bottom = -100,
         top = 100,
     }
+    self._shake_x = 0
+    self._shake_y = 0
+    self.shake_params = {
+        timer = 0,
+        lifetime = 0,
+        strength = 0,
+        interval = 0.05,
+        way = 1.5,
+        fadeout_size_mode = Core.Lib.Easing.Linear,
+    }
 end
 
+function M:shake(time, strength, interval, way, fadeout_size_mode)
+    local SP = self.shake_params
+    SP.timer = 0
+    SP.lifetime = time
+    SP.strength = strength or SP.strength
+    SP.interval = interval or SP.interval
+    SP.way = way or SP.way
+    SP.fadeout_size_mode = fadeout_size_mode or Core.Lib.Easing.Linear
+end
+
+function M:update(dt)
+    Base.update(self, dt)
+    local SP = self.shake_params
+    if SP.lifetime > 0 then
+        SP.timer = SP.timer + dt
+        local size = SP.strength * SP.fadeout_size_mode(1 - SP.timer / SP.lifetime)
+        local a = 360 / SP.way * int(SP.timer / SP.interval)
+        self._shake_x = size * cos(a)
+        self._shake_y = size * sin(a)
+        if SP.timer >= SP.lifetime then
+            SP.timer = 0
+            SP.lifetime = 0
+            self._shake_x = 0
+            self._shake_y = 0
+        end
+    end
+end
 ---@param x number
 ---@param y number
 ---@param width number
 ---@param height number
 function M:setView(x, y, width, height)
-    self.x= x or self.x
-    self.y= y or self.y
+    self.x = x or self.x
+    self.y = y or self.y
     self.view.width = width or self.view.width
     self.view.height = height or self.view.height
     return self
@@ -66,11 +109,11 @@ function M:getViewSize()
     return self.view.width / zoom, self.view.height / zoom
 end
 function M:getCenter()
-    return self.x,self.y
+    return self.x + self._shake_x, self.y + self._shake_y
 end
 function M:setCenter(x, y)
-    self.x=x or self.x
-    self.y=y or self.y
+    self.x = x or self.x
+    self.y = y or self.y
     return self
 end
 

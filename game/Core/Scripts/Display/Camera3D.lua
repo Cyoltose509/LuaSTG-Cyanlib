@@ -1,8 +1,9 @@
+local Base = Core.Display.Camera.Base
 ---@class Core.Display.Camera3D : Core.Display.Camera.Base
-local M = Core.Class(Core.Display.Camera.Base)
+local M = Core.Class(Base)
 Core.Display.Camera3D = M
 function M:init()
-    Core.Display.Camera.Base.init(self)
+    Base.init(self)
     self._is_3d = true
     self.yaw = 0
     self.pitch = 0
@@ -13,6 +14,14 @@ function M:init()
     self._shake_x = 0
     self._shake_y = 0
     self._shake_z = 0
+    self.shake_params = {
+        timer = 0,
+        lifetime = 0,
+        strength = 0,
+        interval = 0.05,
+        way = 1.5,
+        fadeout_size_mode = Core.Lib.Easing.Linear,
+    }
 
     self.fov = 80
     self.z_near = 0.01
@@ -37,63 +46,38 @@ local function vec2_rot(x, y, r_deg)
     return x * cos_v - y * sin_v, x * sin_v + y * cos_v
 end
 
-function M:fixedShake(time, strength, interval, way, fadeout_size_mode)
-    Core.Task.Clear(self._shakeTask)
-    Core.Task.New(self._shakeTask, function()
-        local times = time / interval
-        local a = 0
-        local size = strength
-        for i = 1, times do
-            local fx, fy, fz = self:getForward()
-            local ux, uy, uz = self:getUp()
-            local rx, ry, rz = uy * fz - uz * fy, uz * fx - ux * fz, ux * fy - uy * fx
-            local x, y, z = size * cos(a), size * sin(a), 0
-            self._shake_x = x * rx + y * ux + z * fx
-            self._shake_y = x * ry + y * uy + z * fy
-            self._shake_z = x * rz + y * uz + z * fz
-            if fadeout_size_mode then
-                size = strength * Core.Lib.Easing[fadeout_size_mode](1 - i / times)
-            end
-            a = a + 360 / way
-            Core.Task.Wait(interval)
-        end
-        self._shake_x = 0
-        self._shake_y = 0
-        self._shake_z = 0
-    end)
+function M:shake(time, strength, interval, way, fadeout_size_mode)
+    local SP = self.shake_params
+    SP.timer = 0
+    SP.lifetime = time
+    SP.strength = strength or SP.strength
+    SP.interval = interval or SP.interval
+    SP.way = way or SP.way
+    SP.fadeout_size_mode = fadeout_size_mode or Core.Lib.Easing.Linear
 end
 
-function M:shake(time, strength, interval, way, fadeout_size_mode)
-    Core.Task.Clear(self._shakeTask)
-    Core.Task.New(self._shakeTask, function()
-        local times = int(time / interval)
-        local a = 0
-        local size = strength
-        local timer = 0
-        local i = 1
-        while i < times do
-            if timer >= interval then
-                local fx, fy, fz = self:getForward()
-                local ux, uy, uz = self:getUp()
-                local rx, ry, rz = uy * fz - uz * fy, uz * fx - ux * fz, ux * fy - uy * fx
-                local x, y, z = size * cos(a), size * sin(a), 0
-                self._shake_x = x * rx + y * ux + z * fx
-                self._shake_y = x * ry + y * uy + z * fy
-                self._shake_z = x * rz + y * uz + z * fz
-                if fadeout_size_mode then
-                    size = strength * Core.Lib.Easing[fadeout_size_mode](1 - i / times)
-                end
-                a = a + 360 / way
-                i = i + 1
-                timer = timer % interval
-            end
-            timer = timer + Core.Time.GetDelta()
-            Core.Task.Yield()
+function M:update(dt)
+    Base.update(self, dt)
+    local SP = self.shake_params
+    if SP.lifetime > 0 then
+        SP.timer = SP.timer + dt
+        local size = SP.strength * SP.fadeout_size_mode(1 - SP.timer / SP.lifetime)
+        local a = 360 / SP.way * int(SP.timer / SP.interval)
+        local fx, fy, fz = self:getForward()
+        local ux, uy, uz = self:getUp()
+        local rx, ry, rz = uy * fz - uz * fy, uz * fx - ux * fz, ux * fy - uy * fx
+        local x, y, z = size * cos(a), size * sin(a), 0
+        self._shake_x = x * rx + y * ux + z * fx
+        self._shake_y = x * ry + y * uy + z * fy
+        self._shake_z = x * rz + y * uz + z * fz
+        if SP.timer >= SP.lifetime then
+            SP.timer = 0
+            SP.lifetime = 0
+            self._shake_x = 0
+            self._shake_y = 0
+            self._shake_z = 0
         end
-        self._shake_x = 0
-        self._shake_y = 0
-        self._shake_z = 0
-    end)
+    end
 end
 
 function M:apply()
@@ -151,6 +135,52 @@ end
 
 function M:getPosition()
     return self.x, self.y, self.z
+end
+
+local view = {
+    centerX = 0,
+    centerY = 0,
+    width = 100,
+    height = 100,
+    left = 0,
+    right = 100,
+    bottom = 0,
+    top = 100,
+}
+---返回一个只读的table，包含相机视角的参数
+---return a read-only table of the camera view parameters
+function M:getView(z)
+    z = z or 0.5
+    local cx, cy, cz = self:getPosition()
+    view.centerX = cx
+    view.centerY = cy
+    view.centerZ = cz
+    local vp = self.viewport
+    local aspect = (vp.right - vp.left) / (vp.top - vp.bottom)
+    local vh = 2 * tan(self.fov * 0.5) * (z - self.z)
+    local vw = vh * aspect
+    view.width = vw
+    view.height = vh
+    view.left = cx - vw / 2
+    view.right = cx + vw / 2
+    view.bottom = cy - vh / 2
+    view.top = cy + vh / 2
+    return view
+end
+local viewport = {
+    left = 0,
+    right = 100,
+    bottom = 0,
+    top = 100,
+}
+---返回一个只读的table，包含相机视角的视窗参数
+---return a read-only table of the camera viewport parameters
+function M:getViewport()
+    viewport.left = self.viewport.left
+    viewport.right = self.viewport.right
+    viewport.bottom = self.viewport.bottom
+    viewport.top = self.viewport.top
+    return viewport
 end
 
 ---@param x number
@@ -310,13 +340,14 @@ end
 ---Get the screen coordinates corresponding to the world coordinates in the camera's perspective.
 ---@return number, number
 function M:worldToScreen(x, y, z)
+    z = z or 0.5
     local vp = self.viewport
     local dx = x - self.x - self._shake_x
     local dy = y - self.y - self._shake_y
     local dz = z - self.z - self._shake_z
     local w, h = vp.right - vp.left, vp.top - vp.bottom
     local aspect = w / h
-    local tan_fov = tan(self.fov / 2)
+    local tan_fov = tan(self.fov * 0.5)
     local fx, fy, fz = self:getForward()
     local ux, uy, uz = self:getUp()
     local rx, ry, rz = fy * uz - fz * uy, fz * ux - fx * uz, fx * uy - fy * ux

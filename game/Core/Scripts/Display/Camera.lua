@@ -16,8 +16,6 @@ end
 function M.Frame()
     local dt = Core.Time.GetDelta()
     for _, camera in ipairs(M.List) do
-        Core.Task.Do(camera._shakeTask)
-        Core.Task.Do(camera)
         camera:update(dt)
         camera.renderEvents:dispatch("update")
     end
@@ -34,7 +32,6 @@ local base = Core.Class()
 M.Base = base
 
 function base:init()
-    self._shakeTask = {}
     self.renderObjs = {}
     self.apply_stack = 0
     self.renderEvents = Core.Lib.EventListener()
@@ -70,9 +67,6 @@ function base:update(dt)
     self._last_x = self.x
     self._last_y = self.y
     self._last_z = self.z
-end
-function base:fixedShake(time, strength, interval, way, fadeout_size_mode)
-
 end
 function base:shake(time, strength, interval, way, fadeout_size_mode)
 
