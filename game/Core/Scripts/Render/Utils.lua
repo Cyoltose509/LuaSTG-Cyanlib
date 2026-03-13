@@ -7,10 +7,7 @@ M.QuadSprite = lstg.Render4V
 M.SimpleRenderTarget = lstg.RenderTexture
 M.SimpleTexture = lstg.RenderTexture
 M.SimpleAnimation = lstg.RenderAnimation
-
-function M.RectSprite(imgname, left, right, bottom, top, z)
-    lstg.RenderRect(imgname, left, right, bottom, top, z)
-end
+M.RectSprite = lstg.RenderRect
 
 ---@overload fun(image:string, blend:string, c1:lstg.Color, c2:lstg.Color, c3:lstg.Color, c4:lstg.Color)
 ---@overload fun(image:string, blend:string, a:number, r:number, g:number, b:number)
