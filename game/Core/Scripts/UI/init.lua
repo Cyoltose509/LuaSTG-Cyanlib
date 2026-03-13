@@ -46,6 +46,13 @@ end
 ---Do not modify this camera unless you know what you are doing.
 M.Camera = Core.Display.Camera2D():setResponsiveViewport(true)
 
+function M.Camera:reset()
+    local sw, sh = Core.Display.Screen.GetSize()
+    local w, h = Core.Display.Window.GetSize()
+    self:setViewport(0, w, 0, h)
+        :setView(sw * 0.5, sh * 0.5, sw, sh)
+end
+
 ---@param worldCamera Core.Display.Camera.Base
 function M.Camera:worldToUI(worldCamera, x, y, z)
     local sx, sy = worldCamera:worldToScreen(x, y, z)
