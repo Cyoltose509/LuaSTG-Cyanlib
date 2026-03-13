@@ -26,7 +26,7 @@ function M.New(name, width, height, depth_buffer)
     else
         lstg.CreateRenderTarget(name)
     end
-    self.sampler_state = Core.Render.SamplerState.LinearClamp
+    self.sampler_state = Core.Resource.SamplerState.LinearClamp
     self.width, self.height = lstg.GetTextureSize(name)
     self.res_pool = Core.Resource.GetResourcePool()
     M.res[name] = self
