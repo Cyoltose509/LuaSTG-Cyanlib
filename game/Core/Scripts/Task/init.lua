@@ -1,6 +1,4 @@
 ---@class Core.Task
----@field Move Core.Task.Move
----@field Object Core.Task.Object
 local M = {}
 Core.Task = M
 
@@ -124,49 +122,3 @@ function M.Wait2(t)
         end
     end
 end
-
----增量模式
-M.INC_MODE = {
-    SET = 0,
-    ADD = 1,
-    MUL = 2
-}
-
----平滑设置一个对象的变量
----@param valname string|number|function @索引或者一个变量设置函数
----@param y number @增量
----@param t number @持续时间
----@param mode number @参见移动模式
----@param setter function @变量设置函数
----@param starttime number @等待时间
----@param vmode number @INC_MODE.SET, INC_MODE.ADD, INC_MODE.MUL，增量模式
-function M.smoothSetValueTo(valname, y, t, mode, setter, starttime, vmode)
-    local self = M.getSelf()
-    M.Wait(starttime or 0)
-    t = max(1, int(t))
-    local ys = setter and valname() or self[valname]
-    local dy = y - ys
-    vmode = vmode or 0
-    if vmode == 1 then
-        dy = y
-    elseif vmode == 2 then
-        dy = ys * y - ys
-    end
-    if setter then
-        for s = 1, t do
-            s = Core.Lib.Easing[mode](s / t)
-            setter(ys + s * dy)
-            coroutine.yield()
-        end
-    else
-        for s = 1, t do
-            s = Core.Lib.Easing[mode](s / t)
-            self[valname] = ys + s * dy
-            coroutine.yield()
-        end
-    end
-end
-
-require("Core.Scripts.Task.Move")
-require("Core.Scripts.Task.Object")
-
