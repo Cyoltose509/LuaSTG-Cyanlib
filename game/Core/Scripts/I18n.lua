@@ -2,49 +2,48 @@
 local M = {}
 Core.I18n = M
 
-M.currentLanguage = nil
+local Lib = Core.Lib
 
-M.languageMap = {}
-M.languageSet = {}
+---@private
+M.cur_language = nil
+---@private
+M.language_list = {}
+---@private
+M.language_set = {}
 
-M.languageDirectory = {}
+---@private
+M.language_directory = {}
 
-M.jargonSign = "{{([^{}]+)}}"
+---@private
+M.jargon_sign = "{{([^{}]+)}}"
 
+---@private
+M.load_default_lang_value = "ZH-CN"
+
+---这是当前语言存储的多语言文本
 ---@type string[]
-M.text = {}
+---@private
+M.cur_texts = {}
+
+---这是当前语言存储的术语表
 ---@type string[]
-M.jargon = {}
+---@private
+M.cur_jargon = {}
+
+---这是每个语言通用的命令更换
 ---@type fun[]
-M.command = {}
+---@private
+M.commands = {}
 
-M._cache = {}
+---针对特定语言注册多语言文本，将会一直存储
+---@type string[][]
+---@private
+M.registered_texts = {}
 
-local function SkimDirectory(dir)
-    for _, files in ipairs(Core.VFS.EnumFiles(dir, nil, true)) do
-        if files[2] then
-            SkimDirectory(files[1])
-        elseif files[1]:lower():find("%.lua$") then
-            local data = Core.VFS.DoFile(files[1])
-            if data.isJargon then
-                data.isJargon = nil
-                M.RegisterJargon(data)
-                M.RegisterKeys(data)--如果是术语，会同时存在key和jargon
-            else
-                M.RegisterKeys(data)
-            end
-        elseif files[1]:lower():find("%.json$") then
-            local data = Core.Lib.Json.Decode(Core.VFS.LoadTextFile(files[1]))
-            if data.isJargon then
-                data.isJargon = nil
-                M.RegisterJargon(data)
-                M.RegisterKeys(data)--如果是术语，会同时存在key和jargon
-            else
-                M.RegisterKeys(data)
-            end
-        end
-    end
-end
+---针对特定语言注册术语表，将会一直存储
+---@type string[][]
+---@private
+M.registered_jargon = {}
 
 function M.GetJargon(key, depth)
     depth = depth or 0
@@ -52,82 +51,152 @@ function M.GetJargon(key, depth)
         return key
     end
 
-    local val = M.jargon[key]
+    local val = M.cur_jargon[key]
     if not val then
         return key
     end
 
-    local resolved = val:gsub(M.jargonSign, function(k)
+    local resolved = val:gsub(M.jargon_sign, function(k)
         return M.GetJargon(k, depth + 1)
     end)
     -- 如果解析后变了，就缓存结果
-    M.jargon[key] = resolved
+    M.cur_jargon[key] = resolved
 
     return resolved
 end
 
+
 function M.Reload()
-    local lang = M.currentLanguage
+    local lang = M.cur_language
     if not lang then
         return
     end
-    M.text = {}
-    M.jargon = {}
-    M._cache = {}
+    M.cur_texts = {}
+    M.cur_jargon = {}
 
-    for _, dir in pairs(M.languageDirectory) do
+    local function LoadCSV(name)
+        local data = Lib.CSV.Parse(Core.VFS.LoadTextFile(name), true)
+        local is_jargon = name:lower():find("jargon")--使用名字来判断jargon
+        for _, v in pairs(data) do
+            local value = v[M.cur_language]
+            if not value or value == "" then
+                value = v[M.load_default_lang_value]
+            end
+            if value then
+                if is_jargon then
+                    M.cur_jargon[v.key] = value
+                end
+                M.cur_texts[v.key] = value
+            end
+        end
+    end
+    local function SkimDirectory(dir)
+        for _, files in ipairs(Core.VFS.EnumFiles(dir, nil, true)) do
+            local name, is_folder = files[1], files[2]
+            if is_folder then
+                SkimDirectory(name)
+            elseif name:lower():find("%.lua$") then
+                local data = Core.VFS.DoFile(name)
+                if data.is_jargon then
+                    data.is_jargon = nil
+                    Lib.Table.Merge(M.cur_jargon, data)
+                end
+                Lib.Table.Merge(M.cur_texts, data)--如果是术语，会同时存在key和jargon
+            elseif name:lower():find("%.json$") then
+                local data = Lib.Json.Decode(Core.VFS.LoadTextFile(name))
+                if data.is_jargon then
+                    data.is_jargon = nil
+                    Lib.Table.Merge(M.cur_jargon, data)
+                end
+                Lib.Table.Merge(M.cur_texts, data)--如果是术语，会同时存在key和jargon
+            elseif name:lower():find("%.csv$") then
+                LoadCSV(name)
+            end
+        end
+    end
+    local function SkimCSV(dir)
+        for _, files in ipairs(Core.VFS.EnumFiles(dir, nil, true)) do
+            local name, is_folder = files[1], files[2]
+            if is_folder then
+                SkimCSV(name)
+            elseif name:lower():find("%.csv$") then
+                LoadCSV(name)
+            end
+        end
+    end
+
+    for _, dir in pairs(M.language_directory) do
         SkimDirectory(dir .. lang .. "/")
+        SkimCSV(dir)
+    end
+
+    
+    if M.registered_texts[lang] then
+        Lib.Table.Merge(M.cur_texts, M.registered_texts[lang])
+    end
+    if M.registered_jargon[lang] then
+        Lib.Table.Merge(M.cur_jargon, M.registered_jargon[lang])
     end
     ---扁平化
-    for k in pairs(M.jargon) do
-        M.jargon[k] = M.GetJargon(k)
+    for k in pairs(M.cur_jargon) do
+        M.cur_jargon[k] = M.GetJargon(k)
     end
 end
 
 function M.SetLanguage(lang)
-    if not M.languageSet[lang] then
+    if not M.language_set[lang] then
         error(("Language %s is not registered!"):format(lang))
     end
-    M.currentLanguage = lang
+    M.cur_language = lang
     M.Reload()
+end
+
+---如果在csv加载中，未找到其他语言，则自动装载的语言
+function M.SetDefaultLanguageWhenLoad(lang)
+    M.load_default_lang_value = lang
 end
 
 ---注册能够自动扫描多语言文件的目录
 ---Register a directory that can automatically scan for language files
 function M.RegisterDirectory(name, dir)
-    M.languageDirectory[name] = dir
-end
-
-function M.UnregisterDirectory(name)
-    M.languageDirectory[name] = nil
+    M.language_directory[name] = dir
 end
 
 function M.RegisterLanguage(lang)
-    if M.languageSet[lang] then
+    if M.language_set[lang] then
         return
     end
-    table.insert(M.languageMap, lang)
-    M.languageSet[lang] = true
+    table.insert(M.language_list, lang)
+    M.language_set[lang] = true
 end
 
-function M.RegisterKey(key, value)
-    M.text[key] = value
+function M.UnregisterDirectory(name)
+    M.language_directory[name] = nil
 end
 
-function M.RegisterKeys(tbl)
-    Core.Lib.Table.Merge(M.text, tbl)
-end
-
----@overload fun(tbl: table)
+---@overload fun(lang:string,tbl: table)
+---@param lang string
 ---@param key string
 ---@param value string
-function M.RegisterJargon(key, value)
+function M.RegisterKey(lang, key, value)
+    M.registered_texts[lang] = M.registered_texts[lang] or {}
     if type(key) == "table" then
-        for k, v in pairs(key) do
-            M.jargon[k] = v
-        end
+        Lib.Table.Merge(M.registered_texts[lang], key)
     else
-        M.jargon[key] = value
+        M.registered_texts[lang][key] = value
+    end
+end
+
+---@overload fun(lang:string,tbl: table)
+---@param lang string
+---@param key string
+---@param value string
+function M.RegisterJargon(lang, key, value)
+    M.registered_jargon[lang] = M.registered_jargon[lang] or {}
+    if type(key) == "table" then
+        Lib.Table.Merge(M.registered_jargon[lang], key)
+    else
+        M.registered_jargon[lang][key] = value
     end
 end
 
@@ -137,22 +206,22 @@ end
 ---命令是不会被重置的
 ---@see string.gsub
 function M.RegisterCommand(pattern, repl)
-    M.command[pattern] = repl
+    M.commands[pattern] = repl
 end
 
 function M.GetAvailableLanguages()
-    return Core.Lib.Table.Copy(M.languageMap)
+    return Lib.Table.Copy(M.language_list)
 end
 
 ---@param key string
 ---@return string
 ---获取纯净的多语言文本，不带术语与命令
 function M.GetRaw(key)
-    return M.text[key] or key
+    return M.cur_texts[key] or key
 end
 
 function M.Exists(key)
-    return M.text[key] ~= nil
+    return M.cur_texts[key] ~= nil
 end
 
 ---获取带有术语的多语言文本
@@ -161,20 +230,17 @@ function M.Get(key)
     if key == "" then
         return key
     end
-   -- if M._cache[key] then
-   --     return M._cache[key]
-   -- end
-    local text = M.text[key] or key
-    text = text:gsub(M.jargonSign, function(kw)
-        return M.jargon[kw] or kw
+    -- if M._cache[key] then
+    --     return M._cache[key]
+    -- end
+    local text = M.cur_texts[key] or key
+    text = text:gsub(M.jargon_sign, function(kw)
+        return M.cur_jargon[kw] or kw
     end)
-    for kw, func in pairs(M.command) do
+    for kw, func in pairs(M.commands) do
         text = text:gsub(kw, func)
     end
     --M._cache[key] = text
     return text
 end
-
----你可以覆盖它
-M.RegisterKey("default-font", "heiti")
 

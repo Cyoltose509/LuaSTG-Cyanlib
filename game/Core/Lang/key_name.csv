@@ -1,0 +1,137 @@
+key,ZH-CN,ZH-TW,EN,JA,KO
+Keyboard.Null,无,無,None,なし,없음
+Keyboard.A,A,A,A,A,A
+Keyboard.B,B,B,B,B,B
+Keyboard.C,C,C,C,C,C
+Keyboard.D,D,D,D,D,D
+Keyboard.E,E,E,E,E,E
+Keyboard.F,F,F,F,F,F
+Keyboard.G,G,G,G,G,G
+Keyboard.H,H,H,H,H,H
+Keyboard.I,I,I,I,I,I
+Keyboard.J,J,J,J,J,J
+Keyboard.K,K,K,K,K,K
+Keyboard.L,L,L,L,L,L
+Keyboard.M,M,M,M,M,M
+Keyboard.N,N,N,N,N,N
+Keyboard.O,O,O,O,O,O
+Keyboard.P,P,P,P,P,P
+Keyboard.Q,Q,Q,Q,Q,Q
+Keyboard.R,R,R,R,R,R
+Keyboard.S,S,S,S,S,S
+Keyboard.T,T,T,T,T,T
+Keyboard.U,U,U,U,U,U
+Keyboard.V,V,V,V,V,V
+Keyboard.W,W,W,W,W,W
+Keyboard.X,X,X,X,X,X
+Keyboard.Y,Y,Y,Y,Y,Y
+Keyboard.Z,Z,Z,Z,Z,Z
+Keyboard.Ctrl,Ctrl,Ctrl,Ctrl,Ctrl,Ctrl
+Keyboard.LCtrl,左Ctrl,左Ctrl,Left Ctrl,左Ctrl,왼쪽 Ctrl
+Keyboard.RCtrl,右Ctrl,右Ctrl,Right Ctrl,右Ctrl,오른쪽 Ctrl
+Keyboard.Win,Win,Win,Win,Win,Win
+Keyboard.LWin,左Win,左Win,Left Win,左Win,왼쪽 Win
+Keyboard.RWin,右Win,右Win,Right Win,右Win,오른쪽 Win
+Keyboard.Alt,Alt,Alt,Alt,Alt,Alt
+Keyboard.LAlt,左Alt,左Alt,Left Alt,左Alt,왼쪽 Alt
+Keyboard.RAlt,右Alt,右Alt,Right Alt,右Alt,오른쪽 Alt
+Keyboard.Shift,Shift,Shift,Shift,Shift,Shift
+Keyboard.LShift,左Shift,左Shift,Left Shift,左Shift,왼쪽 Shift
+Keyboard.RShift,右Shift,右Shift,Right Shift,右Shift,오른쪽 Shift
+Keyboard.Apps,Apps,Apps,Apps,Apps,Apps
+Keyboard.Pause,Pause,Pause,Pause,Pause,Pause
+Keyboard.Insert,Insert,Insert,Insert,Insert,Insert
+Keyboard.Home,Home,Home,Home,Home,Home
+Keyboard.PageUp,Page Up,Page Up,Page Up,Page Up,PgUp
+Keyboard.Delete,Delete,Delete,Delete,Delete,Delete
+Keyboard.End,End,End,End,End,End
+Keyboard.PageDown,Page Down,Page Down,Page Down,Page Down,PgDn
+Keyboard.Grave,`,`,`,`,`
+Keyboard.Minus,-,-,-,-,-
+Keyboard.Equals,=,=,=,=,=
+Keyboard.LBracket,[,[,[,[,[
+Keyboard.RBracket,],],],],]
+Keyboard.Backslash,\,\,\,\,\
+Keyboard.Semicolon,;,;,;,;,;
+Keyboard.Apostrophe,',',',','
+Keyboard.Comma,",",",",",",",",","
+Keyboard.Period,.,.,.,.,.
+Keyboard.Slash,/,/,/,/,/
+Keyboard.NumLock,Num Lock,Num Lock,Num Lock,Num Lock,Num Lock
+Keyboard.NumEnter,Num Enter,Num Enter,Num Enter,Num Enter,Num Enter
+Keyboard.Numpad0,Num 0,Num 0,Numpad 0,Num 0,Num 0
+Keyboard.Numpad1,Num 1,Num 1,Numpad 1,Num 1,Num 1
+Keyboard.Numpad2,Num 2,Num 2,Numpad 2,Num 2,Num 2
+Keyboard.Numpad3,Num 3,Num 3,Numpad 3,Num 3,Num 3
+Keyboard.Numpad4,Num 4,Num 4,Numpad 4,Num 4,Num 4
+Keyboard.Numpad5,Num 5,Num 5,Numpad 5,Num 5,Num 5
+Keyboard.Numpad6,Num 6,Num 6,Numpad 6,Num 6,Num 6
+Keyboard.Numpad7,Num 7,Num 7,Numpad 7,Num 7,Num 7
+Keyboard.Numpad8,Num 8,Num 8,Numpad 8,Num 8,Num 8
+Keyboard.Numpad9,Num 9,Num 9,Numpad 9,Num 9,Num 9
+Keyboard.Divide,Divide,Divide,Divide,Divide,Divide
+Keyboard.Multiply,Multiply,Multiply,Multiply,Multiply,Multiply
+Keyboard.Subtract,Subtract,Subtract,Subtract,Subtract,Subtract
+Keyboard.Add,Add,Add,Add,Add,Add
+Keyboard.Decimal,Decimal,Decimal,Decimal,Decimal,Decimal
+Keyboard.0,0,0,0,0,0
+Keyboard.1,1,1,1,1,1
+Keyboard.2,2,2,2,2,2
+Keyboard.3,3,3,3,3,3
+Keyboard.4,4,4,4,4,4
+Keyboard.5,5,5,5,5,5
+Keyboard.6,6,6,6,6,6
+Keyboard.7,7,7,7,7,7
+Keyboard.8,8,8,8,8,8
+Keyboard.9,9,9,9,9,9
+Keyboard.Space,Space,Space,Space,Space,Space
+Keyboard.Enter,Enter,Enter,Enter,Enter,Enter
+Keyboard.Escape,Escape,Escape,Escape,Esc,Esc
+Keyboard.Tab,Tab,Tab,Tab,Tab,Tab
+Keyboard.CapsLock,Caps Lock,Caps Lock,Caps Lock,Caps Lock,Caps Lock
+Keyboard.Backspace,Backspace,Backspace,Backspace,Backspace,Backspace
+Keyboard.Up,↑,↑,Up,↑,↑
+Keyboard.Down,↓,↓,Down,↓,↓
+Keyboard.Left,←,←,Left,←,←
+Keyboard.Right,→,→,Right,→,→
+Keyboard.F1,F1,F1,F1,F1,F1
+Keyboard.F2,F2,F2,F2,F2,F2
+Keyboard.F3,F3,F3,F3,F3,F3
+Keyboard.F4,F4,F4,F4,F4,F4
+Keyboard.F5,F5,F5,F5,F5,F5
+Keyboard.F6,F6,F6,F6,F6,F6
+Keyboard.F7,F7,F7,F7,F7,F7
+Keyboard.F8,F8,F8,F8,F8,F8
+Keyboard.F9,F9,F9,F9,F9,F9
+Keyboard.F10,F10,F10,F10,F10,F10
+Keyboard.F11,F11,F11,F11,F11,F11
+Keyboard.F12,F12,F12,F12,F12,F12
+Mouse.Left,鼠标左键,滑鼠左鍵,Left Click,左クリック,마우스 왼쪽 버튼
+Mouse.Right,鼠标右键,滑鼠右鍵,Right Click,右クリック,마우스 오른쪽 버튼
+Mouse.Middle,鼠标中键,滑鼠中鍵,Middle Click,中クリック,마우스 가운데 버튼
+Mouse.X1,鼠标侧键1,滑鼠側鍵1,Mouse Button 4,マウスボタン4,마우스 측면 버튼 1
+Mouse.X2,鼠标侧键2,滑鼠側鍵2,Mouse Button 5,マウスボタン5,마우스 측면 버튼 2
+Xinput.A,A键,A鍵,A Button,Aボタン,A 버튼
+Xinput.B,B键,B鍵,B Button,Bボタン,B 버튼
+Xinput.X,X键,X鍵,X Button,Xボタン,X 버튼
+Xinput.Y,Y键,Y鍵,Y Button,Yボタン,Y 버튼
+Xinput.LeftShoulder,LB,LB,LB,LB,LB
+Xinput.RightShoulder,RB,RB,RB,RB,RB
+Xinput.LeftTrigger,LT,LT,LT,LT,LT
+Xinput.RightTrigger,RT,RT,RT,RT,RT
+Xinput.Back,BACK,BACK,Back,Back,Back
+Xinput.Start,START,START,Start,Start,Start
+Xinput.LeftThumb,LS按下,LS按下,L3,L3,L3
+Xinput.RightThumb,RS按下,RS按下,R3,R3,R3
+Xinput.Up,十字键上,十字鍵上,D-Pad Up,十字キー上,십자키 위
+Xinput.Down,十字键下,十字鍵下,D-Pad Down,十字キー下,십자키 아래
+Xinput.Left,十字键左,十字鍵左,D-Pad Left,十字キー左,십자키 왼쪽
+Xinput.Right,十字键右,十字鍵右,D-Pad Right,十字キー右,십자키 오른쪽
+Xinput.LeftThumbPositiveX,LS→,LS→,Left Stick Right,左スティック→,왼쪽 스틱 →
+Xinput.LeftThumbNegativeX,LS←,LS←,Left Stick Left,左スティック←,왼쪽 스틱 ←
+Xinput.LeftThumbPositiveY,LS↑,LS↑,Left Stick Up,左スティック↑,왼쪽 스틱 ↑
+Xinput.LeftThumbNegativeY,LS↓,LS↓,Left Stick Down,左スティック↓,왼쪽 스틱 ↓
+Xinput.RightThumbPositiveX,RS→,RS→,Right Stick Right,右スティック→,오른쪽 스틱 →
+Xinput.RightThumbNegativeX,RS←,RS←,Right Stick Left,右スティック←,오른쪽 스틱 ←
+Xinput.RightThumbPositiveY,RS↑,RS↑,Right Stick Up,右スティック↑,오른쪽 스틱 ↑
+Xinput.RightThumbNegativeY,RS↓,RS↓,Right Stick Down,右スティック↓,오른쪽 스틱 ↓
