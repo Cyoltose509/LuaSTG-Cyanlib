@@ -11,16 +11,6 @@
 local M = {}
 Core.Render = M
 
-require("Core.Scripts.Render.Sprite")
-
-require("Core.Scripts.Render.Draw")
-require("Core.Scripts.Render.Mesh")
-require("Core.Scripts.Render.Skybox")
-require("Core.Scripts.Render.Color")
-require("Core.Scripts.Render.GPU")
-require("Core.Scripts.Render.Ball")
-require("Core.Scripts.Render.Text")
-
 
 ---@class lstg.BlendMode
 M.BlendMode = {
@@ -44,9 +34,6 @@ M.BlendMode = {
     AddScreen = "add+screen",
     Force = "one",
 }
-
-
-
 
 local function SetClipRect(l, r, b, t, scrl, scrr, scrb, scrt)
     lstg.SetOrtho(l, r, b, t)
@@ -81,6 +68,15 @@ function M.PopClipRect()
     end
 end
 
+require("Core.Scripts.Render.Color")
+require("Core.Scripts.Render.Sprite")
+require("Core.Scripts.Render.Draw")
+require("Core.Scripts.Render.Mesh")
+require("Core.Scripts.Render.Skybox")
+
+require("Core.Scripts.Render.GPU")
+require("Core.Scripts.Render.Ball")
+require("Core.Scripts.Render.Text")
 
 require("Core.Scripts.Render.Utils")
 setmetatable(M, {

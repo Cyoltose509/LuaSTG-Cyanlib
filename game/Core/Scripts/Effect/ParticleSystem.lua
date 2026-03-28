@@ -9,6 +9,7 @@ local HUGE = math.huge
 local cos, sin = cos, sin
 local clamp = clamp
 local int = int
+local atan2 = atan2
 
 function M:init()
     ---@type Core.Effect.ParticleSystem.Particle[]
@@ -356,7 +357,7 @@ function M:update(dt)
         o.vx = o.vx + o.gravity_x * dt + o.d_vx / o.lifetime * dt
         o.vy = o.vy + o.gravity_y * dt + o.d_vy / o.lifetime * dt
         if o.accel_rad ~= 0 or o.accel_tan ~= 0 then
-            local a = Core.Math.Angle(0, 0, o.vx, o.vy)
+            local a = atan2(o.vy, o.vx)
             local cosa, sina = cos(a), sin(a)
             o.vx = o.vx + o.accel_rad * cosa * dt + o.accel_tan * sina * dt
             o.vy = o.vy + o.accel_rad * sina * dt - o.accel_tan * cosa * dt

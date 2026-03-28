@@ -2,6 +2,12 @@
 local M = {}
 Core.Render.Color = M
 
+local lstg = lstg
+local tonumber = tonumber
+local clamp = clamp
+local min, max = min, max
+local int = int
+
 setmetatable(M, {
     __call = function(_, ...)
         return lstg.Color(...)

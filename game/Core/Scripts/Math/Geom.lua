@@ -45,7 +45,6 @@ function M.InversePerspectiveProjection(x_proj, y_proj, zp, x0, y0, z0, z)
     return x, y, z
 end
 
-
 function M.PointOnSegment(x0, y0, x1, y1, x2, y2, offset)
     local dx, dy = x2 - x1, y2 - y1
     local lengthSquared = dx * dx + dy * dy
@@ -58,17 +57,35 @@ function M.PointOnSegment(x0, y0, x1, y1, x2, y2, offset)
 end
 
 local SQRT3 = sqrt(3)
+local INV_SQRT3 = 0.5773502691896257
 ---判断点是否在正六边形内
-function M.PointInHexagon(px, py, cx, cy, a)
+function M.PointInHexagon(px, py, cx, cy, r)
     local dx = abs(px - cx)
     local dy = abs(py - cy)
-    if dy > SQRT3 / 2 * a then
+    if dy > SQRT3 * 0.5 * r then
         return false
     end
-    if dx > a then
+    if dx > r then
         return false
     end
-    if SQRT3 * dx + dy > SQRT3 * a then
+    if SQRT3 * dx + dy > SQRT3 * r then
+        return false
+    end
+    return true
+end
+
+function M.PointInHorizontalHex(px, py, x1, x2, y1, y2)
+    local cx = (x1 + x2) * 0.5
+    local cy = (y1 + y2) * 0.5
+    local dx = abs(px - cx)
+    local dy = abs(py - cy)
+    if py > y2 or py < y1 then
+        return false
+    end
+    if px < x1 or px > x2 then
+        return false
+    end
+    if SQRT3 * dx + dy > SQRT3 * (x2 - x1) * 0.5 then
         return false
     end
     return true

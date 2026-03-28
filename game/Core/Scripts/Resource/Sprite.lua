@@ -9,6 +9,8 @@ M.res = {}
 ---@type Core.Resource.Sprite[][]
 M.res_group = {}
 
+local SetImageState = lstg.SetImageState
+
 ---@param name string
 ---@param tex Core.Resource.Texture|string
 ---@param x number?
@@ -129,20 +131,13 @@ function M:getSize()
     return self.width, self.height
 end
 
----@private
-function M:_applyState()
-    if self._color2 then
-        lstg.SetImageState(self.name, self._blend, self._color1, self._color2, self._color3, self._color4)
-    else
-        lstg.SetImageState(self.name, self._blend, self._color1)
-    end
-end
+
 
 ---@param blend lstg.BlendMode
 function M:setBlend(blend)
     if blend ~= self._blend then
         self._blend = blend
-        self:_applyState()
+        lstg.SetImageState(self.name, self._blend)
     end
     return self
 end
@@ -154,20 +149,16 @@ end
 ---@param c4 lstg.Color
 function M:setColor(c1, c2, c3, c4)
     if c2 then
-        -- 四色版本
-        if c1 ~= self._color1 or c2 ~= self._color2 or c3 ~= self._color3 or c4 ~= self._color4 then
-            self._color1, self._color2, self._color3, self._color4 = c1, c2, c3, c4
-            self:_applyState()
-        end
+        self._color1, self._color2, self._color3, self._color4 = c1, c2, c3, c4
+        SetImageState(self.name, self._blend, self._color1, self._color2, self._color3, self._color4)
+    elseif c1 then
+        self._color1 = c1
+        self._color2 = nil
+        self._color3 = nil
+        self._color4 = nil
+        SetImageState(self.name, self._blend, self._color1)
     else
-        -- 单色版本
-        if (c1 ~= self._color1) or self._color2 then
-            self._color1 = c1
-            self._color2 = nil  -- 标记为单色模式
-            self._color3 = nil
-            self._color4 = nil
-            self:_applyState()
-        end
+        SetImageState(self.name, self._blend)
     end
     return self
 end
@@ -176,29 +167,18 @@ end
 ---@overload fun(blend:lstg.BlendMode, color:lstg.Color)
 ---@overload fun(blend:lstg.BlendMode, c1:lstg.Color, c2:lstg.Color, c3:lstg.Color, c4:lstg.Color)
 function M:setState(blend, c1, c2, c3, c4)
-    local changed = false
-    if blend ~= self._blend then
-        self._blend = blend
-        changed = true
-    end
-
+    self._blend = blend
     if c2 then
-        if c1 ~= self._color1 or c2 ~= self._color2 or c3 ~= self._color3 or c4 ~= self._color4 then
-            self._color1, self._color2, self._color3, self._color4 = c1, c2, c3, c4
-            changed = true
-        end
+        self._color1, self._color2, self._color3, self._color4 = c1, c2, c3, c4
+        SetImageState(self.name, self._blend, self._color1, self._color2, self._color3, self._color4)
     elseif c1 then
-        if (c1 ~= self._color1) or self._color2 then
-            self._color1 = c1
-            self._color2 = nil
-            self._color3 = nil
-            self._color4 = nil
-            changed = true
-        end
-    end
-
-    if changed then
-        self:_applyState()
+        self._color1 = c1
+        self._color2 = nil
+        self._color3 = nil
+        self._color4 = nil
+        SetImageState(self.name, self._blend, self._color1)
+    else
+        SetImageState(self.name, self._blend)
     end
     return self
 end

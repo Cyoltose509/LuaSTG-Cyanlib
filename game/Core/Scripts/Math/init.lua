@@ -86,7 +86,14 @@ end
 ---@param start number
 ---@param step number
 function M.Snap(x, start, step)
-    return start + int((x - start) / step + 0.5) * step
+    local align = (x - start) % step
+    if abs(-align) > abs(step - align) then
+        x = x + step - align
+    else
+        x = x - align
+    end
+    return x
+   -- return start + int((x - start) / step + 0.5) * step
 end
 
 M.Dist = lstg.Dist
