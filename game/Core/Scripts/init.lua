@@ -88,8 +88,9 @@ require("Core.Scripts.Task")
 require("Core.Scripts.Animator")
 
 require("Core.Scripts.UI")
-require("Core.Scripts.Collision")
+require("Core.Scripts.Menu")
 
+require("Core.Scripts.Collision")
 require("Core.Scripts.MainLoop")
 
 require("Core.Scripts.Time")
