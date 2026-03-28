@@ -34,3 +34,6 @@ end
 function M:getSize()
     return self.size
 end
+function M:cacheString(str)
+    lstg.CacheTTFString(self.name, str)
+end
