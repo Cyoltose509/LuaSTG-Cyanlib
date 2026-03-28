@@ -34,7 +34,6 @@ function M.New(name, path, mipmap)
     return self
 end
 
-
 function M.Remove(name)
     if M.res[name] then
         lstg.RemoveResource(M.res[name].res_pool, Core.Resource.ResType.Texture, name)

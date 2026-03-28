@@ -75,5 +75,6 @@ function M.Update()
 end
 function M.Draw()
     Core.UI.Camera:apply()
+    Core.Display.Camera.Current=Core.UI.Camera
     Canvas:draw()
 end
