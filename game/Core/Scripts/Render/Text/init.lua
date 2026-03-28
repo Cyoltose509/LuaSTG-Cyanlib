@@ -41,11 +41,11 @@ M.DEFAULT_SHADOW_DIR_X = 8
 M.DEFAULT_SHADOW_DIR_Y = -6
 M.DEFAULT_SHADOW_DIV = 4
 
-M.DEFAULT_UNDERLINE_WIDTH = 2
+M.DEFAULT_UNDERLINE_WIDTH = 0.04
 M.DEFAULT_UNDERLINE_Y_OFFSET = 4
 M.DEFAULT_UNDERLINE_Y_FACTOR = 0
 
-M.DEFAULT_STRIKE_WIDTH = 2
+M.DEFAULT_STRIKE_WIDTH = 0.04
 M.DEFAULT_STRIKE_Y_OFFSET = 0
 M.DEFAULT_STRIKE_Y_FACTOR = -0.32
 
@@ -513,6 +513,13 @@ function M:enableOblique(enable)
     return self
 end
 
+function M:cacheString()
+    if self.font_res then
+        self.font_res:cacheString(self._real_text)
+    end
+    return self
+end
+
 ---@private
 function M:refreshTextSegments()
     --self._text_segments = {}
@@ -525,7 +532,7 @@ function M:refreshTextSegments()
         ds.underline = self.underline_params.enabled
         ds.strikethrough = self.strikethrough_params.enabled
         ds.blend = self.blend
-        text = M.RichText.Parse(self._rich_text_data, text, self._default_style)
+        text = M.RichText.Parse(self._rich_text_data, text, ds)
     end
     self._real_text = text
     if self.wrap_word then
@@ -870,12 +877,13 @@ end
 
 local Draw = Core.Render.Draw
 local function draw_line(x1, y1, z1, x2, y2, z2, wv, h0, h1, blend, color)
+    local w1, w2, w3 = wv[1], wv[2], wv[3]
     Draw.SetState(blend, color)
     Draw.Quad(
-            x1 + h0 * wv[1], y1 + h0 * wv[2], z1 + h0 * wv[3],
-            x2 + h0 * wv[1], y2 + h0 * wv[2], z2 + h0 * wv[3],
-            x2 + h1 * wv[1], y2 + h1 * wv[2], z2 + h1 * wv[3],
-            x1 + h1 * wv[1], y1 + h1 * wv[2], z1 + h1 * wv[3])
+            x1 + h0 * w1, y1 + h0 * w2, z1 + h0 * w3,
+            x2 + h0 * w1, y2 + h0 * w2, z2 + h0 * w3,
+            x2 + h1 * w1, y2 + h1 * w2, z2 + h1 * w3,
+            x1 + h1 * w1, y1 + h1 * w2, z1 + h1 * w3)
 end
 function M:update()
     if self._size_dirty then
@@ -899,7 +907,9 @@ function M:update()
         self:refreshVector()
         self._vector_dirty = false
     end
+    return self
 end
+--TODO 如何减少drawcall
 function M:draw(no_update)
     if not no_update then
         self:update()
@@ -907,6 +917,7 @@ function M:draw(no_update)
     local fr = lstg.FontRenderer
     fr.SetFontProvider(self.font)
     local hs, vs = self._real_hscale * self._auto_w_scale, self._real_vscale * self._auto_h_scale
+    local real_s = self.size
 
     local xv, yv = self._xVector, self._yVector
     local wv = self._writeVector
@@ -936,6 +947,7 @@ function M:draw(no_update)
             if style and style.oblique or self.is_oblique then
                 y1, y2, y3 = yv[1], yv[2], yv[3]
             end
+            local x1, x2, x3 = xv[1], xv[2], xv[3]
             local hsize, vsize = hs * size, vs * size
             if self.lock_aspect_ratio then
                 local m = min(hs, vs)
@@ -948,26 +960,26 @@ function M:draw(no_update)
                     local c = i / shadow_p.div
                     local dx = shadow_p.dir_x * hsize * c
                     local dy = shadow_p.dir_y * vsize * c
-                    fr.RenderTextInSpace(data.text, x + dx, y + dy, z, xv[1], xv[2], xv[3], y1, y2, y3,
+                    fr.RenderTextInSpace(data.text, x + dx, y + dy, z, x1, x2, x3, y1, y2, y3,
                             blend, shadow_p.color * (1 - c))
                 end
             end
-            fr.RenderTextInSpace(data.text, x, y, z, xv[1], xv[2], xv[3], y1, y2, y3, blend, _color)
+            fr.RenderTextInSpace(data.text, x, y, z, x1, x2, x3, y1, y2, y3, blend, _color)
             if style and style.underline or underline_p.enabled then
-                local w = underline_p.width * 0.5
+                local w = underline_p.width * 0.5 * size * real_s
                 local h = underline_p.y + underline_p.y_factor * dh
-                draw_line(x, y, z, x + dw * xv[1], y + dw * xv[2], z + dw * xv[3], wv,
+                draw_line(x, y, z, x + dw * x1, y + dw * x2, z + dw * x3, wv,
                         h - w, h + w, blend, _color)
             end
             if style and style.strikethrough or strikethrough_p.enabled then
-                local w = strikethrough_p.width * 0.5
+                local w = strikethrough_p.width * 0.5 * size * real_s
                 local h = strikethrough_p.y + strikethrough_p.y_factor * dh
-                draw_line(x, y, z, x + dw * xv[1], y + dw * xv[2], z + dw * xv[3], wv,
+                draw_line(x, y, z, x + dw * x1, y + dw * x2, z + dw * x3, wv,
                         h - w, h + w, blend, _color)
             end
-            x = x + dw * xv[1]
-            y = y + dw * xv[2]
-            z = z + dw * xv[3]
+            x = x + dw * x1
+            y = y + dw * x2
+            z = z + dw * x3
         end
         if self._lines[k + 1] then
             local h = self._lines[k + 1].height
