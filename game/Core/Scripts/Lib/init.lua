@@ -9,6 +9,7 @@
 ---@field ComponentBase Core.Lib.ComponentBase
 ---@field Accessor Core.Lib.Accessor@一个getter&setter，支持"."路径解析
 ---@field CSV Core.Lib.CSV@CSV解析
+---@field Matcher Core.Lib.Matcher@搜索匹配
 local M = {}
 Core.Lib = M
 
@@ -22,4 +23,5 @@ require("Core.Scripts.Lib.StateMachine")
 require("Core.Scripts.Lib.ComponentSystem")
 require("Core.Scripts.Lib.ComponentBase")
 require("Core.Scripts.Lib.CSV")
+require("Core.Scripts.Lib.Matcher")
 
