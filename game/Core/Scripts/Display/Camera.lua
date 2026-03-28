@@ -81,12 +81,12 @@ function base:release()
             break
         end
     end
+    self._is_released = true
     self.renderObjs = {}
     self.renderEvents = nil
     if self.responsiveViewport then
         Core.Display.Screen.UnregisterCamera(self)
     end
-    --TODO：是否需要释放RenderTarget？
 end
 
 ---@return number,number
@@ -173,7 +173,11 @@ local RenderEventObj = Core.Object.Define(Core.Object.Base, {
     end,
 }, true)
 ---@return self
+---@param target string|Core.Resource.RenderTarget
 function base:setRenderTarget(target)
+    if type(target) == "table" then
+        target = target.name
+    end
     self.renderTarget = target
     return self
 end
