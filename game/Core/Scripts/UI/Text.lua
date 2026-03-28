@@ -38,12 +38,8 @@ function M:setColor(color)
     self.text:setColor(color)
     return self
 end
-function M:setHAlign(value)
-    self.text:setHAlign(value)
-    return self
-end
-function M:setVAlign(value)
-    self.text:setVAlign(value)
+function M:setAlignValue(h, v)
+    self.text:setAlignValue(h, v)
     return self
 end
 function M:setAlignment(...)

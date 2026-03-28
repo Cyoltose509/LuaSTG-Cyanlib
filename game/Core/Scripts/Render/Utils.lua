@@ -2,6 +2,21 @@
 local M = {}
 Core.Render.Utils = M
 
+local type = type
+local lstg = lstg
+local abs = abs
+local min, max = min, max
+local cos, sin = cos, sin
+local Core = Core
+local Render = Core.Render
+local Color = Render.Color
+local BlendMode = Render.BlendMode
+local TTF = Core.Resource.TTF
+local Font = Core.Resource.Font
+local Texture = Core.Resource.Texture
+local RenderTarget = Core.Resource.RenderTarget
+local Sprite = Core.Resource.Sprite
+local Animation = Core.Resource.Animation
 M.SimpleSprite = lstg.Render
 M.QuadSprite = lstg.Render4V
 M.SimpleRenderTarget = lstg.RenderTexture
@@ -13,10 +28,10 @@ M.RectSprite = lstg.RenderRect
 ---@overload fun(image:string, blend:string, a:number, r:number, g:number, b:number)
 ---@overload fun(image:string, blend:string, color:lstg.Color)
 function M.SetSpriteState(image, blend, c1, c2, c3, c4)
-    local img = Core.Resource.Sprite.Get(image)
-    assert(img, "Image not found: " .. image)
+    local img = Sprite.Get(image)
+    -- assert(img, "Image not found: " .. image)
     if type(c1) == "number" then
-        img:setState(blend, lstg.Color(c1, c2, c3, c4))
+        img:setState(blend, Color(c1, c2, c3, c4))
     else
         img:setState(blend, c1, c2, c3, c4)
     end
@@ -26,10 +41,10 @@ end
 ---@overload fun(animation:string, blend:string, a:number, r:number, g:number, b:number)
 ---@overload fun(animation:string, blend:string, color:lstg.Color)
 function M.SetAnimationState(animation, blend, c1, c2, c3, c4)
-    local ani = Core.Resource.Animation.Get(animation)
-    assert(ani, "Animation not found: " .. animation)
+    local ani = Animation.Get(animation)
+    --  assert(ani, "Animation not found: " .. animation)
     if type(c1) == "number" then
-        ani:setState(blend, lstg.Color(c1, c2, c3, c4))
+        ani:setState(blend, Color(c1, c2, c3, c4))
     else
         ani:setState(blend, c1, c2, c3, c4)
     end
@@ -38,15 +53,16 @@ end
 ---@overload fun(font:string, blend:string, a:number, r:number, g:number, b:number)
 ---@overload fun(font:string, blend:string, color:lstg.Color)
 function M.SetFontState(font, blend, a, r, g, b)
-    local fnt = Core.Resource.Font.Get(font)
-    assert(fnt, "Font not found: " .. font)
+    local fnt = Font.Get(font)
+    -- assert(fnt, "Font not found: " .. font)
     if type(a) == "number" then
-        fnt:setState(blend, lstg.Color(a, r, g, b))
+        fnt:setState(blend, Color(a, r, g, b))
     else
         fnt:setState(blend, a)
     end
 end
 
+---@deprecated
 ---描点连线
 ---@param img string
 ---@param line table@由obj组成的一个数组
@@ -101,11 +117,12 @@ end
 ---@param count number@一圈的图片数
 ---@param color lstg.Color@圆心颜色或整体颜色
 ---@param color2 lstg.Color@扩散颜色
-function M.TexDiffuseCircle(texname, x, y, r1, r2, rot, n, count, spread, blend, color, color2)
-    blend = blend or Core.Render.BlendMode.Default
-    color = color or Core.Render.Color.Default
+function M.TexDiffuseCircle(tex_name, x, y, r1, r2, rot, n, count, spread, blend, color, color2)
+    blend = blend or BlendMode.Default
+    color = color or Color.Default
     color2 = color2 or color
-    local tex = Core.Resource.Texture.Get(texname):setBlend(blend)
+    local tex = Texture.Get(tex_name) or RenderTarget.Get(tex_name)
+    tex:setBlend(blend)
     local texl = tex:getSize()
     local da = 360 / n
     local h = 0
@@ -123,13 +140,14 @@ function M.TexDiffuseCircle(texname, x, y, r1, r2, rot, n, count, spread, blend,
 end
 
 ---用纹理以Render的形式渲染
-function M.TexLikeImage(texname, x, y, rot, hscale, vscale, blend, color)
-    blend = blend or Core.Render.BlendMode.Default
-    color = color or Core.Render.Color.Default
-    local tex = Core.Resource.Texture.Get(texname):setBlend(blend)
+function M.TexLikeImage(tex_name, x, y, rot, hscale, vscale, blend, color)
+    blend = blend or BlendMode.Default
+    color = color or Color.Default
+    local tex = Texture.Get(tex_name) or RenderTarget.Get(tex_name)
+    tex:setBlend(blend)
     local w, h = tex:getSize()
     local cosr, sinr = cos(rot), sin(rot)
-    local _w, _h = w * hscale / 2, h * vscale / 2
+    local _w, _h = w * hscale * 0.5, h * vscale * 0.5
     tex:setUV1(x - cosr * _w - sinr * _h, y + cosr * _h - sinr * _w, 0.5, 0, 0, color)
        :setUV2(x + cosr * _w - sinr * _h, y + cosr * _h + sinr * _w, 0.5, w, 0, color)
        :setUV3(x + cosr * _w + sinr * _h, y - cosr * _h + sinr * _w, 0.5, w, h, color)
@@ -137,16 +155,35 @@ function M.TexLikeImage(texname, x, y, rot, hscale, vscale, blend, color)
        :draw()
 end
 
-function M.TexInChamferRect(texname, blend, color, l, r, b, t, rr, size, offx, offy)
-    blend = blend or Core.Render.BlendMode.Default
-    color = color or Core.Render.Color.Default
-    local tex = Core.Resource.Texture.Get(texname):setBlend(blend)
+function M.TexInRect(tex_name, x1, x2, y1, y2, offx, offy, rot, hscale, vscale, blend, color)
+    blend = blend or BlendMode.Default
+    color = color or Color.Default
+    local tex = Texture.Get(tex_name) or RenderTarget.Get(tex_name)
+    tex:setBlend(blend)
+    local uw, uh = tex:getSize()
+    local cx, cy = -offx, offy
+    cx, cy = cx * cos(rot) - cy * sin(rot), cy * cos(rot) + cx * sin(rot)
+    cx, cy = cx + uw * 0.5, cy + uh * 0.5
+    uw, uh = abs(x2 - x1) * 0.5 / hscale, abs(y2 - y1) * 0.5 / vscale
+    local c, s = cos(-rot), sin(-rot)
+    tex:setUV1(x1, y2, 0.5, cx - uw * c - uh * s, cy - uh * c + uw * s, color)
+       :setUV2(x2, y2, 0.5, cx + uw * c - uh * s, cy - uh * c - uw * s, color)
+       :setUV3(x2, y1, 0.5, cx + uw * c + uh * s, cy + uh * c - uw * s, color)
+       :setUV4(x1, y1, 0.5, cx - uw * c + uh * s, cy + uh * c + uw * s, color)
+       :draw()
+end
+
+function M.TexInChamferRect(tex_name, blend, color, l, r, b, t, rr, size, offx, offy)
+    blend = blend or BlendMode.Default
+    color = color or Color.Default
+    local tex = Texture.Get(tex_name) or RenderTarget.Get(tex_name)
+    tex:setBlend(blend)
     local tw, th = tex:getSize()
-    offx = offx or (tw / 2)
-    offy = offy or (th / 2)
+    offx = offx or (tw * 0.5)
+    offy = offy or (th * 0.5)
     size = size or 1
-    local w = (r - l) / size / 2
-    local h = (t - b) / size / 2
+    local w = (r - l) / size * 0.5
+    local h = (t - b) / size * 0.5
     local _rr = rr / size
     local z = 0.5
     tex:setUV1(l + rr, t, z, offx - w + _rr, offy - h, color)
@@ -167,41 +204,43 @@ function M.TexInChamferRect(texname, blend, color, l, r, b, t, rr, size, offx, o
 
 end
 
-function M.TexInHexRect(texname, blend, color, x1, x2, y1, y2, size, offx, offy)
-    blend = blend or Core.Render.BlendMode.Default
-    color = color or Core.Render.Color.Default
-    local tex = Core.Resource.Texture.Get(texname):setBlend(blend)
+function M.TexInHexRect(tex_name, blend, color, x1, x2, y1, y2, size, offx, offy)
+    blend = blend or BlendMode.Default
+    color = color or Color.Default
+    local tex = Texture.Get(tex_name) or RenderTarget.Get(tex_name)
+    tex:setBlend(blend)
     local tw, th = tex:getSize()
-    offx = offx or (tw / 2)
-    offy = offy or (th / 2)
+    offx = offx or (tw * 0.5)
+    offy = offy or (th * 0.5)
     size = size or 1
-    local r = (y2 - y1) / SQRT3
-    local bx1, bx2, bx3, bx4 = x1, x1 + r / 2, x2 - r / 2, x2
-    local by1, by2, by3 = y1, (y1 + y2) / 2, y2
-    local w = (x2 - x1) / size / 2
-    local h = (y2 - y1) / size / 2
-    local _rr = r / size / 2
+    local r = (y2 - y1) * 0.57735026
+    local bx1, bx2, bx3, bx4 = x1, x1 + r * 0.5, x2 - r * 0.5, x2
+    local by1, by2, by3 = y1, (y1 + y2) * 0.5, y2
+    local w = (x2 - x1) / size * 0.5
+    local h = (y2 - y1) / size * 0.5
+    local _rr = r / size * 0.5
     local z = 0.5
     tex:setUV1(bx1, by2, z, offx - w, offy, color)
-       :setUV2(bx2, by1, z, offx - w + _rr, offy - h, color)
-       :setUV3(bx3, by1, z, offx + w - _rr, offy - h, color)
+       :setUV2(bx2, by1, z, offx - w + _rr, offy + h, color)
+       :setUV3(bx3, by1, z, offx + w - _rr, offy + h, color)
        :setUV4(bx4, by2, z, offx + w, offy, color)
        :draw()
        :setUV1(bx1, by2, z, offx - w, offy, color)
-       :setUV2(bx2, by3, z, offx - w + _rr, offy + h, color)
-       :setUV3(bx3, by3, z, offx + w - _rr, offy + h, color)
+       :setUV2(bx2, by3, z, offx - w + _rr, offy - h, color)
+       :setUV3(bx3, by3, z, offx + w - _rr, offy - h, color)
        :setUV4(bx4, by2, z, offx + w, offy, color)
        :draw()
 end
 
-function M.TexInCircle(texname, x, y, radius, rot, scale, cut, blend, color, offx, offy, offrot)
-    blend = blend or Core.Render.BlendMode.Default
-    color = color or Core.Render.Color.Default
+function M.TexInCircle(tex_name, x, y, radius, rot, scale, cut, blend, color, offx, offy, offrot)
+    blend = blend or BlendMode.Default
+    color = color or Color.Default
     cut = cut or 10
-    local tex = Core.Resource.Texture.Get(texname):setBlend(blend)
+    local tex = Texture.Get(tex_name) or RenderTarget.Get(tex_name)
+    tex:setBlend(blend)
     local tw, th = tex:getSize()
-    offx = (offx or 0) / scale + tw / 2
-    offy = -(offy or 0) / scale + th / 2
+    offx = (offx or 0) / scale + tw * 0.5
+    offy = -(offy or 0) / scale + th * 0.5
     offrot = offrot or 0
 
     local angle
@@ -245,10 +284,9 @@ function M.SimpleText(fontname, text, x, y, size, ...)
     lstg.RenderText(fontname, text, x, y, size, buildFmt(...))
 end
 
-local TTF = Core.Resource.TTF
 function M.SimpleTTF(ttfname, text, x, y, size, color, ...)
     local fmt = buildFmt(...)
-    local scale = size / TTF.Get(ttfname):getSize() * 2--TODO
+    local scale = size / TTF.Get(ttfname):getSize() * 2--为了与Render.Text统一
     lstg.RenderTTF(ttfname, text, x, x, y, y, fmt, color, scale)
 end
 
