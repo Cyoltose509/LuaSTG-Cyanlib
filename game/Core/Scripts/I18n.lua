@@ -65,7 +65,6 @@ function M.GetJargon(key, depth)
     return resolved
 end
 
-
 function M.Reload()
     local lang = M.cur_language
     if not lang then
@@ -75,18 +74,20 @@ function M.Reload()
     M.cur_jargon = {}
 
     local function LoadCSV(name)
-        local data = Lib.CSV.Parse(Core.VFS.LoadTextFile(name), true)
+        local data = Lib.CSV.Decode(Core.VFS.LoadTextFile(name), true)
         local is_jargon = name:lower():find("jargon")--使用名字来判断jargon
         for _, v in pairs(data) do
-            local value = v[M.cur_language]
-            if not value or value == "" then
-                value = v[M.load_default_lang_value]
-            end
-            if value then
-                if is_jargon then
-                    M.cur_jargon[v.key] = value
+            if v.key and v.key ~= "" then
+                local value = v[M.cur_language]
+                if not value or value == "" then
+                    value = M.cur_texts[v.key] or v[M.load_default_lang_value]
                 end
-                M.cur_texts[v.key] = value
+                if value then
+                    if is_jargon then
+                        M.cur_jargon[v.key] = value
+                    end
+                    M.cur_texts[v.key] = value
+                end
             end
         end
     end
@@ -130,7 +131,6 @@ function M.Reload()
         SkimCSV(dir)
     end
 
-    
     if M.registered_texts[lang] then
         Lib.Table.Merge(M.cur_texts, M.registered_texts[lang])
     end
