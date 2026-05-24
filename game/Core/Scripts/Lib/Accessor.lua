@@ -21,8 +21,21 @@ end
 function M:setPath(path)
     self.path = path
     local fields = {}
-    for field in path:gmatch("[^.]+") do
-        fields[#fields + 1] = field
+
+    for part in path:gmatch("[^%.]+") do
+        local key = part:match("^[^%[]+")
+        if key then
+            fields[#fields + 1] = key
+        end
+        for index in part:gmatch("%[(.-)%]") do
+            local num = tonumber(index)
+            if num then
+                fields[#fields + 1] = num
+            else
+                -- 支持 ["xxx"]
+                fields[#fields + 1] = index:gsub("^['\"](.-)['\"]$", "%1")
+            end
+        end
     end
     self.fields = fields
     return self
@@ -44,18 +57,18 @@ function M:set(value)
         local obj = self.root
         for i = 1, len - 1 do
             local key = self.fields[i]
-            local next = obj[key]
-            if next == nil then
+            local nextO = obj[key]
+            if nextO == nil then
                 if self.auto_create then
-                    next = {}
-                    obj[key] = next
+                    nextO = {}
+                    obj[key] = nextO
                 else
                     error("Attempt to index a nil value (field '" .. key .. "'")
                 end
-            elseif type(next) ~= "table" then
+            elseif type(nextO) ~= "table" then
                 error(("Accessor path conflict at '%s' (not a table)"):format(key))
             end
-            obj = next
+            obj = nextO
         end
         obj[self.fields[len]] = value
     else
