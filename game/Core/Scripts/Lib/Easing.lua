@@ -6,6 +6,7 @@ local VALUE_SET = {
     QuadOut = 2,
     ---二指数加速减速
     QuadInOut = 3,
+    SineInOut = 4,
     ---正弦减速
     SineOut = 5,
     ---正弦加速
@@ -47,6 +48,7 @@ local VALUE_SET = {
 
 local exp = math.exp
 local sin = sin
+local cos = cos
 local sqrt = sqrt
 
 ---@type Core.Lib.Easing
@@ -66,6 +68,9 @@ local SetMode = {
         else
             return -2 * n * n + 4 * n - 1
         end
+    end,
+    [4] = function(n)
+        return 1 - cos(n * 180) / 2
     end,
     [5] = function(n)
         return sin(n * 90)

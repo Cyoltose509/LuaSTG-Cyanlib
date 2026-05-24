@@ -9,7 +9,9 @@
 ---@field ComponentBase Core.Lib.ComponentBase
 ---@field Accessor Core.Lib.Accessor@一个getter&setter，支持"."路径解析
 ---@field CSV Core.Lib.CSV@CSV解析
+---@field YAML Core.Lib.YAML@YAML解析
 ---@field Matcher Core.Lib.Matcher@搜索匹配
+---@field Smooth Core.Lib.Smooth@自动控制平滑
 local M = {}
 Core.Lib = M
 
@@ -17,6 +19,7 @@ require("Core.Scripts.Lib.Accessor")
 require("Core.Scripts.Lib.Debug")
 require("Core.Scripts.Lib.Table")
 require("Core.Scripts.Lib.Easing")
+require("Core.Scripts.Lib.Smooth")
 require("Core.Scripts.Lib.Json")
 require("Core.Scripts.Lib.EventListener")
 require("Core.Scripts.Lib.StateMachine")
@@ -24,4 +27,5 @@ require("Core.Scripts.Lib.ComponentSystem")
 require("Core.Scripts.Lib.ComponentBase")
 require("Core.Scripts.Lib.CSV")
 require("Core.Scripts.Lib.Matcher")
+require("Core.Scripts.Lib.YAML")
 

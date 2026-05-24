@@ -22,7 +22,7 @@ Core.Lib.CSV = M
 ---@param has_header boolean 是否包含表头
 ---@param sep string 字段分隔符
 ---@return table
-function M.Parse(text, has_header, sep)
+function M.Decode(text, has_header, sep)
     sep = sep or ","
 
     local rows = {}
@@ -97,5 +97,3 @@ function M.Parse(text, has_header, sep)
 
     return rows
 end
-
-return M
