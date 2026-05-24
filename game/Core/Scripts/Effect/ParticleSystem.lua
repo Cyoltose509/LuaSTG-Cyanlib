@@ -13,7 +13,12 @@ local atan2 = atan2
 
 function M:init()
     ---@type Core.Effect.ParticleSystem.Particle[]
+    --- 空闲粒子
+    self.pool = {}
+    ---@type Core.Effect.ParticleSystem.Particle[]
+    ---活跃粒子
     self.objects = {}
+
     self._emit_fraction = 0---发射积累的小数
 
     self.max_count = HUGE---最大粒子数量
@@ -256,6 +261,21 @@ function M:ignoreEndColor(flag)
     return self
 end
 
+---@private
+---@return Core.Effect.ParticleSystem.Particle
+function M:_getParticle()
+    local p = self.pool[#self.pool]
+    if p then
+        self.pool[#self.pool] = nil
+        return p
+    end
+    return {}
+end
+---@private
+function M:_recycleParticle(p)
+    self.pool[#self.pool + 1] = p
+end
+
 ---@overload fun(img:string):self
 function M:setImage(ani, ani_timer_multi)
     self.img = ani or self.img
@@ -302,43 +322,42 @@ function M:newParticle(count)
         local fade_in = self.fade_in_time + ran:float(-self.fade_in_time_rand, self.fade_in_time_rand)
         local fade_out = self.fade_out_time + ran:float(-self.fade_out_time_rand, self.fade_out_time_rand)
         local lifetime = self.lifetime + ran:float(-self.lifetime_rand, self.lifetime_rand)
-
         ---@class Core.Effect.ParticleSystem.Particle
-        self.objects[#self.objects + 1] = {
-            x = ran:float(f.left, f.right) + r * cosa,
-            y = ran:float(f.bottom, f.top) + r * sina,
-            d_vx = (-sv + ev) * vcosa,
-            d_vy = (-sv + ev) * vsina,
-            vx = sv * vcosa,
-            vy = sv * vsina,
-            gravity_x = gx,
-            gravity_y = gy,
-            accel_rad = ar,
-            accel_tan = at,
-            size = ss,
-            start_size = ss,
-            end_size = es,
-            rot = sr,
-            start_rot = sr,
-            end_rot = er,
-            A = A,
-            R = R,
-            G = G,
-            B = B,
-            start_A = A,
-            start_R = R,
-            start_G = G,
-            start_B = B,
-            end_A = eA,
-            end_R = eR,
-            end_G = eG,
-            end_B = eB,
-            alpha = 0,
-            fade_in_time = fade_in,
-            fade_out_time = fade_out,
-            lifetime = lifetime,
-            timer = 0,
-        }
+        local p = self:_getParticle()
+        p.x = ran:float(f.left, f.right) + r * cosa
+        p.y = ran:float(f.bottom, f.top) + r * sina
+        p.d_vx = (-sv + ev) * vcosa
+        p.d_vy = (-sv + ev) * vsina
+        p.vx = sv * vcosa
+        p.vy = sv * vsina
+        p.gravity_x = gx
+        p.gravity_y = gy
+        p.accel_rad = ar
+        p.accel_tan = at
+        p.size = ss
+        p.start_size = ss
+        p.end_size = es
+        p.rot = sr
+        p.start_rot = sr
+        p.end_rot = er
+        p.A = A
+        p.R = R
+        p.G = G
+        p.B = B
+        p.start_A = A
+        p.start_R = R
+        p.start_G = G
+        p.start_B = B
+        p.end_A = eA
+        p.end_R = eR
+        p.end_G = eG
+        p.end_B = eB
+        p.alpha = 0
+        p.fade_in_time = fade_in
+        p.fade_out_time = fade_out
+        p.lifetime = lifetime
+        p.timer = 0
+        self.objects[#self.objects + 1] = p
     end
     self._emit_fraction = self._emit_fraction % 1
 end
@@ -378,7 +397,11 @@ function M:update(dt)
             o.alpha = (o.lifetime - o.timer) / o.fade_out_time
         end
         if o.timer >= o.lifetime then
-            table.remove(self.objects, i)
+            local n = #self.objects
+            local last = self.objects[n]
+            self.objects[i] = last
+            self.objects[n] = nil
+            self:_recycleParticle(o)
         end
         o.timer = o.timer + dt
     end
