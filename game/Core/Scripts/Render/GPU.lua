@@ -4,7 +4,7 @@ Core.Render.GPU = M
 
 M.ClearZBuffer = lstg.ClearZBuffer
 M.PopRenderTarget = lstg.PopRenderTarget
-M.RenderClear = lstg.RenderClear
+M.Clear = lstg.RenderClear
 
 ---当务之急是停止使用这个函数
 ---转而使用更高级的参数设置方式

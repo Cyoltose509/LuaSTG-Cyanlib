@@ -366,6 +366,7 @@ end
 ---Set the blend mode
 function M:setBlendMode(blend)
     self.blend = blend or Core.Render.BlendMode.Default
+    self:refreshColor()
     return self
 end
 
@@ -555,18 +556,26 @@ end
 function M:refreshColor()
     for _, line in ipairs(self._lines) do
         for _, data in ipairs(line.data) do
-            if data.style and data.style.color then
-                data.style.color.a = self.color.a * data.style.alpha
-                if not data.style._color then
-                    data.style.color.r = self.color.r
-                    data.style.color.g = self.color.g
-                    data.style.color.b = self.color.b
+            if data.style then
+                if data.style.color then
+                    data.style.color.a = self.color.a * data.style.alpha
+                    if not data.style._color then
+                        data.style.color.r = self.color.r
+                        data.style.color.g = self.color.g
+                        data.style.color.b = self.color.b
+                    else
+                        data.style.color.r = self.color.r / 255 * data.style._color.r
+                        data.style.color.g = self.color.g / 255 * data.style._color.g
+                        data.style.color.b = self.color.b / 255 * data.style._color.b
+                    end
+                end
+                if data.style._blend then
+                    data.style.blend = data.style._blend
                 else
-                    data.style.color.r = self.color.r / 255 * data.style._color.r
-                    data.style.color.g = self.color.g / 255 * data.style._color.g
-                    data.style.color.b = self.color.b / 255 * data.style._color.b
+                    data.style.blend = self.blend
                 end
             end
+
         end
     end
 end
@@ -587,7 +596,7 @@ function M:refreshLines(second)
     local text_seg = self._text_segments
 
     local total_height = 0
-    local total_width = self.width
+    local total_width = 0
 
     local lh = fr.GetFontLineHeight() * self.line_height_factor
     local asc = fr.GetFontAscender()

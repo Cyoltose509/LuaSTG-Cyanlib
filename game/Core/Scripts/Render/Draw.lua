@@ -41,10 +41,8 @@ function M.Rect(left, right, bottom, top, z)
 end
 
 ---渲染一个纯色遮罩
----需传入一个相机
----@param camera Core.Display.Camera2D
-function M.Mask(camera)
-    camera = camera or Core.Display.Camera.GetCurrent()
+function M.Mask()
+    local camera = Core.Display.Camera.GetCurrent()
     if camera and camera.getView then
         local v = camera:getView()
         RenderRect(DEFAULT_TEX, v.left, v.right, v.bottom, v.top)
@@ -134,8 +132,8 @@ function M.RectOutline(x, y, w, h, rot, outl)
     outl = outl or 1
     local ox = w * 0.5 + outl * 0.5
     local oy = h * 0.5 + outl * 0.5
-    local cosr=cos(rot)
-    local sinr=sin(rot)
+    local cosr = cos(rot)
+    local sinr = sin(rot)
     M.Line(x + ox * cosr, y + ox * sinr, rot + 90, h, outl)
     M.Line(x + oy * sinr, y - oy * cosr, rot, w + outl * 2, outl)
     M.Line(x - ox * cosr, y - ox * sinr, rot, h, outl)

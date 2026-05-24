@@ -67,9 +67,11 @@ function M.Release()
     for _, menu in ipairs(M.stack) do
         menu:release()
     end
-    for _, menu in ipairs(M.simple_list) do
+    for _, menu in ipairs(M.pop_up) do
         menu:release()
     end
+    M.stack = {}
+    M.pop_up = {}
 end
 
 ---@generic T

@@ -5,6 +5,7 @@ Core.Task = M
 local stack = {}
 ---@type thread[]
 local threads = {}
+local max, int = max, int
 
 local coroutine = coroutine
 
@@ -74,20 +75,6 @@ function M.Del(unit, delco)
     end
 end
 
----等待t帧，在task环境内
----t是非负整数
----@param t number
-function M.Wait(t)
-    t = max(0, int(t or 1))
-    if t == 1 then
-        coroutine.yield()
-    else
-        for _ = 1, t do
-            coroutine.yield()
-        end
-    end
-end
-
 M.Yield = coroutine.yield
 
 function M.getSelf()
@@ -101,24 +88,51 @@ end
 
 ---小数位的缓存
 local frame_cache = setmetatable({  }, { __mode = "k" })
+local second_cache = setmetatable({  }, { __mode = "k" })
 
----等待t帧，在task环境内
----t可以是小数，处理方法是把小数部分集起来，多出了1再wait1帧
----@param t number
-function M.Wait2(t)
-    t = max(0, t or 1)
-    if t == 1 then
+---等待f帧，在task环境内
+---Wait for t frames in the task environment
+---@param frame number
+---@param save_frac boolean 是否保存小数部分
+function M.Wait(frame, save_frac)
+    frame = max(0, frame or 1)
+    if frame == 1 then
         coroutine.yield()
     else
-        for _ = 1, t do
+        for _ = 1, frame do
             coroutine.yield()
         end
-        local curco = threads[#threads]
-        frame_cache[curco] = frame_cache[curco] or 0
-        frame_cache[curco] = frame_cache[curco] + (t - int(t))
-        while frame_cache[curco] >= 1 do
-            coroutine.yield()
-            frame_cache[curco] = frame_cache[curco] - 1
+        if save_frac then
+            local frac = frame - int(frame)
+            if frac > 0 then
+                local curco = threads[#threads]
+                frame_cache[curco] = frame_cache[curco] or 0
+                frame_cache[curco] = frame_cache[curco] + frac
+                while frame_cache[curco] >= 1 do
+                    coroutine.yield()
+                    frame_cache[curco] = frame_cache[curco] - 1
+                end
+            end
         end
     end
+end
+
+---等待t秒
+---由Core.Time.GetDelta赞助播出
+---Wait for t seconds
+---Sponsored by Core.Time.GetDelta
+---@param sec number
+function M.Wait2(sec)
+    local get = Core.Time.GetDelta
+    local _t = 0
+    local curco = threads[#threads]
+    second_cache[curco] = second_cache[curco] or 0
+    sec = sec - second_cache[curco]
+    second_cache[curco] = max(-sec, 0)
+    while _t < sec do
+        coroutine.yield()
+        _t = _t + get()
+    end
+    local frac = _t - sec
+    second_cache[curco] = second_cache[curco] + frac
 end

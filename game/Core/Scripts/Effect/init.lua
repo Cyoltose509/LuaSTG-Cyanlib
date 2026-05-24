@@ -152,7 +152,7 @@ function pulse:frame()
     elseif self.time < self.t2 then
         self._a = self.__a
     elseif self.time < self.t3 then
-        self._a = self.fade_out_mode((self.time - self.t2) / (self.t3 - self.t2)) * self.__a
+        self._a = self.fade_out_mode((self.t3 - self.time) / (self.t3 - self.t2)) * self.__a
     end
     if self.time >= self.lifetime then
         Object.RawDel(self)
@@ -177,9 +177,9 @@ function M.PulseScreen(layer, col, blend, fade_in, stay, fade_out)
     self.blend = blend or ""
     self.__a = col.a
     self._r, self._g, self._b = col.r, col.g, col.b
-    fade_in = int(fade_in or 0)
-    stay = int(stay or 0)
-    fade_out = int(fade_out or 0)
+    fade_in = fade_in or 0
+    stay = stay or 0
+    fade_out = fade_out or 0
     self.lifetime = fade_in + stay + fade_out
     if fade_in > 0 then
         self._a = 0

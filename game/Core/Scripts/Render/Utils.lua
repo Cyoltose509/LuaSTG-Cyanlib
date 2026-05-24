@@ -248,7 +248,7 @@ function M.TexInCircle(tex_name, x, y, radius, rot, scale, cut, blend, color, of
     local uradius = radius / scale
 
     for a = 1, cut do
-        angle = rot + 360 / cut * a
+        angle = rot + ang * a
         tex:setUV1(x + radius * cos(angle - ang), y + radius * sin(angle - ang), 0.5,
                 offx + uradius * cos(offrot + angle - ang), offy - uradius * sin(offrot + angle - ang), color)
            :setUV2(x, y, 0.5, offx, offy, color)
