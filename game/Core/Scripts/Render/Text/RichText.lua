@@ -44,6 +44,7 @@ local function set_style(style, target, default)
             style.strikethrough = true
         elseif name == "blend" then
             style.blend = value
+            style._blend = value
         elseif name == "color" or name == "col" then
             local cache = color[value:lower()]
             if cache then
