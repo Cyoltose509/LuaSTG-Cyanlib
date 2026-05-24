@@ -169,7 +169,7 @@ function M:worldToScreen(x, y)
     end
     local w, h = self:getViewportSize()
     local vw, vh = self:getViewSize()
-    local vx, vy = (self.viewport.left + self.viewport.right) / 2, (self.viewport.bottom + self.viewport.top) / 2
+    local vx, vy = (self.viewport.left + self.viewport.right) * 0.5, (self.viewport.bottom + self.viewport.top) * 0.5
     return vx + x / vw * w, vy + y / vh * h
 end
 
@@ -180,7 +180,7 @@ function M:screenToWorld(x, y)
     y = y - self.viewport.bottom
     local w, h = self:getViewportSize()
     local vw, vh = self:getViewSize()
-    local left, bottom = self.x - vw / 2, self.y - vh / 2
+    local left, bottom = self.x - vw * 0.5, self.y - vh * 0.5
     local wX = left + x / w * vw
     local wY = bottom + y / h * vh
     if self.rot ~= 0 then
@@ -244,11 +244,11 @@ function M:apply()
     local vw, vh = self:getViewSize()
     local cx, cy = self:getCenter()
     if self.rot == 0 then
-        lstg.SetOrtho(cx - vw / 2, cx + vw / 2, cy - vh / 2, cy + vh / 2)
+        lstg.SetOrtho(cx - vw * 0.5, cx + vw * 0.5, cy - vh * 0.5, cy + vh * 0.5)
     else
         --用透视投影模拟旋转
         local z = -1000
-        local fovy = 2 * math.atan(abs(vh / 2 / z))
+        local fovy = 2 * math.atan(abs(vh / z * 0.5))
         local aspect = vw / vh
         lstg.SetPerspective(cx, cy, z, cx, cy, 0, -sin(self.rot), cos(self.rot), 0, fovy, aspect, 0.001, 1000)
     end
