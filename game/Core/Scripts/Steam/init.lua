@@ -116,7 +116,7 @@ function M.OpenWebPage(url)
     if steam and steam.SteamFriends then
         steam.SteamFriends.ActivateGameOverlayToWebPage(url)
     else
-        Core.System.OpenURL(url)
+        Core.System.OpenURL(url, false)
     end
 end
 
