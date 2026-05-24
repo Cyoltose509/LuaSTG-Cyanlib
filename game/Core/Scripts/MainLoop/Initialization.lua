@@ -42,6 +42,20 @@ MainLoop.AddEvent("Init", "Default", {
     name = "Core.Save.Data",
     func = Core.Data.Score.Save,
 })
+MainLoop.AddEvent("Init", "Default", {
+    name = "Core.Default.Exit",
+    func = function()
+        ---退出的保存事件在全部加载完毕后再赋予
+        MainLoop.AddEvent("Exit", "Default", {
+            name = "Core.Exit.Save.Settings",
+            func = Core.Data.Setting.Save,
+        })
+        MainLoop.AddEvent("Exit", "Default", {
+            name = "Core.Exit.Save.Data",
+            func = Core.Data.Score.Save,
+        })
+    end
+})
 ------------------------------------
 ------------------------------------
 
@@ -138,14 +152,7 @@ MainLoop.AddEvent("Render", "Default", {
 
 ------------------------------------
 ------------------------------------
-MainLoop.AddEvent("Exit", "Default", {
-    name = "Core.Exit.Save.Settings",
-    func = Core.Data.Setting.Save,
-})
-MainLoop.AddEvent("Exit", "Default", {
-    name = "Core.Exit.Save.Data",
-    func = Core.Data.Score.Save,
-})
+
 ------------------------------------
 ------------------------------------
 MainLoop.AddEvent("SceneChangeBefore", "Default", {
