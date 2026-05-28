@@ -35,3 +35,32 @@ function M.GetCurrentDirectory()
     return i and src:sub(1, i) or ""
 end
 
+
+---@param src string
+---@param dst string
+---@return boolean
+function M.CopyFile(src, dst)
+    local infile = io.open(src, "rb")
+    if not infile then
+        return false
+    end
+
+    local outfile = io.open(dst, "wb")
+    if not outfile then
+        infile:close()
+        return false
+    end
+
+    while true do
+        local block = infile:read(8192)
+        if not block then
+            break
+        end
+        outfile:write(block)
+    end
+
+    infile:close()
+    outfile:close()
+
+    return true
+end

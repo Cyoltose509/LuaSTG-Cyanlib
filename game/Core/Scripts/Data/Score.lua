@@ -7,6 +7,9 @@ M.event_listener = Core.Lib.EventListener()
 M.event_listener:create("Score.beforeSave")
 M.event_listener:create("Score.afterSave")
 
+M.save_name = "score"
+M.STOP_SAVING = false
+
 ---冒出来的null太可恶了
 local function CheckData(_data)
     for k, v in pairs(_data) do
@@ -30,16 +33,18 @@ local function readDecodeData(file)
     return table.concat(strs)
 end
 
-local function getPath(slot)
+function M.GetSlotPath(slot)
+    slot = slot or M.current_slot
     return ("%s/slot_%d"):format(Core.Data.GetPath(), slot)
 end
-local function getSlotFile(slot)
-    return ("%s/slot_%d/score.dat"):format(Core.Data.GetPath(), slot)
+function M.GetFilePath(slot)
+    slot = slot or M.current_slot
+    return ("%s/slot_%d/%s.dat"):format(Core.Data.GetPath(), slot, M.save_name)
 end
 
 local function NewOrReadFile(slot)
-    Core.VFS.CreateDirectory(getPath(slot))
-    local file = getSlotFile(slot)
+    Core.VFS.CreateDirectory(M.GetSlotPath(slot))
+    local file = M.GetFilePath(slot)
     --读取文件
     local data
     if not Core.VFS.FileExist(file) then
@@ -77,9 +82,12 @@ function M.Init()
 end
 
 function M.Save()
+    if M.STOP_SAVING then
+        return
+    end
     M.event_listener:dispatch("Score.beforeSave")
-    Core.VFS.CreateDirectory(getPath(M.current_slot))
-    local file = getSlotFile(M.current_slot)
+    Core.VFS.CreateDirectory(M.GetSlotPath(M.current_slot))
+    local file = M.GetFilePath(M.current_slot)
     local fake_file = file .. ".tmp"
     local score_data_file = assert(io.open(fake_file, "wb"))
     local str = Core.Lib.Json.Encode(_scoredata)
@@ -93,11 +101,15 @@ function M.Save()
 end
 
 function M.GetSaveIterator(doEvent)
+    if M.STOP_SAVING then
+        return function()
+        end
+    end
     if doEvent then
         M.event_listener:dispatch("Score.beforeSave")
     end
-    Core.VFS.CreateDirectory(getPath(M.current_slot))
-    local file = getSlotFile(M.current_slot)
+    Core.VFS.CreateDirectory(M.GetSlotPath(M.current_slot))
+    local file = M.GetFilePath(M.current_slot)
     local fake_file = file .. ".tmp"
     local score_data_file = assert(io.open(fake_file, "wb"))
     local str = Core.Lib.Json.Encode(_scoredata)
