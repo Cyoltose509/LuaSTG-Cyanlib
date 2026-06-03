@@ -4,5 +4,5 @@
 local M = {}
 Test.Camera = M
 
-require("Test.Scripts.Camera.Controller2D")
-require("Test.Scripts.Camera.Controller3D")
+require("Test.Camera.Controller2D")
+require("Test.Camera.Controller3D")

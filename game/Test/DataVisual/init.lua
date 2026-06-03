@@ -6,6 +6,6 @@
 local M = {}
 Test.DataVisual = M
 
-require("Test.Scripts.DataVisual.UI")
-require("Test.Scripts.DataVisual.Scene")
-require("Test.Scripts.DataVisual.PauseMenu")
+require("Test.DataVisual.UI")
+require("Test.DataVisual.Scene")
+require("Test.DataVisual.PauseMenu")
