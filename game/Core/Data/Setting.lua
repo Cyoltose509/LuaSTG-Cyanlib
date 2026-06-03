@@ -65,14 +65,50 @@ end
 function M.SetDefaultValue(key, value)
     local obj = default_setting
     local fields = key:split(".")
-    for i = 1, #fields - 1 do
+    local n = #fields
+    for i = 1, n - 1 do
         local field = fields[i]
         obj[field] = obj[field] or {}
         obj = obj[field]
     end
-    local field = fields[#fields]
+    local field = fields[n]
     obj[field] = value
 end
+
+---设置值
+---支持解析"."
+---@param key string
+function M.SetValue(key, value)
+    local obj = setting
+    local fields = key:split(".")
+    local n = #fields
+    for i = 1, n - 1 do
+        local field = fields[i]
+        obj[field] = obj[field] or {}
+        obj = obj[field]
+    end
+    local field = fields[n]
+    obj[field] = value
+end
+
+---获取值
+---支持解析"."
+---@param key string
+---@param default any
+function M.GetValue(key, default)
+    local obj = setting
+    local fields = key:split(".")
+    for i = 1, #fields do
+        local field = fields[i]
+        obj = obj[field]
+        if obj == nil then
+            return default
+        end
+    end
+    return obj
+end
+
+
 
 
 --M.Load()

@@ -9,6 +9,10 @@ MainLoop.AddEvent("Init", "Default", {
     func = Core.Data.Setting.Load,
 })
 MainLoop.AddEvent("Init", "Default", {
+    name = "Core.Load.Config",
+    func = Core.Data.Config.Load,
+})
+MainLoop.AddEvent("Init", "Default", {
     name = "Core.Init.Data",
     func = Core.Data.Score.Init,
 })
@@ -34,6 +38,7 @@ MainLoop.AddEvent("Init", "Default", {
     name = "Core.Reset.Screen",
     func = Core.Display.Screen.Reset,
 })
+--[[
 MainLoop.AddEvent("Init", "Default", {
     name = "Core.Save.Settings",
     func = Core.Data.Setting.Save,
@@ -41,11 +46,15 @@ MainLoop.AddEvent("Init", "Default", {
 MainLoop.AddEvent("Init", "Default", {
     name = "Core.Save.Data",
     func = Core.Data.Score.Save,
-})
+})--]]
 MainLoop.AddEvent("Init", "Default", {
     name = "Core.Default.Exit",
     func = function()
         ---退出的保存事件在全部加载完毕后再赋予
+        MainLoop.AddEvent("Exit", "Default", {
+            name = "Core.Exit.Save.Config",
+            func = Core.Data.Config.Save,
+        })
         MainLoop.AddEvent("Exit", "Default", {
             name = "Core.Exit.Save.Settings",
             func = Core.Data.Setting.Save,

@@ -1,6 +1,7 @@
 ---@class Core.Data
 ---@field Score Core.Data.Score
 ---@field Setting Core.Data.Setting
+---@field Config Core.Data.Config
 local M = {}
 Core.Data = M
 M._Path = "User"
@@ -20,3 +21,4 @@ end
 
 require("Core.Data.Score")
 require("Core.Data.Setting")
+require("Core.Data.Config")
