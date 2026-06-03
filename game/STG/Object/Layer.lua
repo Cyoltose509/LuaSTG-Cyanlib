@@ -1,0 +1,22 @@
+---@class STG.Object.Layer
+local Layer = {
+    --- -800
+    BG3D = -800,
+    --- -700
+    BG = -700,
+    --- -600
+    Enemy = -600,
+    --- -500
+    PlayerShots = -500,
+    --- -400
+    Player = -400,
+    --- -300
+    Item = -300,
+    --- -200
+    EnemyBullet = -200,
+    --- -100
+    EnemyBulletEF = -100,
+    --- 0
+    Top = 0
+}
+STG.Object.Layer = Layer

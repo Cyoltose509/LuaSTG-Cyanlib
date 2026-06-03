@@ -1,6 +1,7 @@
 .idea/*
 .vscode/*
 .vs/*
+.workbuddy/*
 
 testing.lua
 
@@ -11,9 +12,12 @@ snapshot/*
 replay/*
 User/*
 
+game/Main
 game/update.txt
 game/engine.log
 game/imgui.ini
 game/User/*
 game/snapshot/*
 game/replay/*
+/game/STG/_legacy/
+/game/STG/_legacy-official/
