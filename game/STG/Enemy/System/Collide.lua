@@ -9,13 +9,3 @@ function M:init(enemy, system)
 end
 function M:update()
 end
-
-function M:withPlayerShots(other)
-    self.system:takeDamage({
-        amount = other.dmg,
-        type = "hit:shoot",
-    })
-end
-function M:withWall(info)
-
-end

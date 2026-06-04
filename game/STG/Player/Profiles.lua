@@ -32,9 +32,5 @@ M.Default = {
     health = {
     },
     shoot = {
-        speed = 0.2,
-        dmg = 10,
-        bullet_life = 60,
-        bullet_velocity = 10,
     }
 }

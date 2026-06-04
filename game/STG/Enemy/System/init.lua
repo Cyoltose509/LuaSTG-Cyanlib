@@ -5,7 +5,6 @@
 ---@field Death STG.Enemy.System.Death
 ---@field Collide STG.Enemy.System.Collide
 ---@field DamageModifier STG.Enemy.System.DamageModifier
----@field Move STG.Enemy.System.Move
 ---@field Phase STG.Enemy.System.Phase
 local M = Core.Class()
 STG.Enemy.System = M
@@ -18,7 +17,6 @@ require("STG.Enemy.System.Health")
 require("STG.Enemy.System.Death")
 require("STG.Enemy.System.Collide")
 require("STG.Enemy.System.DamageModifier")
-require("STG.Enemy.System.Move")
 require("STG.Enemy.System.Phase")
 
 function M:init(enemy)
@@ -32,7 +30,6 @@ function M:init(enemy)
     self.death_system = M.Death(enemy, self)
     self.collide_system = M.Collide(enemy, self)
     self.damage_modifier_system = M.DamageModifier(enemy, self)
-    self.move_system = M.Move(enemy, self)
     self.phase_system = M.Phase(enemy, self)
     self.view_data = {
         health = self.health_system:getViewData(),
@@ -42,7 +39,6 @@ end
 function M:update(dt)
     self.timer = self.timer + dt
     self.phase_system:update(dt)
-    self.move_system:update(dt)
     self.anim_system:update(dt)
     self.health_system:update(dt)
     self.collide_system:update(dt)
@@ -88,7 +84,6 @@ function M:applyProfile(profile)
     self.death_system:setProfile(profile)
     self.collide_system:setProfile(profile)
     self.damage_modifier_system:setProfile(profile)
-    self.move_system:setProfile(profile)
     self.phase_system:setProfile(profile)
     if profile.default_damage_modifier ~= false then
         self.damage_modifier_system:add(M.DamageModifier.Default(self.enemy, self))
@@ -132,8 +127,7 @@ end
 ---@field interrupt boolean
 
 ---@param info STG.Enemy.System.DamageInfo
----@param hit STG.Enemy.System.HitInfo
-function M:takeDamage(info, hit)
+function M:takeDamage(info)
     info = info or {}
     if info.amount <= 0 then
         return false
@@ -145,9 +139,6 @@ function M:takeDamage(info, hit)
     end
     local amount = self.damage_modifier_system:apply(info.amount)
 
-    if hit then
-        self:hit(hit)
-    end
     self.health_system:damage(amount)
     self.anim_system:onDamage(info)
     for _, comp in pairs(self.components) do
@@ -158,13 +149,6 @@ function M:takeDamage(info, hit)
     end
 end
 
----@param info STG.Enemy.System.HitInfo
-function M:hit(info)
-    info = info or {}
-    info.time = info.time or 0.2
-    self.move_system:knockback(info.angle, info.power, info.time)
-    --self.hit_system:apply(info)
-end
 
 function M:onDeath()
     for _, comp in pairs(self.components) do
@@ -189,30 +173,6 @@ function M:setScaling(h, v)
     return self
 end
 
-function M:requestMoveTo(x, y, time, mode)
-    self.move_system:moveTo(x, y, time, mode)
-end
-function M:requestMoveBy(dx, dy, time, mode)
-    local e = self.enemy
-    local x, y = e.x, e.y
-    self.move_system:moveTo(x + dx, y + dy, time, mode)
-end
-
-function M:requestMoveDir(x, y, time)
-    self.move_system:moveWithDir(x, y, time)
-end
-
-function M:applyImpulse(vx, vy, time)
-    self.move_system:impulse(vx, vy, time)
-end
-
-function M:requestMoveStop()
-    self.move_system:stop()
-end
-
-function M:enableMove(v)
-    self.move_system:enableMove(v)
-end
 
 function M:getPhase()
     return self.phase_system:get()
