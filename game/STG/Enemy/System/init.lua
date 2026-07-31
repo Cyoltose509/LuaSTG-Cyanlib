@@ -18,6 +18,8 @@ require("STG.Enemy.System.Death")
 require("STG.Enemy.System.Collide")
 require("STG.Enemy.System.DamageModifier")
 require("STG.Enemy.System.Phase")
+require("STG.Enemy.System.Move")
+require("STG.Enemy.System.Shoot")
 
 function M:init(enemy)
     self.enemy = enemy
@@ -31,6 +33,8 @@ function M:init(enemy)
     self.collide_system = M.Collide(enemy, self)
     self.damage_modifier_system = M.DamageModifier(enemy, self)
     self.phase_system = M.Phase(enemy, self)
+    self.move_system = M.Move(enemy, self)
+    self.shoot_system = M.Shoot(enemy, self)
     self.view_data = {
         health = self.health_system:getViewData(),
     }
@@ -42,8 +46,9 @@ function M:update(dt)
     self.anim_system:update(dt)
     self.health_system:update(dt)
     self.collide_system:update(dt)
+    self.move_system:update(dt)
+    self.shoot_system:update(dt)
 
-    --self.hit_system:update(dt)
     for _, comp in pairs(self.components) do
         comp:update()
     end
@@ -207,4 +212,64 @@ function M:onPhaseChanged(from, to)
     for _, comp in pairs(self.components) do
         comp:onPhaseChanged(from, to)
     end
+end
+
+-- ========================================
+-- 便捷移动方法 (使用 Core.Task + move_system 实现缓动)
+-- ========================================
+
+---相对移动：从当前位置向 (dx, dy) 偏移，duration 帧内完成
+---@param dx number   x 方向偏移量
+---@param dy number   y 方向偏移量
+---@param duration number  动画帧数
+---@param easing number?   缓动类型 (Core.Lib.Easing.xxx)，默认线性
+function M:requestMoveBy(dx, dy, duration, easing)
+    local e     = self.enemy
+    local start_x = e.x
+    local start_y = e.y
+    local end_x   = start_x + dx
+    local end_y   = start_y + dy
+    self:_moveOverTime(start_x, start_y, end_x, end_y, duration, easing)
+end
+
+---绝对移动：移动到 (x, y)，duration 帧内完成
+---@param x number   目标 x
+---@param y number   目标 y
+---@param duration number  动画帧数
+---@param easing number?   缓动类型，默认线性
+function M:requestMoveTo(x, y, duration, easing)
+    local e     = self.enemy
+    local start_x = e.x
+    local start_y = e.y
+    self:_moveOverTime(start_x, start_y, x, y, duration, easing)
+end
+
+---内部：使用 Core.Task 逐帧插值移动
+---@param sx number
+---@param sy number
+---@param tx number
+---@param ty number
+---@param duration number
+---@param easing number?
+function M:_moveOverTime(sx, sy, tx, ty, duration, easing)
+    local e = self.enemy
+    -- 暂停当前 move_system 的自动移动
+    self.move_system:stop()
+
+    Core.Task.New(e, function()
+        local elapsed = 0
+        while elapsed < duration do
+            elapsed = elapsed + 1
+            local t = elapsed / duration
+            -- 使用 lstg 引擎的缓动函数
+            if easing and easing ~= 0 then
+                t = Core.Lib.Easing(easing, t)
+            end
+            e.x = sx + (tx - sx) * t
+            e.y = sy + (ty - sy) * t
+            Core.Task.Wait(1)
+        end
+        e.x = tx
+        e.y = ty
+    end)
 end

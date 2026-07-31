@@ -45,7 +45,23 @@ M.Base = Base
 function M.Spawn(x, y, options)
     ---@type STG.Player.Base
     local p = Object.New(Base, x, y)
-    p.sys:applyProfile(options)
+    -- 合并顺序: Define 默认值 → 传入 options → Profiles.Default 兜底
+    local profile = {}
+    local style_name = (options and options.style_name) or ""
+    if style_name ~= "" then
+        local data = M.Resource.GetSafe(style_name)
+        if data and data.defaults then
+            for k, v in pairs(data.defaults) do
+                profile[k] = v
+            end
+        end
+    end
+    if options then
+        for k, v in pairs(options) do
+            profile[k] = v
+        end
+    end
+    p.sys:applyProfile(profile)
     return p
 end
 
@@ -54,6 +70,7 @@ require("STG.Player.System")
 require("STG.Player.Shots")
 require("STG.Player.Profiles")
 require("STG.Player.Resource")
+require("STG.Player.Register")
 
 ---@return STG.Player.Base
 function M.Get()

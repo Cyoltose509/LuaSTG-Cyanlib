@@ -3,6 +3,7 @@
 ---@field ComponentBase STG.Enemy.ComponentBase
 ---@field Profiles STG.Enemy.Profiles
 ---@field Resource STG.Enemy.Resource
+---@field Boss STG.Enemy.Boss
 local M = {}
 STG.Enemy = M
 
@@ -27,6 +28,9 @@ function Base:colli(other)
 end
 
 function Base:frame()
+    if STG.Pause and STG.Pause.IsPaused and STG.Pause.IsPaused() then
+        return
+    end
     local dt = self.time:getDelta()
     Core.Task.Do(self, dt)
     self.sys:update(dt)
@@ -39,6 +43,8 @@ require("STG.Enemy.Resource")
 require("STG.Enemy.Profiles")
 require("STG.Enemy.System")
 require("STG.Enemy.ComponentBase")
+require("STG.Enemy.Boss")
+require("STG.Enemy.Register")
 
 ---@class STG.Enemy.Variant:STG.Enemy.Base
 local Variant = {}
@@ -73,7 +79,7 @@ end
 ---@param variant STG.Enemy.Variant
 function M.SpawnVariant(variant, x, y, ...)
     ---@type STG.Enemy.Base
-    local e = lstg.New(Base, variant.system)
+    local e = New(Base, variant.system)
     e.x = x
     e.y = y
 
@@ -87,10 +93,25 @@ end
 ---@param options STG.Enemy.Profiles.Default
 function M.Spawn(x, y, options)
     ---@type STG.Enemy.Base
-    local e = lstg.New(Base)
+    local e = New(Base)
     e.x = x
     e.y = y
-    e.sys:applyProfile(options)
+    -- 合并顺序: Define 默认值 → 传入 options → Profiles.Default 兜底
+    local profile = {}
+    local style_name = (options and options.style_name) or ""
+    if style_name ~= "" then
+        local data = M.Resource.GetSafe(style_name)
+        if data and data.defaults then
+            for k, v in pairs(data.defaults) do
+                profile[k] = v
+            end
+        end
+    end
+    if options then
+        for k, v in pairs(options) do
+            profile[k] = v
+        end
+    end
+    e.sys:applyProfile(profile)
     return e
 end
-

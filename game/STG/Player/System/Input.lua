@@ -21,6 +21,10 @@ function M:init(player, system)
 
 end
 function M:update()
+    -- 暂停时跳过输入处理
+    if STG.Pause and STG.Pause.IsPaused and STG.Pause.IsPaused() then
+        return
+    end
     self.move_axis_h = Input.GetAxis("Player.MoveHorizontal")
     self.move_axis_v = Input.GetAxis("Player.MoveVertical")
     self.move = Vec2.New(self.move_axis_h, self.move_axis_v)

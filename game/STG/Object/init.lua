@@ -4,6 +4,8 @@
 local M = {}
 STG.Object = M
 
+local ObjList = Core.Object.ObjList
+
 require("STG.Object.Group")
 require("STG.Object.Layer")
 
@@ -11,43 +13,43 @@ require("STG.Object.Layer")
 
 
 function M.BulletDo(fun)
-    for _,obj in lstg.ObjList(M.Group.EnemyBullet) do
+    for _,obj in ObjList(M.Group.EnemyBullet) do
         fun(obj)
     end
 end
 
 function M.IndesDo(fun)
-    for _,obj in lstg.ObjList(M.Group.InDes) do
+    for _,obj in ObjList(M.Group.InDes) do
         fun(obj)
     end
 end
 
 function M.BulletIndesDo(fun)
-    for _,obj in lstg.ObjList(M.Group.EnemyBullet) do
+    for _,obj in ObjList(M.Group.EnemyBullet) do
         fun(obj)
     end
-    for _,obj in lstg.ObjList(M.Group.InDes) do
+    for _,obj in ObjList(M.Group.InDes) do
         fun(obj)
     end
 end
 
 function M.EnemyDo(fun)
-    for _,obj in lstg.ObjList(M.Group.Enemy) do
+    for _,obj in ObjList(M.Group.Enemy) do
         fun(obj)
     end
 end
 
 function M.NotCollideDo(fun)
-    for _,obj in lstg.ObjList(M.Group.NotCollide) do
+    for _,obj in ObjList(M.Group.NotCollide) do
         fun(obj)
     end
 end
 
 function M.EnemyNotCollideDo(fun)
-    for _,obj in lstg.ObjList(M.Group.Enemy) do
+    for _,obj in ObjList(M.Group.Enemy) do
         fun(obj)
     end
-    for _,obj in lstg.ObjList(M.Group.NotCollide) do
+    for _,obj in ObjList(M.Group.NotCollide) do
         fun(obj)
     end
 end

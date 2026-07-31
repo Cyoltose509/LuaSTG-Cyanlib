@@ -28,6 +28,9 @@ end
 local Base = Object.Define()
 M.Base = Base
 function Base:frame()
+    if STG.Pause and STG.Pause.IsPaused and STG.Pause.IsPaused() then
+        return
+    end
     if self.frame_new then
         self:frame_new()
     else
@@ -157,6 +160,9 @@ end
 local TypeBase = Object.Define()
 M.TypeBase = TypeBase
 function TypeBase:frame()
+    if STG.Pause and STG.Pause.IsPaused and STG.Pause.IsPaused() then
+        return
+    end
     if not self.stay then
         if not (self._forbid_ref) then
             self._forbid_ref = true

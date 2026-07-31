@@ -59,7 +59,7 @@ function M.BreakEff(x, y, index)
     self.layer = Object.Layer.EnemyBullet - 50
     self.img = "stg:etbreak" .. index
     --
-    self.rot = ran:Float(0, 360)
+    self.rot = math.random() * 360
     return self
 end
 

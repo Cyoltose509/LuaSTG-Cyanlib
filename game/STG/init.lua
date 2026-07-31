@@ -2,7 +2,7 @@
 ---@class STG
 STG = {}
 
---TODO:如果要真完善的话，需要在很多地方尽量插入事件监听。
+require("STG.Constants")
 
 
 --region register button
@@ -52,7 +52,16 @@ require("STG.Shots")
 require("STG.Enemy")
 require("STG.Player")
 require("STG.Item")
-require("STG.Area")
+require("STG.World")
 require("STG.System")
+require("STG.Replay")
+require("STG.Run")
+require("STG.Background")
+require("STG.Stage")
+require("STG.Layout")
+require("STG.HUD")
+require("STG.Pause")
+require("STG.Menu")
+require("STG.TestScene")
 
 require("STG._Assets")

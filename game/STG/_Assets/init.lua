@@ -32,11 +32,9 @@ local function fromGrid(prefix, relPath, x, y, w, h, cols, rows)
 end
 
 ---Import all legacy/common assets.
+---（原 STG.Config.Get("import_legacy_assets") 检查已移除——
+--- 配置项不存在，且资产加载应在游戏初始化阶段无条件执行。）
 function STG.Assets.Import()
-    if STG.Config.Get("import_legacy_assets") == false then
-        return
-    end
-
     LazyLoader.Add(function()
         Resource.SetResourcePool(Resource.PoolType.Global)
     end)

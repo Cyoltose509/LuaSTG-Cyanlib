@@ -144,7 +144,7 @@ function M.BulletFogEffect(x, y, sty, col, v, a, mulAdd)
                     break
                 end
                 self.x, self.y = x.x, x.y
-                task.Wait()
+                Task.Wait()
             end
             Object.RawDel(self)
         end)

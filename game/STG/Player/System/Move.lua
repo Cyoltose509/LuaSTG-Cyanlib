@@ -24,6 +24,10 @@ function M:setProfile(profile)
     end
 end
 function M:update(dt)
+    -- 暂停时跳过移动
+    if STG.Pause and STG.Pause.IsPaused and STG.Pause.IsPaused() then
+        return
+    end
     local phase = self.system:getPhase()
     if phase ~= "normal" then
         return
