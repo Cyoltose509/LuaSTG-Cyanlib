@@ -372,9 +372,12 @@ function M:init()
     Core.Lib.Debug.AddButton("Test", "Add Core node", function()
         self:newNode("Core", Core, nil).hide = false
     end)
+    Core.Lib.Debug.AddButton("Test", "切换到 UITest", function()
+        Core.SceneManager.SetScene("Test.UITest")
+    end)
     Core.Resource.Music.Get("test"):fadePlay(1)
 
-    self.skybox = Core.Render.Skybox.NewSphere("Test\\Assets\\Textures\\night.jpg")
+    self.skybox = Core.Render.Skybox.NewSphere("Test\\_Assets\\Textures\\night.jpg")
 
     local scale = 10000
     self.skybox:setScale(scale, scale, scale):setLegacyBlendState("mul+add")

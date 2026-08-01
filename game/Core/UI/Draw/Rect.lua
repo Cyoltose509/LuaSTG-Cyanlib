@@ -51,11 +51,21 @@ function M:setDrawSize(width, height)
     return self
 end
 
+---覆盖：setWH 同步绘制尺寸，使背景矩形跟随布局尺寸变化
+function M:setWH(width, height)
+    Core.UI.Child.setWH(self, width, height)
+    self.draw_width = self.width
+    self.draw_height = self.height
+    self._need_update = true
+    return self
+end
+
 function M:update()
     Core.UI.Draw.update(self)
     if self._need_update then
+        local hs = self._hover_scale_cur or 1
         self.datas={
-            Core.Math.Geom.GetRectPoints(0,0,self.draw_width * self._hscale, self.draw_height * self._vscale, self.rot)
+            Core.Math.Geom.GetRectPoints(0,0,self.draw_width * self._hscale * hs, self.draw_height * self._vscale * hs, self.rot)
         }
         self._need_update = false
     end

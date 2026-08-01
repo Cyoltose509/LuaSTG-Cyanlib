@@ -10,8 +10,10 @@
 ---@field TextureRect Core.UI.TextureRect.New @用于创建纹理矩形节点，可以显示纹理内容
 ---@field Draw Core.UI.Draw @Draw基类，一般不直接创建，而是通过它的子类来创建绘制节点
 ---@field Anchor Core.UI.Anchor @用于创建锚点节点，我不知道有什么用但是肯定有用
+---@field Pattern Core.UI.Pattern
 local M = {}
 Core.UI = M
+require("Core.UI.Pattern")
 
 local function try_resolve(root, fields)
     local obj = root
@@ -63,6 +65,7 @@ require("Core.UI.Root")
 require("Core.UI.Child")
 
 require("Core.UI.Layout")
+require("Core.UI.Style")
 require("Core.UI.Anchor")
 require("Core.UI.Immediate")
 

@@ -45,10 +45,11 @@ function M:update()
     if self._need_update then
         local cosr, sinr = cos(self.rot), sin(self.rot)
         local hscale, vscale = self._hscale, self._vscale
-        local w = self.draw_width * self._hscale
-        local h = self.draw_height * self._vscale
-        local rh = self.round_size * hscale
-        local rv = self.round_size * vscale
+        local hs = self._hover_scale_cur or 1
+        local w = self.draw_width * self._hscale * hs
+        local h = self.draw_height * self._vscale * hs
+        local rh = self.round_size * hscale * hs
+        local rv = self.round_size * vscale * hs
         if self.lock_round_aspect then
             local m = min(rh, rv)
             rh, rv = m, m
